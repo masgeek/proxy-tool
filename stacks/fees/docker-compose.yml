@@ -124,7 +124,7 @@ services:
       - "127.0.0.1:9401:80"
     environment:
       APP_NAME: ${DEV_APP_NAME:-Fee Syncer dev}
-      APP_ENV: ${DEV_APP_ENV:-production}
+      APP_ENV: ${DEV_APP_ENV:-development}
       APP_DEBUG: ${DEV_APP_DEBUG:-false}
       APP_KEY: ${DEV_APP_KEY:?DEV_APP_KEY must be set}
       APP_URL: ${DEV_APP_URL:?DEV_APP_URL must be set}
