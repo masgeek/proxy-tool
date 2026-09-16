@@ -144,7 +144,7 @@ services:
       SESSION_DRIVER: ${SESSION_DRIVER:-redis}
       SESSION_LIFETIME: ${SESSION_LIFETIME:-120}
       CACHE_PREFIX: ${DEV_CACHE_PREFIX:-fees-dev:}
-            # Logging
+      # Logging
       LOG_LEVEL: ${DEV_LOG_LEVEL:-debug}
       LOG_CHANNEL: ${LOG_CHANNEL:-stack}
       LOG_STACK: ${LOG_STACK:-stderr}
@@ -162,6 +162,10 @@ services:
       QUEUE_TIMEOUT: ${QUEUE_TIMEOUT:-3600}
       QUEUE_SLEEP: ${QUEUE_SLEEP:-3}
       CADDY_ADMIN_URL: ${CADDY_ADMIN_URL:-host.docker.internal:2019}
+      #supervisor
+      HORIZON_ENABLED: "${HORIZON_ENABLED:-false}"
+      SCHEDULER_ENABLED: "${SCHEDULER_ENABLED:-false}"
+      LARAVEL_MIGRATE: "${LARAVEL_MIGRATE:-false}"
     deploy:
       resources:
         limits:
