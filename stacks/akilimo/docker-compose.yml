@@ -11,7 +11,7 @@ networks:
 services:
   api:
     container_name: akilimo-api
-    image: iita/akilimo-api:${AKILIMO_TAG:?AKILIMO_TAG must be set}
+    image: ghcr.io/iita-akilimo/akilimo-api:${AKILIMO_TAG:?AKILIMO_TAG must be set}
     hostname: akilimo-api
     restart: unless-stopped
     pull_policy: always
