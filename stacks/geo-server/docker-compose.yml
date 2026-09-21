@@ -50,7 +50,7 @@ services:
     volumes:
       - geoserver-data:/opt/geoserver_data
     ports:
-      - "127.0.0.1:9500:8080"
+      - "127.0.0.1:9510:8080"
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/geoserver/web/wicket/resource/org.geoserver.web.GeoServerBasePage/img/logo.png"]
       interval: 60s
