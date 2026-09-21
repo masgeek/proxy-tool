@@ -21,6 +21,7 @@ services:
     restart: unless-stopped
     stop_grace_period: 60s
     environment:
+      ROOT_WEBAPP_REDIRECT: ${ROOT_WEBAPP_REDIRECT:-true}
       # Extensions (downloaded at startup, needs outbound internet)
       INSTALL_EXTENSIONS: "true"
       STABLE_EXTENSIONS: ${GEOSERVER_EXTENSIONS:-wps,csw}
@@ -44,7 +45,7 @@ services:
       # Admin / proxy
       GEOSERVER_ADMIN_USER: ${GEOSERVER_ADMIN_USER:-admin}
       GEOSERVER_ADMIN_PASSWORD: ${GEOSERVER_ADMIN_PASSWORD:?GEOSERVER_ADMIN_PASSWORD must be set}
-      PROXY_BASE_URL: ${PROXY_BASE_URL:?PROXY_BASE_URL must be set}
+      PROXY_BASE_URL: ${PROXY_BASE_URL}
       GEOSERVER_CSRF_WHITELIST: ${GEOSERVER_CSRF_WHITELIST:-}
       SKIP_DEMO_DATA: ${SKIP_DEMO_DATA:-true}"
     volumes:
