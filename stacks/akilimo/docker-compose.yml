@@ -66,8 +66,6 @@ services:
       MAIL_ENCRYPTION: ${MAIL_ENCRYPTION:-null}
       MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-noreply@akilimo.org}
       MAIL_FROM_NAME: ${MAIL_FROM_NAME:-Akilimo}
-    volumes:
-      - ../../config/supervisor/common:/etc/supervisor/conf.d
     logging:
       driver: json-file
       options:
