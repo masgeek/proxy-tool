@@ -66,7 +66,7 @@ services:
   stats-api:
     container_name: stats-api
     hostname: stats-api
-    image: dokploy/stats-api:${STATS_API_TAG:-latest}
+    image: ghcr.io/masgeek/mfl-dashboard:${STATS_API_TAG:-latest}
     restart: unless-stopped
     stop_grace_period: 60s
     environment:
