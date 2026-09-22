@@ -72,7 +72,7 @@ services:
     environment:
       GEOSERVER_BASE: ${GEOSERVER_BASE:-https://geo.akilimo.org/geoserver}
     ports:
-      - "127.0.0.1:9511:8080"
+      - "127.0.0.1:9511:5001"
     networks:
       - dokploy-network
       - internal
