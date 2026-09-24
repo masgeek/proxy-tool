@@ -11,7 +11,7 @@ agwise.org {
 
 	root * /data/extra_storage/services/agwise_site
 	php_fastcgi unix//run/php/php8.4-fpm.sock
-	import wp_common
+	import ../wp-common.caddy
 	import ../headers/security-headers.caddy
 
 	log {
@@ -31,7 +31,7 @@ new.agwise.org {
 ragapi.agwise.org {
 	tls agwise@akilimo.org
 	encode gzip zstd
-	import proxy_disallowed_basic
+	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 
 	reverse_proxy 127.0.0.1:8002 {
@@ -48,7 +48,7 @@ ragapi.agwise.org {
 api.agwise.org {
 	tls agwise@akilimo.org
 	encode gzip zstd
-	import proxy_disallowed_basic
+	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 	reverse_proxy 127.0.0.1:8000 {
 		import ../headers/proxy-headers.caddy
@@ -63,7 +63,7 @@ api.agwise.org {
 dashboard.agwise.org {
 	tls agwise@akilimo.org
 	encode gzip zstd
-	import proxy_disallowed_basic
+	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 	reverse_proxy 127.0.0.1:8300 {
 		import ../headers/proxy-headers.caddy
@@ -78,7 +78,7 @@ dashboard.agwise.org {
 kvuno.agwise.org {
 	tls agwise@akilimo.org
 	encode gzip zstd
-	import proxy_disallowed_basic
+	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 	reverse_proxy 127.0.0.1:9800 {
 		import ../headers/proxy-headers.caddy

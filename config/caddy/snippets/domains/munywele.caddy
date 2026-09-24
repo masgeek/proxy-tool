@@ -9,7 +9,7 @@
 munywele.co.ke {
 	tls dev@munywele.co.ke
 	encode gzip
-	import proxy_disallowed_basic
+	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 
 	reverse_proxy 127.0.0.1:9200 {
@@ -31,7 +31,7 @@ munywele.co.ke {
 api.munywele.co.ke, api.tsobu.co.ke {
 	tls dev@munywele.co.ke
 	encode gzip
-	import proxy_disallowed_basic
+	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 
 	rewrite * /api{uri}
@@ -69,7 +69,7 @@ http://api.munywele.co.ke, http://api.tsobu.co.ke {
 	}
 
 	handle @activex {
-		import proxy_disallowed_basic
+		import ../disallowed-basic.caddy
 
 		rewrite * /api{uri}
 
@@ -96,7 +96,7 @@ http://api.munywele.co.ke, http://api.tsobu.co.ke {
 sms.munywele.co.ke {
 	tls dev@munywele.co.ke
 	encode gzip
-	import proxy_disallowed_basic
+	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 
 	reverse_proxy 127.0.0.1:9201 {
@@ -113,7 +113,7 @@ sms.munywele.co.ke {
 portal.munywele.co.ke {
 	tls dev@munywele.co.ke
 	encode gzip
-	import proxy_disallowed_basic
+	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 
 	@allowed remote_ip 203.0.113.5 198.51.100.0/24 192.0.2.100
@@ -143,7 +143,7 @@ portal.munywele.co.ke {
 n8n.munywele.co.ke {
 	tls dev@munywele.co.ke
 	encode gzip
-	import proxy_disallowed_basic
+	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 
 	reverse_proxy 127.0.0.1:9700 {
@@ -161,7 +161,7 @@ n8n.munywele.co.ke {
 fees.munywele.co.ke {
 	tls dev@munywele.co.ke
 	encode gzip
-	import proxy_disallowed_basic
+	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 
 	reverse_proxy 127.0.0.1:9400 {
@@ -179,7 +179,7 @@ fees.munywele.co.ke {
 fees-dev.munywele.co.ke {
 	tls dev@munywele.co.ke
 	encode gzip
-	import proxy_disallowed_basic
+	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 
 	reverse_proxy 127.0.0.1:9401 {
@@ -197,7 +197,7 @@ fees-dev.munywele.co.ke {
 logs.munywele.co.ke, logs.akilimo.org {
 	tls dev@munywele.co.ke
 	encode gzip zstd
-	import proxy_disallowed_basic
+	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 	reverse_proxy 127.0.0.1:9600 {
 		import ../headers/proxy-headers.caddy
@@ -229,7 +229,7 @@ mqtt.munywele.co.ke {
 sonar.munywele.co.ke {
 	tls dev@munywele.co.ke
 	encode gzip zstd
-	import proxy_disallowed_basic
+	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 	reverse_proxy 127.0.0.1:9900 {
 		import ../headers/proxy-headers.caddy
@@ -244,7 +244,7 @@ sonar.munywele.co.ke {
 api.farm.munywele.co.ke {
 	tls dev@munywele.co.ke
 	encode gzip zstd
-	import proxy_disallowed_basic
+	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 	reverse_proxy 127.0.0.1:9300 {
 		import ../headers/proxy-headers.caddy
@@ -259,7 +259,7 @@ api.farm.munywele.co.ke {
 farm.munywele.co.ke {
 	tls dev@munywele.co.ke
 	encode gzip zstd
-	import proxy_disallowed_basic
+	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 	reverse_proxy 127.0.0.1:9301 {
 		import ../headers/proxy-headers.caddy
@@ -281,7 +281,7 @@ lnk-admin.munywele.co.ke {
 s3.munywele.co.ke {
 	tls dev@munywele.co.ke
 	encode gzip zstd
-	import proxy_disallowed_basic
+	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 	reverse_proxy 127.0.0.1:9612 {
 		import ../headers/proxy-headers.caddy
@@ -296,7 +296,7 @@ s3.munywele.co.ke {
 s3-console.munywele.co.ke {
 	tls dev@munywele.co.ke
 	encode gzip zstd
-	import proxy_disallowed_basic
+	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 	reverse_proxy 127.0.0.1:9614 {
 		import ../headers/proxy-headers.caddy
@@ -311,7 +311,7 @@ s3-console.munywele.co.ke {
 monitor.munywele.co.ke {
 	tls dev@munywele.co.ke
 	encode gzip zstd
-	import proxy_disallowed_basic
+	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 	reverse_proxy 127.0.0.1:19999 {
 		import ../headers/proxy-headers.caddy
@@ -326,7 +326,7 @@ monitor.munywele.co.ke {
 flow.munywele.co.ke {
 	tls dev@munywele.co.ke
 	encode gzip zstd
-	import proxy_disallowed_basic
+	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 	reverse_proxy 127.0.0.1:9710 {
 		import ../headers/proxy-headers.caddy
@@ -341,7 +341,7 @@ flow.munywele.co.ke {
 caddy.munywele.co.ke {
 	tls dev@munywele.co.ke
 	encode gzip zstd
-	import proxy_disallowed_basic
+	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 	reverse_proxy 127.0.0.1:9621 {
 		import ../headers/proxy-headers.caddy
@@ -356,7 +356,7 @@ caddy.munywele.co.ke {
 beszel.munywele.co.ke {
 	tls dev@munywele.co.ke
 	encode gzip zstd
-	import proxy_disallowed_basic
+	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 	reverse_proxy 127.0.0.1:9625 {
 		import ../headers/proxy-headers.caddy
@@ -371,7 +371,7 @@ beszel.munywele.co.ke {
 lnk.munywele.co.ke, lnk.agwise.org, lnk.akilimo.org {
 	tls dev@munywele.co.ke
 	encode gzip zstd
-	import proxy_disallowed_basic
+	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 	reverse_proxy 127.0.0.1:9660 {
 		import ../headers/proxy-headers.caddy

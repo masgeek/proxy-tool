@@ -29,7 +29,7 @@ akilimo.org {
 	php_fastcgi 127.0.0.1:9000 {
 		root /var/www/html
 	}
-	import wp_common
+	import ../wp-common.caddy
 	import ../headers/security-headers.caddy
 
 	log {
@@ -47,7 +47,7 @@ portal.akilimo.org {
 	php_fastcgi 127.0.0.1:9001 {
 		root /var/www/html
 	}
-	import wp_common
+	import ../wp-common.caddy
 	import ../headers/security-headers.caddy
 
 	log {
@@ -67,7 +67,7 @@ new.akilimo.org {
 	php_fastcgi 127.0.0.1:9002 {
 		root /var/www/html
 	}
-	import wp_common
+	import ../wp-common.caddy
 	import ../headers/security-headers.caddy
 
 	log {
@@ -84,7 +84,7 @@ new.akilimo.org {
 app.akilimo.org, dev.akilimo.org {
 	tls akilimo@cgiar.org
 	encode gzip zstd
-	import proxy_disallowed_full
+	import ../disallowed-full.caddy
 	import ../headers/security-headers.caddy
 
 	reverse_proxy 127.0.0.1:9100 {
@@ -110,7 +110,7 @@ app.akilimo.org, dev.akilimo.org {
 api.akilimo.org {
 	tls akilimo@cgiar.org
 	encode gzip
-	import proxy_disallowed_full
+	import ../disallowed-full.caddy
 	import ../headers/security-headers.caddy
 
 	rewrite * /api{uri}
@@ -137,7 +137,7 @@ api.akilimo.org {
 uptake.akilimo.org {
 	tls akilimo@cgiar.org
 	encode gzip zstd
-	import proxy_disallowed_basic
+	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 	reverse_proxy 127.0.0.1:9500 {
 		import ../headers/proxy-headers.caddy
@@ -154,7 +154,7 @@ uptake.akilimo.org {
 geo.akilimo.org {
 	tls akilimo@cgiar.org
 	encode gzip zstd
-	import proxy_disallowed_basic
+	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 	cache {
 		allowed_http_verbs GET HEAD
@@ -174,7 +174,7 @@ geo.akilimo.org {
 stats.akilimo.org {
 	tls akilimo@cgiar.org
 	encode gzip zstd
-	import proxy_disallowed_basic
+	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 	cache {
 		allowed_http_verbs GET HEAD

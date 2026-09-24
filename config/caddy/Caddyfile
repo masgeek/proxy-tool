@@ -12,25 +12,6 @@
 order rate_limit before basicauth
 order cache before reverse_proxy
 
-(proxy_disallowed_basic) {
-	@disallowed {
-		path /.git/*
-		path *.sql
-	}
-	respond @disallowed "Access Denied" 403
-}
-
-(proxy_disallowed_full) {
-	@disallowed {
-		path /.git/*
-		path *.sql
-		path /xmlrpc.php
-		path_regexp user_ini \.user\.ini
-	}
-	respond @disallowed "Access Denied" 403
-}
-
-import snippets/common.caddy
 import snippets/domains/akilimo.caddy
 import snippets/domains/munywele.caddy
 import snippets/domains/agwise.caddy
