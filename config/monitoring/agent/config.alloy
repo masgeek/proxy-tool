@@ -11,11 +11,11 @@ discovery.relabel "applications" {
   targets = discovery.docker.applications.targets
 
   # Temporarily disabled: no application containers are selected for Loki.
-  # rule {
-  #   source_labels = ["__meta_docker_container_name"]
-  #   regex         = "/(fuelrod|fee\\.prod|fee\\.dev|akilimo-api)"
-  #   action        = "keep"
-  # }
+  rule {
+     source_labels = ["__meta_docker_container_name"]
+     regex         = "/(fuelrod|fee\\.prod|fee\\.dev|akilimo-api)"
+     action        = "keep"
+ }
 
   rule {
     source_labels = ["__meta_docker_container_name"]
