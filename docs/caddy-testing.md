@@ -13,8 +13,8 @@ The output must include the cache handler module. If it does not, do not deploy 
 ## 2. Validate the repository file
 
 ```bash
-caddy adapt --config ./Caddyfile --adapter caddyfile >/tmp/caddy-adapted.json
-caddy validate --config ./Caddyfile --adapter caddyfile
+caddy adapt --config config/caddy/Caddyfile --adapter caddyfile >/tmp/caddy-adapted.json
+caddy validate --config config/caddy/Caddyfile --adapter caddyfile
 ```
 
 Both commands must exit successfully. Keep `/tmp/caddy-adapted.json` when troubleshooting because it shows the handlers Caddy will actually run.
@@ -33,7 +33,10 @@ If the output differs, update the `admin` address in `Caddyfile` before deployme
 
 ```bash
 sudo cp /etc/caddy/Caddyfile "/etc/caddy/Caddyfile.bak.$(date +%Y%m%d%H%M%S)"
-sudo install -m 0644 ./Caddyfile /etc/caddy/Caddyfile
+sudo mkdir -p /etc/caddy/snippets/domains
+sudo cp config/caddy/Caddyfile /etc/caddy/Caddyfile
+sudo cp config/caddy/snippets/common.caddy /etc/caddy/snippets/common.caddy
+sudo cp config/caddy/snippets/domains/*.caddy /etc/caddy/snippets/domains/
 sudo caddy validate --config /etc/caddy/Caddyfile
 sudo caddy reload --config /etc/caddy/Caddyfile
 ```
