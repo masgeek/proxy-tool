@@ -65,10 +65,11 @@ cp -a "$restore_dir/Caddyfile" "$target_dir/Caddyfile"
 
 caddy validate --config "$target_dir/Caddyfile"
 
-if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet caddy; then
-    systemctl reload caddy
+if command -v systemctl >/dev/null 2>&1; then
+    systemctl restart caddy
 else
-    caddy reload --config "$target_dir/Caddyfile"
+    printf '%s\n' 'systemctl is required for a hard Caddy restart.' >&2
+    exit 1
 fi
 
 printf 'Caddy rolled back from %s\n' "$backup_path"

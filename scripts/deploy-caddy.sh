@@ -48,10 +48,11 @@ fi
 
 cp -a "$stage_dir"/. "$target_dir"/
 
-if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet caddy; then
-    systemctl reload caddy
+if command -v systemctl >/dev/null 2>&1; then
+    systemctl restart caddy
 else
-    caddy reload --config "$target_dir/Caddyfile"
+    printf '%s\n' 'systemctl is required for a hard Caddy restart.' >&2
+    exit 1
 fi
 
 printf 'Caddy deployed successfully from %s\n' "$source_dir"
