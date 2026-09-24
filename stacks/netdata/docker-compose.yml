@@ -1,0 +1,53 @@
+name: "netdata"
+
+# Lightweight host and Docker metrics UI. Application logs remain in the
+# separate monitoring stack through Loki and Alloy.
+
+services:
+  netdata:
+    image: netdata/netdata:${NETDATA_TAG:-latest}
+    container_name: netdata
+    hostname: netdata
+    restart: unless-stopped
+    pid: host
+    network_mode: host
+    cap_add:
+      - SYS_ADMIN
+      - SYS_PTRACE
+    security_opt:
+      - apparmor=unconfined
+    volumes:
+      - netdata-config:/etc/netdata
+      - netdata-lib:/var/lib/netdata
+      - netdata-cache:/var/cache/netdata
+      - ./netdata.conf:/etc/netdata/netdata.conf:ro
+      - /:/host/root:ro,rslave
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/group:/host/etc/group:ro
+      - /etc/localtime:/host/etc/localtime:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - /var/log:/host/var/log:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "2"
+    deploy:
+      resources:
+        limits:
+          memory: ${NETDATA_MEMORY_LIMIT:-512m}
+          cpus: "${NETDATA_CPU_LIMIT:-0.5}"
+
+volumes:
+  netdata-config:
+    driver: local
+    name: netdata-config
+  netdata-lib:
+    driver: local
+    name: netdata-lib
+  netdata-cache:
+    driver: local
+    name: netdata-cache
