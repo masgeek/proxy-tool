@@ -36,7 +36,7 @@ Caddy handles the WebSocket upgrade automatically. Reload after validation:
 
 ```bash
 caddy validate --config /etc/caddy/Caddyfile
-sudo caddy reload --config /etc/caddy/Caddyfile
+sudo systemctl restart caddy
 ```
 
 ## FeeSyncer Agent
