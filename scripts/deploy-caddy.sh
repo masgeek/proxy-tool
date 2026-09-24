@@ -27,6 +27,8 @@ cp -a "$source_dir"/. "$stage_dir"/
 caddy validate --config "$stage_dir/Caddyfile"
 
 install -d -m 0755 "$target_dir"
+install -d -m 0755 /var/www/caddy-errors
+install -m 0644 "$source_dir/errors/upstream-unavailable.html" /var/www/caddy-errors/upstream-unavailable.html
 backup_dir="$target_dir/backups"
 install -d -m 0755 "$backup_dir"
 timestamp=$(date +%Y%m%d%H%M%S)
