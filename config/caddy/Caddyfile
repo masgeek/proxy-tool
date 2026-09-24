@@ -1,7 +1,7 @@
 # The Caddyfile is an easy way to configure your Caddy web server.
 {
 	admin 172.17.0.1:2019 {
-		origins http://localhost:2019 localhost:2019 127.0.0.1:2019 http://172.17.0.1:2019
+		origins http://localhost:2019 localhost:2019 127.0.0.1:2019 http://:2019
 	}
 
 	# Default ACME contact for akilimo.org properties.
