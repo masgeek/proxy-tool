@@ -30,6 +30,7 @@ akilimo.org {
 		root /var/www/html
 	}
 	import wp_common
+	import security_headers
 
 	log {
 		output file /var/log/caddy/akilimo.org.log
@@ -47,6 +48,7 @@ portal.akilimo.org {
 		root /var/www/html
 	}
 	import wp_common
+	import security_headers
 
 	log {
 		output file /var/log/caddy/portal.akilimo.org.log
@@ -66,6 +68,7 @@ new.akilimo.org {
 		root /var/www/html
 	}
 	import wp_common
+	import security_headers
 
 	log {
 		output file /var/log/caddy/new-akilimo.log

@@ -2,7 +2,6 @@
 # Assumes `root` and `php_fastcgi` are already set in the site block above this import.
 (wp_common) {
 	encode gzip zstd
-	import security_headers
 
 	@wp_disallowed {
 		path /wp-config.php

@@ -12,6 +12,7 @@ agwise.org {
 	root * /data/extra_storage/services/agwise_site
 	php_fastcgi unix//run/php/php8.4-fpm.sock
 	import wp_common
+	import security_headers
 
 	log {
 		output file /var/log/caddy/agwise.org.log
