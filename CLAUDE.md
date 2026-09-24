@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Repo Is
 
-A Docker Compose orchestration layer for domain-based routing across multiple independent application stacks (Fuelrod, Akilimo, Use-Uptake, Fees, Farm, Sonar, Metabase, and supporting tooling) on a shared host. Reverse proxying and TLS are handled by Dokploy + Traefik — routing rules are configured in Dokploy, not in the compose files. Uses two Docker networks: `internal` (private, per-stack) and `dokploy-network` (external, shared across all stacks, managed by Dokploy).
+A Docker Compose orchestration layer for multiple independent application stacks (Fuelrod, Akilimo, Use-Uptake, Fees, Farm, Sonar, Metabase, Activepieces, and supporting tooling) on a shared host. Public routing and TLS are handled by host Caddy snippets. `dokploy-network` is external and shared; stacks also commonly join a fixed-name `internal` network.
 
 ## Common Commands
 
@@ -13,13 +13,22 @@ A Docker Compose orchestration layer for domain-based routing across multiple in
 Stack files live at `stacks/<name>/docker-compose.yml`. Deploy in dependency order:
 
 ```bash
-# 1. Databases — must start first (postgres, pgbouncer, maria, redis)
+# 1. External network required by the stacks
+docker network create dokploy-network
+
+# 2. Databases — must start first (postgres, pgbouncer, maria)
 docker compose -f stacks/databases/docker-compose.yml up -d
 
-# 2. Automation — requires databases (n8n)
+# 3. Cache — separate Redis stack
+docker compose -f stacks/cache/docker-compose.yml up -d
+
+# 4. Automation — requires databases (n8n)
 docker compose -f stacks/automation/docker-compose.yml up -d
 
-# 3. Monitoring — Grafana, Prometheus, Loki, Grafana Alloy
+# 5. Activepieces — requires databases, cache, and the activepieces database
+docker compose -f stacks/activepieces/docker-compose.yml up -d
+
+# 6. Monitoring — Loki, Alloy, Netdata
 docker compose -f stacks/monitoring/docker-compose.yml up -d
 
 # 4. Fuelrod — requires databases; creates the shared 'uploads' volume
@@ -51,58 +60,11 @@ docker compose -f stacks/databases/docker-compose.yml up -d postgres
 
 ### Backup & Restore
 
-```bash
-# Full backup (n8n → postgres → maria → archive → Google Drive)
-# Copy autobackup.sample.sh → autobackup.sh and customise, then run:
-./autobackup.sh
-
-# Postgres backup (all databases, compressed, keep 7 days)
-cd fuelrod-backup && poetry run fuelrod-backup backup --db-type postgres --compress --keep-days 7
-
-# Postgres backup (specific databases and schemas)
-cd fuelrod-backup && poetry run fuelrod-backup backup --db-type postgres --db mydb --schemas public,audit --compress
-
-# Postgres restore
-cd fuelrod-backup && poetry run fuelrod-backup restore --db-type postgres
-
-# MariaDB backup/restore
-cd fuelrod-backup && poetry run fuelrod-backup backup --db-type mariadb
-cd fuelrod-backup && poetry run fuelrod-backup restore --db-type mariadb
-
-# MSSQL backup/restore
-cd fuelrod-backup && poetry run fuelrod-backup backup --db-type mssql
-cd fuelrod-backup && poetry run fuelrod-backup restore --db-type mssql
-
-# Google Drive sync only (dry run first)
-./gbk.sh --dry-run
-./gbk.sh
-```
-
-### Data Migration (MySQL → PostgreSQL)
-
-```bash
-# Export MySQL tables to CSV
-./migration/batch-exporter.sh
-
-# Load CSVs into PostgreSQL via pgloader
-./migration/execute-loads.sh
-
-# Direct CSV import
-./migration/import_csv_to_pg.sh
-```
+The repository contains backup script samples under `scripts/`, but no active backup tool or database migration project. Use the deployment's database tooling and keep backup data and credentials outside Git.
 
 ### Utilities
 
-```bash
-# Auto-commit file changes (uses inotifywait)
-./auto_commit.sh
-
-# Archive and size-report SQL backup files
-./archive-sql.sh --size
-
-# Build custom Docker images (nginx + flask)
-./build-images.sh
-```
+The scripts under `scripts/` are operational helpers and include destructive or host-wide actions. Read a script before running it; do not assume a similarly named root-level script exists.
 
 ## Architecture
 
@@ -112,9 +74,11 @@ Each stack is a self-contained `docker-compose.yml` with no `include:` directive
 
 ```
 stacks/
-  ├── databases/          ← postgres 17, pgbouncer, mariadb, redis
+  ├── databases/          ← postgres 17, pgbouncer, mariadb
+  ├── cache/              ← Redis production and development
   ├── automation/         ← n8n
-  ├── monitoring/         ← Grafana, Prometheus, Loki, Grafana Alloy
+  ├── activepieces/       ← Activepieces app + worker
+  ├── monitoring/         ← Loki, Alloy, Netdata
   ├── fuelrod/            ← Fuelrod service, SMS portal, SMS gateway
   ├── farm/               ← Farm Manager API, web, migrations
   ├── akilimo/            ← Akilimo API (Laravel)
@@ -129,7 +93,7 @@ stacks/
 config/
   ├── supervisor/         ← Supervisor process configs per app (common/, fuelrod/, fees/, akilimo/)
   ├── nginx/              ← NGINX configs
-  ├── monitoring/         ← Grafana dashboards/datasources, Prometheus, Loki, Agent configs
+  ├── monitoring/         ← Loki, Alloy, Netdata
   └── init/pgsql/         ← PostgreSQL init scripts (run on first container start)
 log/
   └── supervisor/         ← Bind-mounted log directories (fees.prod/, fees.dev/)
@@ -156,9 +120,11 @@ Stacks that share postgres credentials must use matching values — copy from `s
 
 | Stack `.env` | Services configured |
 |---|---|
-| `stacks/databases/.env` | postgres, pgbouncer, mariadb, redis |
+| `stacks/databases/.env` | postgres, pgbouncer, mariadb |
+| `stacks/cache/.env` | production and development Redis passwords |
+| `stacks/activepieces/.env` | Activepieces public URL, secrets, worker token, shared PostgreSQL credentials, optional Redis password |
 | `stacks/automation/.env` | n8n (postgres creds must match databases) |
-| `stacks/monitoring/.env` | Grafana, Prometheus, Loki, Grafana Alloy |
+| `stacks/monitoring/.env` | Loki limits and Netdata image/resource settings |
 | `stacks/fuelrod/.env` | Fuelrod, SMS portal, SMS gateway |
 | `stacks/farm/.env` | Farm API, web, migrations (postgres creds must match databases) |
 | `stacks/akilimo/.env` | Akilimo API |
@@ -179,20 +145,22 @@ Laravel-based services (Fuelrod, Fees, Akilimo) use Supervisor inside their cont
 ### Networking
 
 - `dokploy-network`: external, created by Dokploy on install. All inter-stack communication uses this network. Create manually with `docker network create dokploy-network` when running without Dokploy.
-- `internal`: declared per-stack, used for intra-stack service-to-service calls (not exposed externally).
+- `internal`: commonly declared with the fixed name `internal`; despite older documentation calling it private or per-stack, current Compose projects share that network.
+- Public HTTP services publish loopback ports and are routed through stack Caddyfiles merged into the host Caddyfile.
 
 ### Cross-Stack Volumes
 
 | Volume | Created by | Consumed by | Purpose |
 |---|---|---|---|
-| `uploads` | fuelrod | farm | User file uploads |
+| `uploads` | farm | — | Farm uploads |
+| `fuelrod-uploads` | fuelrod | — | Fuelrod uploads |
 
 Application logs are emitted to container stdout and collected through the
-Docker socket by Grafana Alloy.
+Docker socket by Alloy.
 
 ### Monitoring Stack
 
-`stacks/monitoring/docker-compose.yml` runs Grafana, Prometheus, Loki, and Grafana Alloy. Alloy discovers Fuelrod, Fees, Fees Dev, and Akilimo through the Docker socket and forwards their stdout/stderr streams to Loki. Config files are bind-mounted from `../../config/monitoring/` (relative to `stacks/monitoring/`).
+`stacks/monitoring/docker-compose.yml` runs Loki and Alloy for application logs, plus Netdata for host and Docker metrics. Alloy is logs-only and no longer remote-writes to Prometheus. Config files are bind-mounted from `../../config/monitoring/` (relative to `stacks/monitoring/`).
 
 ## Versioning & CI
 

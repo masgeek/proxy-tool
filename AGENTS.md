@@ -3,7 +3,7 @@
 ## Source Of Truth
 
 - This is a collection of independent Docker Compose projects under `stacks/<name>/`, not an application with a repository-wide build or test suite.
-- Trust compose files, stack `.env.example` files, Caddyfiles, and scripts over `README.md`, `CLAUDE.md`, and `docs/deployment.md`; those guides still describe older Traefik, Redis, network, and volume layouts.
+- Trust compose files, stack `.env.example` files, Caddyfiles, and scripts over `README.md`, `CLAUDE.md`, and `docs/deployment.md`; verify any prose that conflicts with those executable sources.
 - Public HTTP services currently bind host ports, usually on `127.0.0.1`, and are routed by snippets in `stacks/<name>/Caddyfile`. Compose files do not define Traefik labels. Merge snippets into the host Caddyfile rather than editing an assumed generated config.
 
 ## Validate Changes
@@ -23,7 +23,8 @@
 - PostgreSQL files in `config/init/pgsql/` and `ADDITIONAL_DBS` run only when `pgdata-main` is empty. Later environment changes do not create databases automatically.
 - The network key `internal` usually has explicit `name: internal`, so it is shared across Compose projects despite older docs calling it private per-stack.
 - Explicit container, network, and volume names bypass Compose project isolation; do not assume parallel copies of a stack are safe.
-- Application logs are emitted to Docker stdout and collected by Alloy through the Docker socket. Farm's `uploads` and Fuelrod's `fuelrod-uploads` remain separate data volumes.
+- Application logs are emitted to Docker stdout and collected by Alloy into Loki. Farm's `uploads` and Fuelrod's `fuelrod-uploads` remain separate data volumes. Netdata handles host and container metrics; it does not replace Loki.
+- Netdata uses host PID/network access, the Docker socket, `SYS_ADMIN`, and `SYS_PTRACE`; its web listener is constrained to `127.0.0.1` and exposed publicly only through Caddy.
 - Do not assume host ports are private: PostgreSQL `5432`, MariaDB `3306`, MSSQL `1433`, and Mailpit SMTP `1025` currently bind all interfaces.
 
 ## Safety And Workflow

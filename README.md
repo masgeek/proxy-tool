@@ -13,7 +13,7 @@ proxy-tool/
 │   ├── cache/                 ← Redis  [deploy before Redis consumers]
 │   ├── automation/            ← n8n
 │   ├── activepieces/          ← Activepieces app + worker
-│   ├── monitoring/            ← Grafana, Prometheus, Loki, Grafana Alloy
+│   ├── monitoring/            ← Loki, Alloy, Netdata
 │   ├── fuelrod/               ← Fuelrod service, SMS portal, SMS gateway
 │   ├── farm/                  ← Farm Manager API, web, migrations
 │   ├── akilimo/               ← Akilimo API, use-uptake
@@ -27,7 +27,7 @@ proxy-tool/
 ├── config/
 │   ├── supervisor/            ← Supervisor process configs (common/, fuelrod/, fees/, akilimo/)
 │   ├── nginx/                 ← NGINX configs
-│   ├── monitoring/            ← Grafana dashboards/datasources, Prometheus, Loki, Agent
+│   ├── monitoring/            ← Loki, Alloy, Netdata
 │   └── init/pgsql/            ← PostgreSQL init scripts (run on first container start)
 ├── log/
 │   └── supervisor/            ← Bind-mounted log dirs (fees.prod/, fees.dev/)
@@ -93,9 +93,7 @@ On first start (empty data volume) postgres runs `config/init/pgsql/` in sorted 
 | `uploads` | farm | — | Farm uploads |
 | `fuelrod-uploads` | fuelrod | — | Fuelrod uploads |
 
-Application services write logs to Docker stdout. Grafana Alloy discovers the
-Fuelrod, Fees, Fees Dev, and Akilimo containers through the Docker socket and
-forwards their logs to Loki.
+Application services write logs to Docker stdout. Alloy discovers the selected Fuelrod, Fees, Fees Dev, and Akilimo containers through the Docker socket and forwards their logs to Loki. Netdata monitors host and Docker metrics independently.
 
 ---
 
@@ -214,7 +212,7 @@ Each stack has its own `.env` (gitignored) sourced from `.env.example`. Stacks s
 | `cache` | `REDIS_PASSWORD`, `REDIS_DEV_PASSWORD` |
 | `automation` | `POSTGRES_*` (must match databases), n8n runtime settings |
 | `activepieces` | `AP_FRONTEND_URL`, `AP_ENCRYPTION_KEY`, `AP_JWT_SECRET`, `AP_WORKER_TOKEN`, `POSTGRES_*`, optional `REDIS_PASSWORD` |
-| `monitoring` | `GRAFANA_ADMIN_PASSWORD`, `GRAFANA_DOMAIN` |
+| `monitoring` | `LOKI_*`, `NETDATA_*` |
 | `fuelrod` | `FUELROD_TAG`, `FUELROD_DOMAIN`, `PORTAL_DOMAIN`, `GATEWAY_DOMAIN` |
 | `farm` | `FARM_TAG`, `POSTGRES_*`, `JWT_SECRET`, `DEFAULT_PASSWORD` |
 | `akilimo` | `AKILIMO_TAG`, `USE_UPTAKE_TAG`, `AKILIMO_DOMAIN`, `MARIADB_*` |
@@ -371,7 +369,7 @@ Each stack keeps its own Caddyfile. Copy the relevant blocks into the host's glo
 | farm | `stacks/farm/Caddyfile` | `93xx` |
 | fees | `stacks/fees/Caddyfile` | `94xx` |
 | use-uptake | `stacks/use-uptake/Caddyfile` | `95xx` |
-| monitoring | `stacks/monitoring/Caddyfile` | `96xx` |
+| monitoring | Netdata | `stacks/monitoring/Caddyfile` | `19999` |
 | automation | n8n | `stacks/automation/Caddyfile` | `9700` |
 | activepieces | Activepieces app | `stacks/activepieces/Caddyfile` | `9710` |
 
