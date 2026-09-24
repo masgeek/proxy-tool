@@ -91,6 +91,12 @@ services:
       HORIZON_ENABLED: "${HORIZON_ENABLED:-false}"
       SCHEDULER_ENABLED: "${SCHEDULER_ENABLED:-false}"
       LARAVEL_MIGRATE: "${LARAVEL_MIGRATE:-false}"
+      #mail
+      MAIL_MAILER: ${MAIL_MAILER:-n8n-mailer}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-Fee Syncer}
+      N8N_MAILER_AUTH: ${N8N_MAILER_AUTH:-none}
+      N8N_MAILER_URL: ${N8N_MAILER_URL:-}
+      N8N_MAILER_TOKEN: ${N8N_MAILER_TOKEN:-}
 
     deploy:
       resources:
