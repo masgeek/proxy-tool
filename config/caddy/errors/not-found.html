@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Page not found</title>
+	<style>
+		:root { color-scheme: light dark; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+		body { min-height: 100vh; margin: 0; display: grid; place-items: center; background: radial-gradient(circle at 20% 20%, #bfdbfe 0, transparent 35%), radial-gradient(circle at 80% 80%, #a5f3fc 0, transparent 35%), #f0f9ff; color: #172033; }
+		main { width: min(36rem, calc(100% - 3rem)); padding: 3rem; border: 1px solid #7dd3fc; border-radius: 1rem; background: rgb(255 255 255 / 90%); box-shadow: 0 1rem 3rem rgb(180 83 9 / 10%); text-align: center; animation: rise .6s ease-out both; }
+		.illustration { display: block; width: 16rem; height: 10rem; margin: 0 auto 1rem; animation: bob 4s ease-in-out infinite; }
+		.status { margin: 0; color: #0369a1; font-size: 4rem; font-weight: 800; letter-spacing: -.05em; }
+		h1 { margin: .5rem 0; font-size: 1.5rem; } p { margin: 0; color: #667085; line-height: 1.6; }
+		@keyframes bob { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-.5rem) rotate(2deg); } } @keyframes rise { from { opacity: 0; transform: translateY(1rem); } to { opacity: 1; transform: translateY(0); } }
+		@media (prefers-color-scheme: dark) { body { background: #29210d; color: #f3f4f6; } main { border-color: #92400e; background: #3b2d12; box-shadow: none; } p { color: #fcd34d; } .status { color: #fbbf24; } } @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; } }
+	</style>
+</head>
+<body>
+	<main>
+		<svg class="illustration" viewBox="0 0 160 100" role="img" aria-label="A cheerful cloud looking for a missing page"><path fill="#bae6fd" d="M35 76c-15 0-27-10-27-23s10-23 24-24c5-14 18-23 34-23 18 0 33 12 36 29 12 2 21 12 21 23 0 12-10 22-24 22H35z"/><path fill="#7dd3fc" d="M45 71c-9 0-16-6-16-14 0-7 6-13 14-14 4-10 13-16 24-16 12 0 22 8 24 19 8 1 14 7 14 14 0 8-7 14-16 14H45z"/><circle cx="62" cy="53" r="3" fill="#92400e"/><circle cx="88" cy="53" r="3" fill="#92400e"/><path d="M70 64c5-5 11-5 16 0" fill="none" stroke="#92400e" stroke-linecap="round" stroke-width="3"/><path d="m115 28 7-7m-1 14 9-1" fill="none" stroke="#38bdf8" stroke-linecap="round" stroke-width="3"/></svg>
+		<p class="status">404</p><h1>Page not found</h1><p>We could not find the page you requested. Check the address or return to the service home page.</p>
+	</main>
+</body>
+</html>

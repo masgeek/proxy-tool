@@ -1,8 +1,15 @@
 handle_errors {
-	@service_unavailable expression {http.error.status_code} in [502, 503, 504]
-	header Retry-After "120"
+	@bad_gateway expression {http.error.status_code} == 502
+	@service_unavailable expression {http.error.status_code} == 503
+	@gateway_timeout expression {http.error.status_code} == 504
+	@service_error expression {http.error.status_code} in [502, 503, 504]
+	@not_found expression {http.error.status_code} == 404
+	header @service_error Retry-After "120"
 	header X-Request-ID "{http.request.uuid}"
 	root * /var/www/caddy-errors
-	rewrite * /upstream-unavailable.html
+	rewrite @bad_gateway /bad-gateway.html
+	rewrite @service_unavailable /service-unavailable.html
+	rewrite @gateway_timeout /gateway-timeout.html
+	rewrite @not_found /not-found.html
 	file_server
 }
