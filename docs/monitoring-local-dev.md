@@ -1,95 +1,79 @@
 # Local Development — Monitoring Stack
 
-How to run the monitoring stack (Loki, Grafana, Prometheus, Alloy) locally via Dokploy without deploying application services.
+The active monitoring stack is Loki + Alloy for application logs and Netdata for host/container metrics. Grafana and Prometheus are not part of the deployment.
 
 ## Prerequisites
 
-- Dokploy running locally (self-hosted)
-- Ports 9600 (Grafana) and 9090 (Prometheus) available
+- Docker Engine with Docker Compose v2
+- Ports 3100 and 19999 available locally if testing directly
+- A stack `.env` with the Loki and Netdata values from `stacks/monitoring/.env.example`
 
-## 1. Verify Docker socket access
-
-Alloy discovers application containers through the Docker socket. Confirm it
-exists on the deployment host:
+## Deploy the stack
 
 ```bash
-test -S /var/run/docker.sock
+cp stacks/monitoring/.env.example stacks/monitoring/.env
+# Edit the copied file if the defaults need to be changed.
+docker compose -f stacks/monitoring/docker-compose.yml config --quiet
+docker compose -f stacks/monitoring/docker-compose.yml up -d
 ```
 
-## 2. Set environment variables in Dokploy
+The stack requires the external `dokploy-network`; create it first when it does not exist:
 
-In the Dokploy UI, open the monitoring project and set these environment variables:
-
-```
-GRAFANA_ADMIN_USER=admin
-GRAFANA_ADMIN_PASSWORD=admin
+```bash
+docker network create dokploy-network
 ```
 
-## 3. Deploy the stack
+## Access services
 
-In the Dokploy UI:
+| Service | Endpoint | Purpose |
+|---------|----------|---------|
+| Loki | `http://127.0.0.1:3100` | Log storage and LogQL API |
+| Alloy | internal only | Docker log collection and filtering |
+| Netdata | `http://127.0.0.1:19999` | Host and Docker metrics UI |
 
-1. Open the monitoring project
-2. Click **Deploy** on the monitoring compose service
+Use **LokiLens** or `logcli` to query Loki. Grafana is not required.
 
-Monitor deployment logs in the Dokploy UI to confirm all services start.
+## Test log ingestion
 
-## 4. Access services
-
-| Service    | URL                        |
-|------------|----------------------------|
-| Grafana    | http://<your-dokploy-host>:9600      |
-| Prometheus | http://<your-dokploy-host>:9090      |
-
-## 5. Test log ingestion
-
-Application logs are read from Docker stdout. Generate test entries with:
+Generate test entries from an application container:
 
 ```bash
 docker exec fuelrod php artisan tinker --execute="logger()->warning('test fuelrod log line');"
 docker exec fee.prod php artisan tinker --execute="logger()->warning('test fees log line');"
-docker exec fee.dev php artisan tinker --execute="logger()->warning('test fees-dev log line');"
-docker exec akilimo-api php artisan tinker --execute="logger()->warning('test akilimo log line');"
 ```
 
-Wait 5-10 seconds for Alloy to collect the entries, then query in Grafana:
+Wait a few seconds, then query from a machine that can reach Loki:
 
-1. Go to Grafana → **Explore** (left sidebar)
-2. Select **Loki** datasource
-3. Query: `{log_type="container", service_name=~"fuelrod-sms|fees|fees-dev|akilimo"}`
-4. You should see log lines from all four stacks
+```bash
+logcli --addr=http://127.0.0.1:3100 \
+  query '{log_type="container", service_name="fees"}'
+```
 
-## 6. Verify Prometheus targets
+## Tear down
 
-Open `http://<your-dokploy-host>:9090/targets` and confirm:
+```bash
+docker compose -f stacks/monitoring/docker-compose.yml down
+```
 
-- `prometheus` — UP
-- `grafana-alloy` — UP
-- `caddy` — DOWN (expected if Caddy isn't running locally)
-
-## 7. Tear down
-
-In the Dokploy UI:
-
-1. Open the monitoring project
-2. Click **Stop** on the monitoring compose service
+This preserves the named Loki, Alloy, and Netdata volumes. Do not add `--volumes` unless permanent monitoring data should be deleted.
 
 ## Troubleshooting
 
 ### Alloy cannot discover containers
 
-Confirm `/var/run/docker.sock` is mounted in the Alloy container and that Alloy
-can read it. Review the `discovery.docker` component on Alloy's debug page.
-
-### Alloy container exits immediately
-
-Check logs in Dokploy UI or via terminal:
+Confirm `/var/run/docker.sock` exists on the host and is mounted read-only into Alloy. Review the Alloy logs:
 
 ```bash
-docker logs <agent-container-name>
+docker logs grafana-alloy
 ```
 
-Common causes:
-- Missing `LOKI_URL` environment variable
-- Invalid `config.alloy` syntax (check for hyphens in component labels)
-- Docker socket permission or mount errors
+### Loki is unavailable
+
+```bash
+docker ps --filter name=loki
+curl http://127.0.0.1:3100/ready
+```
+
+### Netdata has incomplete host metrics
+
+Netdata requires host PID/network access, host `/proc` and `/sys`, the Docker socket, and `SYS_ADMIN`/`SYS_PTRACE`. Check the container configuration and host mounts if collectors are missing.
