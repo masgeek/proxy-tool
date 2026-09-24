@@ -1,6 +1,6 @@
 # =============================================================================
-# Caddy configuration for Loki Dashboard
-# Copy this block into the host Caddyfile.
+# Caddy configuration for the monitoring stack
+# Copy the Loki Dashboard block into the host Caddyfile.
 #
 # Set these variables in the Caddy service environment before reloading:
 #   LOKI_DASHBOARD_USER=admin
