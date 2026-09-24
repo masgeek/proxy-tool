@@ -1,0 +1,102 @@
+# Common WordPress hardening + static caching + security headers + routing.
+# Assumes `root` and `php_fastcgi` are already set in the site block above this import.
+(wp_common) {
+	encode gzip zstd
+	import security_headers
+
+	@wp_disallowed {
+		path /wp-config.php
+		path /xmlrpc.php
+		path /.htaccess
+		path /.git/*
+		path /wp-content/uploads/*.php
+		path /wp-content/*.log
+		path *.sql
+	}
+	respond @wp_disallowed 403
+
+	@wp_static {
+		file
+		path *.css *.js *.jpg *.jpeg *.png *.gif *.ico *.svg *.webp *.woff *.woff2 *.ttf *.eot *.otf
+	}
+	header @wp_static Cache-Control "public, max-age=31536000, immutable"
+
+	handle @wp_static {
+		cache {
+			allowed_http_verbs GET HEAD
+			default_cache_control "public, max-age=31536000, stale-while-revalidate=2592000, immutable"
+			ttl 8760h
+			stale 720h
+		}
+		file_server
+	}
+
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	try_files {path} {path}/ /index.php?{query}
+	file_server
+}
+
+# Basic disallow list for reverse-proxied (non-PHP) apps.
+(proxy_disallowed_basic) {
+	@disallowed {
+		path /.git/*
+		path *.sql
+	}
+	respond @disallowed "Access Denied" 403
+}
+
+# Fuller disallow list for proxied apps that also happen to sit near PHP/WP artifacts.
+(proxy_disallowed_full) {
+	@disallowed {
+		path /.git/*
+		path *.sql
+		path /xmlrpc.php
+		path_regexp user_ini \.user\.ini
+	}
+	respond @disallowed "Access Denied" 403
+}
+
+# Standard forwarded headers for reverse proxies.
+# Note: Caddy's reverse_proxy already sets X-Forwarded-For, X-Forwarded-Proto,
+# and X-Forwarded-Host automatically — only add headers here that aren't
+# already handled by default.
+(proxy_headers) {
+	header_up Host {host}
+	header_up X-Real-IP {remote_host}
+}
+
+(proxy_headers_port) {
+	import proxy_headers
+	header_up X-Forwarded-Port {server_port}
+}
+
+(proxy_headers_forwarded) {
+	header_up X-Forwarded-Host {host}
+	header_up X-Forwarded-Proto {scheme}
+}
+
+(proxy_headers_forwarded_port) {
+	import proxy_headers_forwarded
+	header_up X-Forwarded-Port {server_port}
+}
+
+(proxy_headers_forwarded_host_proto) {
+	import proxy_headers
+	import proxy_headers_forwarded
+}
+
+(proxy_headers_websocket) {
+	import proxy_headers
+	header_up Connection {>Connection}
+	header_up Upgrade {>Upgrade}
+}
+
+(security_headers) {
+	header Content-Security-Policy "upgrade-insecure-requests"
+}
