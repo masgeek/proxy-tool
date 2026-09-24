@@ -65,11 +65,11 @@ docker network create dokploy-network
 
 Public HTTP services are bound to host ports, usually on `127.0.0.1`. Each stack keeps the relevant routing snippets in `stacks/<name>/Caddyfile`; merge those snippets into the host Caddyfile. For Activepieces, `flow.munywele.co.ke` routes to `127.0.0.1:9710`.
 
-Validate the merged host configuration before reloading it:
+Validate the merged host configuration before restarting it:
 
 ```bash
 caddy validate --config /etc/caddy/Caddyfile
-sudo caddy reload --config /etc/caddy/Caddyfile
+sudo systemctl restart caddy
 ```
 
 ### Bind Mount Paths
@@ -267,12 +267,7 @@ Format / auto-indent the Caddyfile in place:
 caddy fmt --overwrite /etc/caddy/Caddyfile
 ```
 
-Reload config without downtime (no restart needed):
-```bash
-caddy reload --config /etc/caddy/Caddyfile
-```
-
-Restart the Caddy service (when reload is not enough):
+Restart Caddy after validation:
 ```bash
 sudo systemctl restart caddy
 ```
