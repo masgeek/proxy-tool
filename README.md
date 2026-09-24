@@ -1,6 +1,6 @@
 # Proxy Tool — Docker Compose Orchestration
 
-Docker Compose orchestration layer for domain-based routing across multiple independent application stacks on a shared host under **munywele.co.ke**. Reverse proxying and TLS termination are handled by [Dokploy](https://dokploy.com) + Traefik.
+Docker Compose orchestration layer for multiple independent application stacks on a shared host under **munywele.co.ke**. Public HTTP services bind loopback host ports and are routed by host Caddy snippets; TLS termination is handled by Caddy.
 
 ---
 
@@ -9,8 +9,10 @@ Docker Compose orchestration layer for domain-based routing across multiple inde
 ```
 proxy-tool/
 ├── stacks/                    ← one folder per stack, each self-contained
-│   ├── databases/             ← postgres 17, pgbouncer, mariadb, redis  [deploy first]
+│   ├── databases/             ← postgres 17, pgbouncer, mariadb  [deploy first]
+│   ├── cache/                 ← Redis  [deploy before Redis consumers]
 │   ├── automation/            ← n8n
+│   ├── activepieces/          ← Activepieces app + worker
 │   ├── monitoring/            ← Grafana, Prometheus, Loki, Grafana Alloy
 │   ├── fuelrod/               ← Fuelrod service, SMS portal, SMS gateway
 │   ├── farm/                  ← Farm Manager API, web, migrations
@@ -46,8 +48,8 @@ EMQX deployment and WSS proxy routing are documented in
 
 | Network | Scope | Managed by |
 |---|---|---|
-| `dokploy-network` | External — Traefik routes here | Dokploy (created on install) |
-| `internal` | Private — intra-stack only | Docker Compose (per stack) |
+| `dokploy-network` | External — inter-stack communication | Dokploy (created on install) |
+| `internal` | Shared fixed-name network used by multiple stacks | Docker Compose |
 
 Create `dokploy-network` manually when running without Dokploy:
 ```bash
@@ -56,19 +58,14 @@ docker network create dokploy-network
 
 ### Reverse Proxy & TLS
 
-All public traffic flows through Traefik (managed by Dokploy). Each service declares its routing rules and TLS config via Docker labels:
+Public HTTP services are bound to host ports, usually on `127.0.0.1`. Each stack keeps the relevant routing snippets in `stacks/<name>/Caddyfile`; merge those snippets into the host Caddyfile. For Activepieces, `flow.munywele.co.ke` routes to `127.0.0.1:9710`.
 
-```yaml
-labels:
-  - "traefik.enable=true"
-  - "traefik.http.routers.myservice.rule=Host(`myservice.munywele.co.ke`)"
-  - "traefik.http.routers.myservice.entrypoints=websecure"
-  - "traefik.http.routers.myservice.tls=true"
-  - "traefik.http.routers.myservice.tls.certresolver=letsencrypt"
-  - "traefik.http.services.myservice.loadbalancer.server.port=80"
+Validate the merged host configuration before reloading it:
+
+```bash
+caddy validate --config /etc/caddy/Caddyfile
+sudo caddy reload --config /etc/caddy/Caddyfile
 ```
-
-TLS certificates are issued automatically by Let's Encrypt.
 
 ### Bind Mount Paths
 
@@ -93,7 +90,8 @@ On first start (empty data volume) postgres runs `config/init/pgsql/` in sorted 
 
 | Volume | Created by | Consumed by | Purpose |
 |---|---|---|---|
-| `uploads` | fuelrod | farm | User file uploads |
+| `uploads` | farm | — | Farm uploads |
+| `fuelrod-uploads` | fuelrod | — | Fuelrod uploads |
 
 Application services write logs to Docker stdout. Grafana Alloy discovers the
 Fuelrod, Fees, Fees Dev, and Akilimo containers through the Docker socket and
@@ -104,14 +102,13 @@ forwards their logs to Loki.
 ## First-time Setup
 
 ```bash
-# 1. Install Dokploy on the server (creates dokploy-network + Traefik)
+# 1. Install Dokploy on the server (creates dokploy-network)
 curl -sSL https://get.dokploy.com | sh
 
 # 2. Copy and configure env files for each stack
-for stack in databases automation monitoring fuelrod farm akilimo fees sonar metabase mail mqtt; do
+for stack in databases cache activepieces automation monitoring fuelrod farm akilimo fees sonar metabase mail mqtt; do
   cp stacks/$stack/.env.example stacks/$stack/.env
 done
-cp .backup-example .backup
 # Edit each .env — replace all placeholder values and domains
 
 # 3. Deploy stacks in order (see Deployment Order below)
@@ -122,39 +119,34 @@ cp .backup-example .backup
 ## Deployment Order
 
 ```bash
-# 1. Databases — must be first (provides postgres, pgbouncer, mariadb, redis)
+# 1. External network required by the stacks
+docker network create dokploy-network
+
+# 2. Databases — must be first for PostgreSQL/MariaDB consumers
 docker compose -f stacks/databases/docker-compose.yml up -d
 
-# 2. Automation — requires databases
+# 3. Cache — separate Redis stack
+docker compose -f stacks/cache/docker-compose.yml up -d
+
+# 4. Automation / Activepieces
 docker compose -f stacks/automation/docker-compose.yml up -d
+docker compose -f stacks/activepieces/docker-compose.yml up -d
 
-# 3. Monitoring
+# 5. Monitoring and applications
 docker compose -f stacks/monitoring/docker-compose.yml up -d
-
-# 4. Fuelrod — requires databases; creates the shared 'uploads' volume
 docker compose -f stacks/fuelrod/docker-compose.yml up -d
-
-# 5. Farm — requires databases + fuelrod (uses 'uploads' volume)
 docker compose -f stacks/farm/docker-compose.yml up -d
-
-# 6. Akilimo — requires databases (MariaDB)
 docker compose -f stacks/akilimo/docker-compose.yml up -d
-
-# 7. Fees — requires databases
 docker compose -f stacks/fees/docker-compose.yml up -d
-
-# Optional tooling — deploy independently as needed
-docker compose -f stacks/sonar/docker-compose.yml up -d
-docker compose -f stacks/metabase/docker-compose.yml up -d
-docker compose -f stacks/mail/docker-compose.yml up -d
-docker compose -f stacks/mqtt/docker-compose.yml up -d
 ```
+
+`activepieces` must exist in PostgreSQL before starting the Activepieces stack. Adding it to `ADDITIONAL_DBS` only creates it when `pgdata-main` is empty; on an existing database volume, create it explicitly with the shared PostgreSQL owner.
 
 ---
 
 ## Accessing Internal Tools via SSH Tunnel
 
-**Adminer**, **RedisInsight**, and **Dozzle** are not exposed through Traefik. They bind only to `127.0.0.1` on the server and are accessed by forwarding a local port over SSH. This means no public URL, no TLS cert needed, and no risk of accidental exposure.
+**Adminer**, **RedisInsight**, and **Dozzle** are not exposed through Caddy. They bind only to `127.0.0.1` on the server and are accessed by forwarding a local port over SSH. This means no public URL or TLS certificate is needed.
 
 ### Bring up the stack
 
@@ -218,8 +210,10 @@ Each stack has its own `.env` (gitignored) sourced from `.env.example`. Stacks s
 
 | Stack | Key variables |
 |---|---|
-| `databases` | `POSTGRES_USER/PASSWORD/DB`, `ADDITIONAL_DBS`, `MARIADB_*`, `REDIS_PASSWORD` |
-| `automation` | `POSTGRES_*` (must match databases), `N8N_DOMAIN` |
+| `databases` | `POSTGRES_USER/PASSWORD/DB`, `ADDITIONAL_DBS`, `MARIADB_*` |
+| `cache` | `REDIS_PASSWORD`, `REDIS_DEV_PASSWORD` |
+| `automation` | `POSTGRES_*` (must match databases), n8n runtime settings |
+| `activepieces` | `AP_FRONTEND_URL`, `AP_ENCRYPTION_KEY`, `AP_JWT_SECRET`, `AP_WORKER_TOKEN`, `POSTGRES_*`, optional `REDIS_PASSWORD` |
 | `monitoring` | `GRAFANA_ADMIN_PASSWORD`, `GRAFANA_DOMAIN` |
 | `fuelrod` | `FUELROD_TAG`, `FUELROD_DOMAIN`, `PORTAL_DOMAIN`, `GATEWAY_DOMAIN` |
 | `farm` | `FARM_TAG`, `POSTGRES_*`, `JWT_SECRET`, `DEFAULT_PASSWORD` |
@@ -235,36 +229,7 @@ Each stack has its own `.env` (gitignored) sourced from `.env.example`. Stacks s
 
 ## Backup & Restore
 
-```bash
-# Full automated backup (n8n → postgres → mariadb → Google Drive sync)
-./autobackup.sh
-
-# PostgreSQL — all databases, compressed, keep 7 days
-cd fuelrod-backup && poetry run fuelrod-backup backup --db-type postgres --compress --keep-days 7
-
-# PostgreSQL — specific databases and schemas
-cd fuelrod-backup && poetry run fuelrod-backup backup --db-type postgres --db mydb --schemas public,audit --compress
-
-# PostgreSQL restore
-cd fuelrod-backup && poetry run fuelrod-backup restore --db-type postgres
-
-# MariaDB backup / restore
-cd fuelrod-backup && poetry run fuelrod-backup backup --db-type mariadb
-cd fuelrod-backup && poetry run fuelrod-backup restore --db-type mariadb
-
-# Google Drive sync only (dry run first)
-./gbk.sh --dry-run && ./gbk.sh
-```
-
----
-
-## Data Migration (MySQL → PostgreSQL)
-
-```bash
-./migration/batch-exporter.sh    # Export MySQL tables to CSV
-./migration/execute-loads.sh     # Load CSVs into PostgreSQL via pgloader
-./migration/import_csv_to_pg.sh  # Direct CSV import
-```
+The repository does not contain an active backup or migration toolchain. Use the database tooling appropriate for the deployment, and keep PostgreSQL/MariaDB backups outside Git. Never commit backup data or credentials.
 
 ---
 
@@ -399,15 +364,16 @@ sudo find /data/extra_storage/services/agwise -type f -exec chmod 644 {} \;
 
 Each stack keeps its own Caddyfile. Copy the relevant blocks into the host's global Caddyfile.
 
-| Stack | Caddyfile | Port range |
-|---|---|---|
+| Stack | Service | Caddyfile | Port |
+|---|---|---|---|
 | akilimo | `stacks/akilimo/Caddyfile` | `90xx` (PHP-FPM), `91xx` (API) |
 | fuelrod | `stacks/fuelrod/Caddyfile` | `92xx` |
 | farm | `stacks/farm/Caddyfile` | `93xx` |
 | fees | `stacks/fees/Caddyfile` | `94xx` |
 | use-uptake | `stacks/use-uptake/Caddyfile` | `95xx` |
 | monitoring | `stacks/monitoring/Caddyfile` | `96xx` |
-| automation | `stacks/automation/Caddyfile` | `97xx` |
+| automation | n8n | `stacks/automation/Caddyfile` | `9700` |
+| activepieces | Activepieces app | `stacks/activepieces/Caddyfile` | `9710` |
 
 ---
 
