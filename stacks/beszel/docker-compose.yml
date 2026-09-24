@@ -39,7 +39,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: ${BESZEL_HUB_MEMORY_LIMIT:-512m}
+          memory: 512m
           cpus: "${BESZEL_HUB_CPU_LIMIT:-0.5}"
 
   agent:
@@ -69,5 +69,5 @@ services:
     deploy:
       resources:
         limits:
-          memory: ${BESZEL_AGENT_MEMORY_LIMIT:-128m}
+          memory: 128m
           cpus: "${BESZEL_AGENT_CPU_LIMIT:-0.25}"

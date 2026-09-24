@@ -35,6 +35,7 @@ services:
     volumes:
       - fuelrod-uploads:/var/www/html/fuelrod/public/uploads
       - fuelrod-migration:/var/www/html/fuelrod/storage/app/migration
+    mem_limit: 256m
 
 
   fuelrod:

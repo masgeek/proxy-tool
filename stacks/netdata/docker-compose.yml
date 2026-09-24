@@ -38,7 +38,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: ${NETDATA_MEMORY_LIMIT:-512m}
+          memory: 512m
           cpus: "${NETDATA_CPU_LIMIT:-0.5}"
 
 volumes:

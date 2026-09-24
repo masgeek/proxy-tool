@@ -45,7 +45,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: ${MQTT_MEMORY_LIMIT:-1g}
+          memory: 1g
           cpus: "${MQTT_CPU_LIMIT:-1.0}"
     healthcheck:
       test: ["CMD", "emqx", "ctl", "status"]

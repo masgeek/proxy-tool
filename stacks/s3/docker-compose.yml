@@ -52,6 +52,7 @@ services:
     command: ["chown -R alarik:alarik /app/Storage"]
     volumes:
       - s3-data:/app/Storage
+    mem_limit: 256m
     networks:
       - internal
 
