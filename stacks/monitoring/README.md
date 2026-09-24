@@ -11,7 +11,7 @@ This stack runs Grafana, Prometheus, Loki, and Alloy.
 
 ```bash
 cp .env.example .env
-# Set GRAFANA_ADMIN_USER and GRAFANA_ADMIN_PASSWORD.
+# Set GRAFANA_ADMIN_USER, GRAFANA_ADMIN_PASSWORD, POSTGRES_USER, POSTGRES_PASSWORD, and REDIS_PASSWORD.
 docker compose --env-file .env config --quiet
 docker compose up -d
 ```
@@ -28,4 +28,8 @@ curl http://127.0.0.1:9600/api/health
 
 Loki retention is `48h` by default. Alloy drops health-check requests, favicon requests, and log lines over `32 KB` before ingestion.
 
+Preloaded dashboards include Application Logs, Caddy, Prometheus, Loki Health, Docker Containers, PostgreSQL, and Redis Cache.
+
 Prometheus, Grafana, and Loki retain their named volumes. Do not add `--volumes` during normal teardown.
+
+The Docker dashboard uses privileged cAdvisor. The PostgreSQL exporter uses the shared database credentials, and the Redis exporter uses the production cache password.

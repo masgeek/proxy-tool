@@ -172,6 +172,78 @@ services:
           memory: 256m
           cpus: "0.25"
 
+  cadvisor:
+    image: ghcr.io/google/cadvisor:${CADVISOR_TAG:-v0.60.5}
+    container_name: cadvisor
+    hostname: cadvisor
+    restart: unless-stopped
+    privileged: true
+    pid: host
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - internal
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "2"
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          cpus: "0.25"
+
+  postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:${POSTGRES_EXPORTER_TAG:-v0.17.1}
+    container_name: postgres-exporter
+    hostname: postgres-exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_URI: ${POSTGRES_EXPORTER_URI:-postgres:5432/postgres?sslmode=disable}
+      DATA_SOURCE_USER: ${POSTGRES_USER:?POSTGRES_USER must be set}
+      DATA_SOURCE_PASS: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+    networks:
+      - internal
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "2"
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+          cpus: "0.1"
+
+  redis-exporter:
+    image: oliver006/redis_exporter:${REDIS_EXPORTER_TAG:-v1.86.0}
+    container_name: redis-exporter
+    hostname: redis-exporter
+    restart: unless-stopped
+    environment:
+      REDIS_ADDR: cache:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    networks:
+      - internal
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "2"
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+          cpus: "0.1"
+
   agent:
     image: grafana/alloy:latest
     container_name: grafana-alloy

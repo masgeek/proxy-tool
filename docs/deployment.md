@@ -106,7 +106,7 @@ Merge the relevant stack snippet into the host Caddyfile. Activepieces uses:
 flow.munywele.co.ke → 127.0.0.1:9710
 ```
 
-The monitoring stack uses Grafana, Prometheus, Loki, and Alloy. Grafana provides the browser UI for Loki logs at `logs.munywele.co.ke` through the Caddy snippet, while the separate `stacks/netdata/` stack monitors host and container metrics.
+The monitoring stack uses Grafana, Prometheus, Loki, Alloy, cAdvisor, PostgreSQL Exporter, and Redis Exporter. Set `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `REDIS_PASSWORD` in `stacks/monitoring/.env` to enable the database/cache dashboards. Grafana provides the browser UI for Loki logs at `logs.munywele.co.ke` through the Caddy snippet, while the separate `stacks/netdata/` stack monitors host and container metrics.
 
 Validate before reloading:
 

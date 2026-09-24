@@ -25,6 +25,7 @@
 - Explicit container, network, and volume names bypass Compose project isolation; do not assume parallel copies of a stack are safe.
 - Application logs are emitted to Docker stdout and collected by Alloy into Loki. Farm's `uploads` and Fuelrod's `fuelrod-uploads` remain separate data volumes. The separate Netdata stack handles host and container metrics; it does not replace Loki.
 - Netdata uses host PID/network access, the Docker socket, `SYS_ADMIN`, and `SYS_PTRACE`; its web listener is constrained to `127.0.0.1` and exposed publicly only through Caddy.
+- The monitoring stack includes privileged cAdvisor; its Docker and host mounts are intentional and should not be removed without replacing the container dashboard.
 - Grafana is the browser UI for Loki logs; its Caddy route is `logs.munywele.co.ke` and the app is bound to `127.0.0.1:9600`.
 - Do not assume host ports are private: PostgreSQL `5432`, MariaDB `3306`, MSSQL `1433`, and Mailpit SMTP `1025` currently bind all interfaces.
 

@@ -1,0 +1,17 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "graphTooltip": 1,
+  "panels": [
+    {"id": 1, "type": "timeseries", "title": "Container CPU", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "fieldConfig": {"defaults": {"unit": "percentunit"}, "overrides": []}, "targets": [{"expr": "sum(rate(container_cpu_usage_seconds_total{container!=\"\",image!=\"\"}[5m])) by (name)", "legendFormat": "{{name}}", "refId": "A"}]},
+    {"id": 2, "type": "timeseries", "title": "Container Memory", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "fieldConfig": {"defaults": {"unit": "bytes"}, "overrides": []}, "targets": [{"expr": "sum(container_memory_usage_bytes{container!=\"\",image!=\"\"}) by (name)", "legendFormat": "{{name}}", "refId": "A"}]},
+    {"id": 3, "type": "timeseries", "title": "Network Receive", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "fieldConfig": {"defaults": {"unit": "Bps"}, "overrides": []}, "targets": [{"expr": "sum(rate(container_network_receive_bytes_total{container!=\"\",image!=\"\"}[5m])) by (name)", "legendFormat": "{{name}}", "refId": "A"}]},
+    {"id": 4, "type": "timeseries", "title": "Filesystem Reads", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "fieldConfig": {"defaults": {"unit": "Bps"}, "overrides": []}, "targets": [{"expr": "sum(rate(container_fs_reads_bytes_total{container!=\"\",image!=\"\"}[5m])) by (name)", "legendFormat": "{{name}}", "refId": "A"}]}
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["docker", "containers"],
+  "time": {"from": "now-6h", "to": "now"},
+  "title": "Docker Containers",
+  "uid": "docker-containers"
+}
