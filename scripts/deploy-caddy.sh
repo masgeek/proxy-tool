@@ -21,43 +21,7 @@ if [ ! -f "$source_dir/Caddyfile" ]; then
 fi
 
 stage_dir=$(mktemp -d)
-deployment_started=false
-backup_created=false
-had_snippets=false
-
-rollback() {
-    status=$?
-    trap - EXIT
-    set +e
-
-    if [ "$deployment_started" = true ] && [ "$backup_created" = true ]; then
-        restore_dir=$(mktemp -d)
-        tar -xzf "$backup_path" -C "$restore_dir"
-        rm -f "$target_dir/Caddyfile"
-        if [ -f "$restore_dir/Caddyfile" ]; then
-            cp -a "$restore_dir/Caddyfile" "$target_dir/Caddyfile"
-        fi
-        if [ "$had_snippets" = true ] && [ -d "$restore_dir/snippets" ]; then
-            rm -rf "$target_dir/snippets"
-            cp -a "$restore_dir/snippets" "$target_dir/snippets"
-        elif [ "$had_snippets" = false ]; then
-            rm -rf "$target_dir/snippets"
-        fi
-
-        if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet caddy; then
-            systemctl reload caddy
-        else
-            caddy reload --config "$target_dir/Caddyfile"
-        fi
-        printf 'Deployment failed; restored backup: %s\n' "$backup_path" >&2
-        rm -rf "$restore_dir"
-    fi
-
-    rm -rf "$stage_dir"
-    exit "$status"
-}
-
-trap rollback EXIT
+trap 'rm -rf "$stage_dir"' EXIT
 cp -a "$source_dir"/. "$stage_dir"/
 
 caddy validate --config "$stage_dir/Caddyfile"
@@ -74,17 +38,14 @@ if [ -f "$target_dir/Caddyfile" ]; then
 fi
 if [ -d "$target_dir/snippets" ]; then
     backup_paths+=(snippets)
-    had_snippets=true
 fi
 if [ "${#backup_paths[@]}" -gt 0 ]; then
     tar -czf "$backup_path" -C "$target_dir" "${backup_paths[@]}"
-    backup_created=true
     printf 'Backup created: %s\n' "$backup_path"
 else
     printf '%s\n' 'No existing Caddyfile found; skipping backup.'
 fi
 
-deployment_started=true
 cp -a "$stage_dir"/. "$target_dir"/
 
 if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet caddy; then
@@ -93,5 +54,4 @@ else
     caddy reload --config "$target_dir/Caddyfile"
 fi
 
-deployment_started=false
 printf 'Caddy deployed successfully from %s\n' "$source_dir"
