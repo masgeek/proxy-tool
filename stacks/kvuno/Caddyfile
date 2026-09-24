@@ -4,10 +4,10 @@
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# kvuno API — api.kvuno.example.com
+# kvuno API — kvuno.agwise.org
 # HTTP reverse proxy to the kvuno container on 127.0.0.1:9800
 # -----------------------------------------------------------------------------
-kvuno.example.com {
+kvuno.agwise.org {
         tls dev@munywele.co.ke
 
         log {
@@ -19,9 +19,7 @@ kvuno.example.com {
         encode zstd gzip
 
         reverse_proxy 127.0.0.1:9800 {
-                header_up Host                {host}
-                header_up X-Real-IP           {remote_host}
-                header_up X-Forwarded-Port    {server_port}
+                import proxy_headers_port
 
                 transport http {
                         dial_timeout            1800s
