@@ -8,6 +8,7 @@
 akilimo-hub.eastus.cloudapp.azure.com, dokploy.munywele.co.ke, dokploy.akilimo.org {
 	encode gzip zstd
 	import ../headers/security-headers.caddy
+	import ../errors.caddy
 
 	handle /logs* {
 		reverse_proxy 127.0.0.1:9999
@@ -31,6 +32,7 @@ akilimo.org {
 	}
 	import ../wp-common.caddy
 	import ../headers/security-headers.caddy
+	import ../errors.caddy
 
 	log {
 		output file /var/log/caddy/akilimo.org.log
@@ -49,6 +51,7 @@ portal.akilimo.org {
 	}
 	import ../wp-common.caddy
 	import ../headers/security-headers.caddy
+	import ../errors.caddy
 
 	log {
 		output file /var/log/caddy/portal.akilimo.org.log
@@ -69,6 +72,7 @@ new.akilimo.org {
 	}
 	import ../wp-common.caddy
 	import ../headers/security-headers.caddy
+	import ../errors.caddy
 
 	log {
 		output file /var/log/caddy/new-akilimo.log
@@ -86,6 +90,7 @@ app.akilimo.org, dev.akilimo.org {
 	encode gzip zstd
 	import ../disallowed-full.caddy
 	import ../headers/security-headers.caddy
+	import ../errors.caddy
 
 	reverse_proxy 127.0.0.1:9100 {
 		import ../headers/proxy-headers.caddy
@@ -112,6 +117,7 @@ api.akilimo.org {
 	encode gzip
 	import ../disallowed-full.caddy
 	import ../headers/security-headers.caddy
+	import ../errors.caddy
 
 	rewrite * /api{uri}
 
@@ -139,6 +145,7 @@ uptake.akilimo.org {
 	encode gzip zstd
 	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
+	import ../errors.caddy
 	reverse_proxy 127.0.0.1:9500 {
 		import ../headers/proxy-headers.caddy
 	}
@@ -156,6 +163,7 @@ geo.akilimo.org {
 	encode gzip zstd
 	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
+	import ../errors.caddy
 	cache {
 		allowed_http_verbs GET HEAD
 		default_cache_control "public, max-age=86400, stale-while-revalidate=604800, immutable"
@@ -176,6 +184,7 @@ stats.akilimo.org {
 	encode gzip zstd
 	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
+	import ../errors.caddy
 	cache {
 		allowed_http_verbs GET HEAD
 		default_cache_control "public, max-age=300, stale-while-revalidate=1800"
