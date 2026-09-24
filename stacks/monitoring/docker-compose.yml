@@ -208,8 +208,8 @@ services:
     restart: unless-stopped
     environment:
       DATA_SOURCE_URI: ${POSTGRES_EXPORTER_URI:-postgres:5432/postgres?sslmode=disable}
-      DATA_SOURCE_USER: ${POSTGRES_USER:?POSTGRES_USER must be set}
-      DATA_SOURCE_PASS: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      DATA_SOURCE_USER: ${DB_USERNAME:?DB_USERNAME must be set}
+      DATA_SOURCE_PASS: ${DB_PASSWORD:?DB_PASSWORD must be set}
     networks:
       - internal
     logging:
