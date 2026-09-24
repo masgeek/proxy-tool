@@ -1,0 +1,27 @@
+# =============================================================================
+# Caddy configuration for Loki Dashboard
+# Copy this block into the host Caddyfile.
+#
+# Set these variables in the Caddy service environment before reloading:
+#   LOKI_DASHBOARD_USER=admin
+#   LOKI_DASHBOARD_PASSWORD_HASH=<bcrypt hash>
+#
+# Generate the hash on the host with:
+#   caddy hash-password --plaintext 'your-password'
+# =============================================================================
+
+logs.munywele.co.ke {
+        tls dev@munywele.co.ke
+
+        log {
+                output file /var/log/caddy/loki-dashboard.log
+                format console
+                level info
+        }
+
+        basic_auth {
+                {$LOKI_DASHBOARD_USER} {$LOKI_DASHBOARD_PASSWORD_HASH}
+        }
+
+        reverse_proxy 127.0.0.1:9610
+}
