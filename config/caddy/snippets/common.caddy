@@ -1,3 +1,7 @@
+(security_headers) {
+	header Content-Security-Policy "upgrade-insecure-requests"
+}
+
 # Common WordPress hardening + static caching + security headers + routing.
 # Assumes `root` and `php_fastcgi` are already set in the site block above this import.
 (wp_common) {
@@ -95,8 +99,4 @@
 	import proxy_headers
 	header_up Connection {>Connection}
 	header_up Upgrade {>Upgrade}
-}
-
-(security_headers) {
-	header Content-Security-Policy "upgrade-insecure-requests"
 }
