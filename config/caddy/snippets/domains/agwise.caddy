@@ -39,7 +39,6 @@ ragapi.agwise.org {
 
 	reverse_proxy 127.0.0.1:8002 {
 		import ../headers/proxy-headers.caddy
-		import ../upstream-errors.caddy
 	}
 
 	log {
@@ -57,7 +56,6 @@ api.agwise.org {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:8000 {
 		import ../headers/proxy-headers.caddy
-		import ../upstream-errors.caddy
 	}
 	log {
 		output file /var/log/caddy/agwise-api.log
@@ -74,7 +72,6 @@ dashboard.agwise.org {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:8300 {
 		import ../headers/proxy-headers.caddy
-		import ../upstream-errors.caddy
 	}
 	log {
 		output file /var/log/caddy/agwise-dashboard.log
@@ -91,7 +88,6 @@ kvuno.agwise.org {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:9800 {
 		import ../headers/proxy-headers.caddy
-		import ../upstream-errors.caddy
 	}
 	log {
 		output file /var/log/caddy/kvuno.log

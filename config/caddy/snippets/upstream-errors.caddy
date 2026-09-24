@@ -1,8 +1,0 @@
-@bad_gateway status 502
-handle_response @bad_gateway {
-	header Retry-After "120"
-	header X-Request-ID "{http.request.uuid}"
-	rewrite * /bad-gateway.html
-	root * /var/www/caddy-errors
-	file_server
-}
