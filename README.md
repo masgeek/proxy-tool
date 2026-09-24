@@ -208,6 +208,15 @@ Then just run `ssh munywele-tools` and all ports are forwarded automatically.
 
 ---
 
+## Stack Setup Guides
+
+Use the stack-local guide when configuring or troubleshooting a specific stack:
+
+- [Activepieces](stacks/activepieces/README.md) — app/worker split, database setup, secrets, and worker token.
+- [Beszel](stacks/beszel/README.md) — hub/agent setup, key/token generation, and access.
+- [Netdata](stacks/netdata/README.md) — host metrics, privileged mounts, and Caddy access.
+- [Monitoring](stacks/monitoring/README.md) — Grafana, Prometheus, Loki, Alloy, and log UI.
+
 ## Environment Files
 
 Each stack has its own `.env` (gitignored) sourced from `.env.example`. Stacks sharing postgres credentials must use matching values — copy from `stacks/databases/.env`.
