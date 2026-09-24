@@ -90,11 +90,10 @@ The app publishes `127.0.0.1:9710`; the worker has no published port.
 
 ## Beszel
 
-The standalone Beszel stack runs the hub on `127.0.0.1:9625` and an agent internally. Start the hub first, open `http://127.0.0.1:9625` through an SSH tunnel, and use **Add System** to obtain the agent's public `KEY`. Create or copy a token from **Settings → Tokens**. Put both values in `stacks/beszel/.env` before starting the agent:
+The standalone Beszel stack runs the hub on `127.0.0.1:9625` and an agent internally. Start the hub first, open `http://127.0.0.1:9625` through an SSH tunnel, create a universal token under **Settings → Tokens**, and set it in `stacks/beszel/.env`. The agent auto-registers with the hub and does not require a per-system public key:
 
 ```dotenv
-BESZEL_KEY=<public key from Add System>
-BESZEL_TOKEN=<token from Settings → Tokens>
+BESZEL_UNIVERSAL_TOKEN=<token from Settings → Tokens>
 ```
 
 The hub UI can also be exposed at `beszel.munywele.co.ke` using `stacks/beszel/Caddyfile`.

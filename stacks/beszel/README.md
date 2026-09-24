@@ -24,9 +24,9 @@ This stack runs the Beszel hub and host agent. The hub UI is bound to `127.0.0.1
 
    Open `http://127.0.0.1:9625` locally.
 
-4. In the hub, use **Add System** to obtain the agent public `KEY`.
-5. Create or copy an agent token from **Settings → Tokens**.
-6. Set `BESZEL_KEY` and `BESZEL_TOKEN` in `.env`, then start the agent:
+4. In the hub, open **Settings → Tokens** and create a universal token.
+5. Set `BESZEL_UNIVERSAL_TOKEN` in `.env`. The agent will auto-register without a per-system key.
+6. Start the agent:
 
    ```bash
    docker compose up -d agent
