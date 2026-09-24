@@ -73,6 +73,12 @@ services:
       GEOSERVER_BASE: ${GEOSERVER_BASE:-https://geo.akilimo.org/geoserver}
     ports:
       - "127.0.0.1:9511:5001"
+    mem_limit: 512m
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "1.0"
     networks:
       - dokploy-network
       - internal
