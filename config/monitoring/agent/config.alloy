@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------------
 // Grafana Alloy — central log collection agent
-// Collects application container logs and pushes them to Loki.
+// Collects application container logs and pushes them to Loki for ingestions.
 // ---------------------------------------------------------------------------
 
 discovery.docker "applications" {
