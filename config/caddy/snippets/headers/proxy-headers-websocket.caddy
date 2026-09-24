@@ -1,0 +1,4 @@
+header_up Host {host}
+header_up X-Real-IP {remote_host}
+header_up Connection {>Connection}
+header_up Upgrade {>Upgrade}

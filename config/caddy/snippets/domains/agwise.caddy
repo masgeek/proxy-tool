@@ -12,7 +12,7 @@ agwise.org {
 	root * /data/extra_storage/services/agwise_site
 	php_fastcgi unix//run/php/php8.4-fpm.sock
 	import wp_common
-	import security_headers
+	import ../headers/security-headers.caddy
 
 	log {
 		output file /var/log/caddy/agwise.org.log
@@ -23,7 +23,7 @@ agwise.org {
 
 # Old staging hostname — redirect to the live domain instead of duplicating config.
 new.agwise.org {
-	import security_headers
+	import ../headers/security-headers.caddy
 	redir https://agwise.org{uri} permanent
 }
 
@@ -32,10 +32,10 @@ ragapi.agwise.org {
 	tls agwise@akilimo.org
 	encode gzip zstd
 	import proxy_disallowed_basic
-	import security_headers
+	import ../headers/security-headers.caddy
 
 	reverse_proxy 127.0.0.1:8002 {
-		import proxy_headers
+		import ../headers/proxy-headers.caddy
 	}
 
 	log {
@@ -49,9 +49,9 @@ api.agwise.org {
 	tls agwise@akilimo.org
 	encode gzip zstd
 	import proxy_disallowed_basic
-	import security_headers
+	import ../headers/security-headers.caddy
 	reverse_proxy 127.0.0.1:8000 {
-		import proxy_headers
+		import ../headers/proxy-headers.caddy
 	}
 	log {
 		output file /var/log/caddy/agwise-api.log
@@ -64,9 +64,9 @@ dashboard.agwise.org {
 	tls agwise@akilimo.org
 	encode gzip zstd
 	import proxy_disallowed_basic
-	import security_headers
+	import ../headers/security-headers.caddy
 	reverse_proxy 127.0.0.1:8300 {
-		import proxy_headers
+		import ../headers/proxy-headers.caddy
 	}
 	log {
 		output file /var/log/caddy/agwise-dashboard.log
@@ -79,9 +79,9 @@ kvuno.agwise.org {
 	tls agwise@akilimo.org
 	encode gzip zstd
 	import proxy_disallowed_basic
-	import security_headers
+	import ../headers/security-headers.caddy
 	reverse_proxy 127.0.0.1:9800 {
-		import proxy_headers
+		import ../headers/proxy-headers.caddy
 	}
 	log {
 		output file /var/log/caddy/kvuno.log

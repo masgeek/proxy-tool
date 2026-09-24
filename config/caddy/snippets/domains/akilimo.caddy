@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 akilimo-hub.eastus.cloudapp.azure.com, dokploy.munywele.co.ke, dokploy.akilimo.org {
 	encode gzip zstd
-	import security_headers
+	import ../headers/security-headers.caddy
 
 	handle /logs* {
 		reverse_proxy 127.0.0.1:9999
@@ -15,7 +15,7 @@ akilimo-hub.eastus.cloudapp.azure.com, dokploy.munywele.co.ke, dokploy.akilimo.o
 
 	handle {
 		reverse_proxy 127.0.0.1:3000 {
-			import proxy_headers
+			import ../headers/proxy-headers.caddy
 		}
 	}
 }
@@ -30,7 +30,7 @@ akilimo.org {
 		root /var/www/html
 	}
 	import wp_common
-	import security_headers
+	import ../headers/security-headers.caddy
 
 	log {
 		output file /var/log/caddy/akilimo.org.log
@@ -48,7 +48,7 @@ portal.akilimo.org {
 		root /var/www/html
 	}
 	import wp_common
-	import security_headers
+	import ../headers/security-headers.caddy
 
 	log {
 		output file /var/log/caddy/portal.akilimo.org.log
@@ -68,7 +68,7 @@ new.akilimo.org {
 		root /var/www/html
 	}
 	import wp_common
-	import security_headers
+	import ../headers/security-headers.caddy
 
 	log {
 		output file /var/log/caddy/new-akilimo.log
@@ -85,10 +85,10 @@ app.akilimo.org, dev.akilimo.org {
 	tls akilimo@cgiar.org
 	encode gzip zstd
 	import proxy_disallowed_full
-	import security_headers
+	import ../headers/security-headers.caddy
 
 	reverse_proxy 127.0.0.1:9100 {
-		import proxy_headers
+		import ../headers/proxy-headers.caddy
 
 		transport http {
 			dial_timeout 1800s
@@ -111,12 +111,12 @@ api.akilimo.org {
 	tls akilimo@cgiar.org
 	encode gzip
 	import proxy_disallowed_full
-	import security_headers
+	import ../headers/security-headers.caddy
 
 	rewrite * /api{uri}
 
 	reverse_proxy 127.0.0.1:9100 {
-		import proxy_headers_port
+		import ../headers/proxy-headers-port.caddy
 
 		transport http {
 			dial_timeout 1800s
@@ -138,9 +138,9 @@ uptake.akilimo.org {
 	tls akilimo@cgiar.org
 	encode gzip zstd
 	import proxy_disallowed_basic
-	import security_headers
+	import ../headers/security-headers.caddy
 	reverse_proxy 127.0.0.1:9500 {
-		import proxy_headers
+		import ../headers/proxy-headers.caddy
 	}
 	log {
 		output file /var/log/caddy/use-uptake.log
@@ -155,7 +155,7 @@ geo.akilimo.org {
 	tls akilimo@cgiar.org
 	encode gzip zstd
 	import proxy_disallowed_basic
-	import security_headers
+	import ../headers/security-headers.caddy
 	cache {
 		allowed_http_verbs GET HEAD
 		default_cache_control "public, max-age=86400, stale-while-revalidate=604800, immutable"
@@ -163,7 +163,7 @@ geo.akilimo.org {
 		stale 168h
 	}
 	reverse_proxy 127.0.0.1:9510 {
-		import proxy_headers
+		import ../headers/proxy-headers.caddy
 	}
 	log {
 		output file /var/log/caddy/geo-server.log
@@ -175,7 +175,7 @@ stats.akilimo.org {
 	tls akilimo@cgiar.org
 	encode gzip zstd
 	import proxy_disallowed_basic
-	import security_headers
+	import ../headers/security-headers.caddy
 	cache {
 		allowed_http_verbs GET HEAD
 		default_cache_control "public, max-age=300, stale-while-revalidate=1800"
@@ -183,7 +183,7 @@ stats.akilimo.org {
 		stale 30m
 	}
 	reverse_proxy 127.0.0.1:9511 {
-		import proxy_headers
+		import ../headers/proxy-headers.caddy
 	}
 	log {
 		output file /var/log/caddy/stats-api.log
