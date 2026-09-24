@@ -95,7 +95,7 @@ Merge the relevant stack snippet into the host Caddyfile. Activepieces uses:
 flow.munywele.co.ke → 127.0.0.1:9710
 ```
 
-The monitoring stack uses Loki, Alloy, and the Loki Dashboard browser UI for application logs. The dashboard connects to `http://loki:3100` over `dokploy-network` and is published on `127.0.0.1:9610`; expose it through the authenticated `logs.munywele.co.ke` Caddy snippet. The separate `stacks/netdata/` stack monitors host and container metrics.
+The monitoring stack uses Grafana, Prometheus, Loki, and Alloy. Grafana provides the browser UI for Loki logs at `logs.munywele.co.ke` through the Caddy snippet, while the separate `stacks/netdata/` stack monitors host and container metrics.
 
 Validate before reloading:
 

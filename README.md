@@ -13,7 +13,7 @@ proxy-tool/
 │   ├── cache/                 ← Redis  [deploy before Redis consumers]
 │   ├── automation/            ← n8n
 │   ├── activepieces/          ← Activepieces app + worker
-│   ├── monitoring/            ← Loki, Alloy, and Loki Dashboard
+│   ├── monitoring/            ← Grafana, Prometheus, Loki, Alloy
 │   ├── netdata/               ← Netdata host/container metrics
 │   ├── fuelrod/               ← Fuelrod service, SMS portal, SMS gateway
 │   ├── farm/                  ← Farm Manager API, web, migrations
@@ -28,7 +28,7 @@ proxy-tool/
 ├── config/
 │   ├── supervisor/            ← Supervisor process configs (common/, fuelrod/, fees/, akilimo/)
 │   ├── nginx/                 ← NGINX configs
-│   ├── monitoring/            ← Loki, Alloy, and Loki Dashboard
+│   ├── monitoring/            ← Grafana, Prometheus, Loki, Alloy
 │   ├── netdata/               ← Netdata host/container metrics
 │   └── init/pgsql/            ← PostgreSQL init scripts (run on first container start)
 ├── log/
@@ -215,7 +215,7 @@ Each stack has its own `.env` (gitignored) sourced from `.env.example`. Stacks s
 | `cache` | `REDIS_PASSWORD`, `REDIS_DEV_PASSWORD` |
 | `automation` | `POSTGRES_*` (must match databases), n8n runtime settings |
 | `activepieces` | `AP_FRONTEND_URL`, `AP_ENCRYPTION_KEY`, `AP_JWT_SECRET`, `AP_WORKER_TOKEN`, `POSTGRES_*`, optional `REDIS_PASSWORD` |
-| `monitoring` | `LOKI_*`, `LOKI_DASHBOARD_*` |
+| `monitoring` | `GRAFANA_*`, `LOKI_*` |
 | `netdata` | `NETDATA_*` |
 | `fuelrod` | `FUELROD_TAG`, `FUELROD_DOMAIN`, `PORTAL_DOMAIN`, `GATEWAY_DOMAIN` |
 | `farm` | `FARM_TAG`, `POSTGRES_*`, `JWT_SECRET`, `DEFAULT_PASSWORD` |
@@ -373,7 +373,7 @@ Each stack keeps its own Caddyfile. Copy the relevant blocks into the host's glo
 | farm | `stacks/farm/Caddyfile` | `93xx` |
 | fees | `stacks/fees/Caddyfile` | `94xx` |
 | use-uptake | `stacks/use-uptake/Caddyfile` | `95xx` |
-| monitoring | Loki Dashboard | `stacks/monitoring/Caddyfile` | `9610` |
+| monitoring | Grafana | `stacks/monitoring/Caddyfile` | `9600` |
 | netdata | Netdata | `stacks/netdata/Caddyfile` | `19999` |
 | automation | n8n | `stacks/automation/Caddyfile` | `9700` |
 | activepieces | Activepieces app | `stacks/activepieces/Caddyfile` | `9710` |

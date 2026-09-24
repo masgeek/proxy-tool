@@ -53,8 +53,9 @@ standard ports for compatibility.
 | Service | Host port | Container port | Caddyfile |
 |---------|-----------|----------------|-----------|
 | loki | 3100 | 3100 | — |
+| prometheus | 9090 | 9090 | — |
+| grafana | 9600 | 3000 | `stacks/monitoring/Caddyfile` |
 | alloy | — (exposed, not published) | 12345 | — |
-| monitoring | dashboard | 9610 | 3000 | `stacks/monitoring/Caddyfile` |
 | netdata | 19999 | 19999 | `stacks/netdata/Caddyfile` |
 
 ## Automation stacks

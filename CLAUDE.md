@@ -79,7 +79,7 @@ stacks/
   ├── cache/              ← Redis production and development
   ├── automation/         ← n8n
   ├── activepieces/       ← Activepieces app + worker
-  ├── monitoring/         ← Loki, Alloy, and Loki Dashboard
+  ├── monitoring/         ← Grafana, Prometheus, Loki, Alloy
   ├── netdata/            ← Netdata host/container metrics
   ├── fuelrod/            ← Fuelrod service, SMS portal, SMS gateway
   ├── farm/               ← Farm Manager API, web, migrations
@@ -95,7 +95,7 @@ stacks/
 config/
   ├── supervisor/         ← Supervisor process configs per app (common/, fuelrod/, fees/, akilimo/)
   ├── nginx/              ← NGINX configs
-  ├── monitoring/         ← Loki, Alloy, and Loki Dashboard
+  ├── monitoring/         ← Grafana, Prometheus, Loki, Alloy
   ├── netdata/            ← Netdata host/container metrics
   └── init/pgsql/         ← PostgreSQL init scripts (run on first container start)
 log/
@@ -127,7 +127,7 @@ Stacks that share postgres credentials must use matching values — copy from `s
 | `stacks/cache/.env` | production and development Redis passwords |
 | `stacks/activepieces/.env` | Activepieces public URL, secrets, worker token, shared PostgreSQL credentials, optional Redis password |
 | `stacks/automation/.env` | n8n (postgres creds must match databases) |
-| `stacks/monitoring/.env` | Loki, Alloy, and Loki Dashboard settings |
+| `stacks/monitoring/.env` | Grafana, Prometheus, Loki, and Alloy settings |
 | `stacks/netdata/.env` | Netdata image and resource settings |
 | `stacks/fuelrod/.env` | Fuelrod, SMS portal, SMS gateway |
 | `stacks/farm/.env` | Farm API, web, migrations (postgres creds must match databases) |
@@ -164,7 +164,7 @@ Docker socket by Alloy.
 
 ### Monitoring Stack
 
-`stacks/monitoring/docker-compose.yml` runs Loki and Alloy for application logs plus a Loki Dashboard browser UI. `stacks/netdata/docker-compose.yml` runs Netdata independently for host and Docker metrics. Alloy is logs-only and no longer remote-writes to Prometheus.
+`stacks/monitoring/docker-compose.yml` runs Grafana, Prometheus, Loki, and Alloy. `stacks/netdata/docker-compose.yml` runs Netdata independently for host and Docker metrics.
 
 ## Versioning & CI
 

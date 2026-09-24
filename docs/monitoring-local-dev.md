@@ -1,6 +1,6 @@
 # Local Development — Monitoring Stack
 
-The active log stack is Loki + Alloy for application logs. Netdata is a separate stack for host/container metrics. Grafana and Prometheus are not part of the deployment.
+The monitoring stack provides Grafana, Prometheus, Loki, and Alloy. Netdata is a separate stack for host/container metrics.
 
 ## Prerequisites
 
@@ -29,11 +29,11 @@ docker network create dokploy-network
 | Service | Endpoint | Purpose |
 |---------|----------|---------|
 | Loki | `http://127.0.0.1:3100` | Log storage and LogQL API |
-| Loki Dashboard | `http://127.0.0.1:9610` | Browser UI for LogQL |
+| Grafana | `http://127.0.0.1:9600` | Loki logs and Prometheus metrics UI |
 | Alloy | internal only | Docker log collection and filtering |
 | Netdata | `http://127.0.0.1:19999` | Host and Docker metrics UI |
 
-Use the Loki Dashboard browser UI at `http://127.0.0.1:9610` for LogQL browsing. `logcli` remains useful for scripted queries. Grafana is not required.
+Use Grafana at `http://127.0.0.1:9600` for LogQL browsing. `logcli` remains useful for scripted queries.
 
 ## Test log ingestion
 
