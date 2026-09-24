@@ -27,8 +27,6 @@ cp -a "$source_dir"/. "$stage_dir"/
 caddy validate --config "$stage_dir/Caddyfile"
 
 install -d -m 0755 "$target_dir"
-install -d -m 0755 /var/www/caddy-errors
-install -m 0644 "$source_dir/errors/upstream-unavailable.html" /var/www/caddy-errors/upstream-unavailable.html
 backup_dir="$target_dir/backups"
 install -d -m 0755 "$backup_dir"
 timestamp=$(date +%Y%m%d%H%M%S)
@@ -48,6 +46,11 @@ else
     printf '%s\n' 'No existing Caddyfile found; skipping backup.'
 fi
 
+rm -f "$target_dir/Caddyfile"
+rm -rf "$target_dir/snippets"
+rm -rf /var/www/caddy-errors
+install -d -m 0755 /var/www/caddy-errors
+install -m 0644 "$source_dir/errors/upstream-unavailable.html" /var/www/caddy-errors/upstream-unavailable.html
 cp -a "$stage_dir"/. "$target_dir"/
 
 if command -v systemctl >/dev/null 2>&1; then
