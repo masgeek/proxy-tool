@@ -5,10 +5,10 @@ Run these checks on the production host before reloading Caddy. Do not overwrite
 ## 1. Verify the compiled modules
 
 ```bash
-caddy list-modules | grep -E 'http.handlers.cache|cache'
+caddy list-modules | grep -E 'cache|rate_limit|transform|badger'
 ```
 
-The output must include the cache handler module. If it does not, do not deploy the cache configuration.
+The output must include `http.handlers.cache`. The current configuration also declares the `rate_limit` and `cache` directive order, so the compiled Caddy build must include those plugin modules.
 
 ## 2. Validate the repository file
 
@@ -18,6 +18,8 @@ caddy validate --config config/caddy/Caddyfile --adapter caddyfile
 ```
 
 Both commands must exit successfully. Keep `/tmp/caddy-adapted.json` when troubleshooting because it shows the handlers Caddy will actually run.
+
+If Caddy reports `File to import not found` for a named snippet, use a relative file import such as `import ../headers/security-headers.caddy`; named snippets are not shared across separately imported files. If it reports that a plugin directive was parsed as a site address, move `order ...` directives inside the global `{}` options block.
 
 ## 3. Verify the Docker bridge address
 
@@ -37,11 +39,13 @@ Run these commands from the repository root. Preserve the `snippets` directory s
 timestamp=$(date +%Y%m%d%H%M%S)
 backup="/etc/caddy/backups/caddy-$timestamp.tar.gz"
 
-sudo mkdir -p /etc/caddy/backups /etc/caddy/snippets/domains
+sudo mkdir -p /etc/caddy/backups /etc/caddy/snippets/domains /etc/caddy/snippets/headers
 sudo tar -czf "$backup" -C /etc/caddy Caddyfile snippets 2>/dev/null || \
     sudo tar -czf "$backup" -C /etc/caddy Caddyfile
 sudo cp config/caddy/Caddyfile /etc/caddy/Caddyfile
-sudo cp config/caddy/snippets/common.caddy /etc/caddy/snippets/common.caddy
+sudo cp config/caddy/snippets/wp-common.caddy /etc/caddy/snippets/wp-common.caddy
+sudo cp config/caddy/snippets/disallowed-*.caddy /etc/caddy/snippets/
+sudo cp config/caddy/snippets/headers/*.caddy /etc/caddy/snippets/headers/
 sudo cp config/caddy/snippets/domains/*.caddy /etc/caddy/snippets/domains/
 sudo caddy validate --config /etc/caddy/Caddyfile
 sudo caddy reload --config /etc/caddy/Caddyfile
@@ -51,6 +55,18 @@ If validation or reload fails, use the standalone rollback script:
 
 ```bash
 sudo ./scripts/rollback-caddy.sh "$backup"
+```
+
+For an automated deployment, use the repository script instead:
+
+```bash
+sudo ./scripts/deploy-caddy.sh
+```
+
+The script validates a staged copy before touching `/etc/caddy`, creates a timestamped backup under `/etc/caddy/backups/`, copies the complete package, and reloads Caddy. Rollback is intentionally separate:
+
+```bash
+sudo ./scripts/rollback-caddy.sh
 ```
 
 ## 5. Check routing and certificates
@@ -79,9 +95,16 @@ Expect a miss followed by a hit for cacheable `GET` responses. `Cache-Status` sh
 
 ## 7. Roll back if necessary
 
+Use the standalone rollback script from the repository root:
+
 ```bash
-sudo caddy validate --config /etc/caddy/Caddyfile
-sudo caddy reload --config /etc/caddy/Caddyfile
+sudo ./scripts/rollback-caddy.sh
 ```
 
-To roll back, copy the most recent `/etc/caddy/Caddyfile.bak.*` file over `/etc/caddy/Caddyfile`, validate it, and reload Caddy.
+To select a specific backup:
+
+```bash
+sudo ./scripts/rollback-caddy.sh /etc/caddy/backups/caddy-YYYYMMDDHHMMSS.tar.gz
+```
+
+The script backs up the current live configuration, extracts the selected backup, validates `/etc/caddy/Caddyfile`, and reloads Caddy.

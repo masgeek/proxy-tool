@@ -194,8 +194,9 @@ stats.akilimo.org {
 
 Notes:
 
-- The global `order` block is required once per Caddyfile — it tells Caddy where `rate_limit` and `cache` slot into the directive execution order, since they're plugin-added directives, not built-ins.
-- `default_cache_control` forces the 5-minute TTL even if the upstream doesn't send its own `Cache-Control` header.
+- Put `order rate_limit ...` and `order cache ...` inside the global `{}` options block. They cannot appear as standalone top-level directives.
+- Caddy does not resolve named snippets across separately imported files. In the split configuration, use relative file imports such as `import ../headers/security-headers.caddy` instead of `import security_headers`.
+- `default_cache_control` forces the configured TTL only when the upstream response does not provide its own cache policy.
 - For an upload size cap, add `request_body { max_size 25MB }` inside the same block, before `reverse_proxy`.
 - Redis instead of Badger:
 
