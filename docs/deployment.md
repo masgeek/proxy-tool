@@ -109,12 +109,12 @@ flow.munywele.co.ke → 127.0.0.1:9710
 
 The monitoring stack uses Grafana, Prometheus, Loki, Alloy, cAdvisor, PostgreSQL Exporter, and Redis Exporter. Set `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `REDIS_PASSWORD` in `stacks/monitoring/.env` to enable the database/cache dashboards. Grafana provides the browser UI for Loki logs at `logs.munywele.co.ke` through the Caddy snippet, while the separate `stacks/netdata/` stack monitors host and container metrics.
 
-Validate before reloading:
+Validate before restarting:
 
 ```bash
 caddy adapt --config stacks/activepieces/Caddyfile --adapter caddyfile
 caddy validate --config /etc/caddy/Caddyfile
-sudo caddy reload --config /etc/caddy/Caddyfile
+sudo systemctl restart caddy
 ```
 
 The stack Caddyfile is a snippet, not a complete replacement for the host Caddyfile.
