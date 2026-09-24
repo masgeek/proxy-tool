@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Service temporarily unavailable</title>
+	<style>
+		:root { color-scheme: light dark; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+		body { min-height: 100vh; margin: 0; display: grid; place-items: center; background: #f5f7fb; color: #172033; }
+		main { width: min(36rem, calc(100% - 3rem)); padding: 3rem; border: 1px solid #dbe2ef; border-radius: 1rem; background: #fff; box-shadow: 0 1rem 3rem rgb(23 32 51 / 8%); text-align: center; }
+		.status { margin: 0; color: #b42318; font-size: 4rem; font-weight: 800; letter-spacing: -.05em; }
+		h1 { margin: .5rem 0; font-size: 1.5rem; }
+		p { margin: 0; color: #667085; line-height: 1.6; }
+		small { display: block; margin-top: 1.5rem; color: #667085; line-height: 1.6; }
+		@media (prefers-color-scheme: dark) {
+			body { background: #111827; color: #f3f4f6; }
+			main { border-color: #374151; background: #1f2937; box-shadow: none; }
+			p { color: #9ca3af; }
+			.status { color: #f97066; }
+		}
+	</style>
+</head>
+<body>
+	<main>
+		<p class="status">503</p>
+		<h1>Service temporarily unavailable</h1>
+		<p>The service is not responding right now. Please wait two minutes and try again.</p>
+		<small>If the problem continues, contact the service administrator and include the request ID from the <code>X-Request-ID</code> response header.</small>
+	</main>
+</body>
+</html>
