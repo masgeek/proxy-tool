@@ -209,32 +209,3 @@ services:
         reservations:
           memory: 64m
           cpus: "0.1"
-
-
-  # monitor:
-  #   hostname: beszel
-  #   image: henrygd/beszel
-  #   container_name: beszel
-  #   restart: unless-stopped
-  #   ports:
-  #     - "8090:8090"
-  #   volumes:
-  #     - beszel-data:/beszel_data
-  #   networks:
-  #     - dokploy-network
-  #     - internal
-
-  # beszel-agent:
-  #   image: henrygd/beszel-agent
-  #   container_name: beszel-agent
-  #   restart: unless-stopped
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock:ro
-  #     - beszel-agent-data:/var/lib/beszel-agent
-  #   environment:
-  #     LISTEN: ${BESZEL_AGENT_PORT:-45876}
-  #     KEY: ${BESZEL_KEY:?}
-  #     TOKEN: ${BESZEL_TOKEN:?}
-  #     HUB_URL: ${BESZEL_HUB_URL:-http://beszel:8090}
-  #   networks:
-  #     - internal
