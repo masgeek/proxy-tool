@@ -80,6 +80,7 @@ stacks/
   ├── automation/         ← n8n
   ├── activepieces/       ← Activepieces app + worker
   ├── monitoring/         ← Grafana, Prometheus, Loki, Alloy
+  ├── beszel/             ← Beszel hub and host agent
   ├── netdata/            ← Netdata host/container metrics
   ├── fuelrod/            ← Fuelrod service, SMS portal, SMS gateway
   ├── farm/               ← Farm Manager API, web, migrations
@@ -96,6 +97,7 @@ config/
   ├── supervisor/         ← Supervisor process configs per app (common/, fuelrod/, fees/, akilimo/)
   ├── nginx/              ← NGINX configs
   ├── monitoring/         ← Grafana, Prometheus, Loki, Alloy
+  ├── beszel/             ← Beszel hub and host agent
   ├── netdata/            ← Netdata host/container metrics
   └── init/pgsql/         ← PostgreSQL init scripts (run on first container start)
 log/
@@ -128,6 +130,7 @@ Stacks that share postgres credentials must use matching values — copy from `s
 | `stacks/activepieces/.env` | Activepieces public URL, secrets, worker token, shared PostgreSQL credentials, optional Redis password |
 | `stacks/automation/.env` | n8n (postgres creds must match databases) |
 | `stacks/monitoring/.env` | Grafana, Prometheus, Loki, and Alloy settings |
+| `stacks/beszel/.env` | Beszel hub/agent keys, token, and resource settings |
 | `stacks/netdata/.env` | Netdata image and resource settings |
 | `stacks/fuelrod/.env` | Fuelrod, SMS portal, SMS gateway |
 | `stacks/farm/.env` | Farm API, web, migrations (postgres creds must match databases) |

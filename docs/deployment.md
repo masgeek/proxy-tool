@@ -43,6 +43,7 @@ Then deploy application stacks in dependency order:
 docker compose -f stacks/automation/docker-compose.yml up -d
 docker compose -f stacks/activepieces/docker-compose.yml up -d
 docker compose -f stacks/monitoring/docker-compose.yml up -d
+docker compose -f stacks/beszel/docker-compose.yml up -d
 docker compose -f stacks/netdata/docker-compose.yml up -d
 docker compose -f stacks/fuelrod/docker-compose.yml up -d
 docker compose -f stacks/farm/docker-compose.yml up -d
@@ -86,6 +87,17 @@ curl http://127.0.0.1:9710/api/v1/health
 ```
 
 The app publishes `127.0.0.1:9710`; the worker has no published port.
+
+## Beszel
+
+The standalone Beszel stack runs the hub on `127.0.0.1:8090` and an agent internally. Start the hub first, open `http://127.0.0.1:8090` through an SSH tunnel, and use **Add System** to obtain the agent's public `KEY`. Create or copy a token from **Settings → Tokens**. Put both values in `stacks/beszel/.env` before starting the agent:
+
+```dotenv
+BESZEL_KEY=<public key from Add System>
+BESZEL_TOKEN=<token from Settings → Tokens>
+```
+
+The hub UI can also be exposed at `beszel.munywele.co.ke` using `stacks/beszel/Caddyfile`.
 
 ## Caddy Routing
 
