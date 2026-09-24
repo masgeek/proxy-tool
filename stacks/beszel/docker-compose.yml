@@ -49,7 +49,7 @@ services:
     expose:
       - "${BESZEL_AGENT_PORT:-45876}"
     environment:
-      LISTEN: ${BESZEL_AGENT_PORT:-45876}
+      LISTEN: 45876
       KEY: ${BESZEL_KEY:?BESZEL_KEY must be set}
       TOKEN: ${BESZEL_TOKEN:?BESZEL_TOKEN must be set}
       HUB_URL: http://beszel:8090
