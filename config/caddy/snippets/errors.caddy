@@ -1,4 +1,8 @@
 handle_errors {
-	@upstream_down expression {http.error.status_code} == 502
-	respond @upstream_down "Service temporarily unavailable. Please try again later." 503
+	@service_unavailable expression {http.error.status_code} in [502, 503, 504]
+	header Retry-After "120"
+	header X-Request-ID "{http.request.uuid}"
+	root * /var/www/caddy-errors
+	rewrite * /upstream-unavailable.html
+	file_server
 }
