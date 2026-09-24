@@ -39,9 +39,10 @@ Run these commands from the repository root. Preserve the `snippets` directory s
 timestamp=$(date +%Y%m%d%H%M%S)
 backup="/etc/caddy/backups/caddy-$timestamp.tar.gz"
 
-sudo mkdir -p /etc/caddy/backups /etc/caddy/snippets/domains /etc/caddy/snippets/headers
+sudo mkdir -p /etc/caddy/backups /etc/caddy/snippets/domains /etc/caddy/snippets/headers /var/www/caddy-errors
 sudo tar -czf "$backup" -C /etc/caddy Caddyfile snippets 2>/dev/null || \
     sudo tar -czf "$backup" -C /etc/caddy Caddyfile
+sudo cp config/caddy/errors/upstream-unavailable.html /var/www/caddy-errors/upstream-unavailable.html
 sudo cp config/caddy/Caddyfile /etc/caddy/Caddyfile
 sudo cp config/caddy/snippets/wp-common.caddy /etc/caddy/snippets/wp-common.caddy
 sudo cp config/caddy/snippets/disallowed-*.caddy /etc/caddy/snippets/
