@@ -11,12 +11,15 @@ akilimo-hub.eastus.cloudapp.azure.com, dokploy.munywele.co.ke, dokploy.akilimo.o
 	import ../errors.caddy
 
 	handle /logs* {
-		reverse_proxy 127.0.0.1:9999
+		reverse_proxy 127.0.0.1:9999 {
+			import ../upstream-errors.caddy
+		}
 	}
 
 	handle {
 		reverse_proxy 127.0.0.1:3000 {
 			import ../headers/proxy-headers.caddy
+			import ../upstream-errors.caddy
 		}
 	}
 }
@@ -94,6 +97,7 @@ app.akilimo.org, dev.akilimo.org {
 
 	reverse_proxy 127.0.0.1:9100 {
 		import ../headers/proxy-headers.caddy
+		import ../upstream-errors.caddy
 
 		transport http {
 			dial_timeout 1800s
@@ -123,6 +127,7 @@ api.akilimo.org {
 
 	reverse_proxy 127.0.0.1:9100 {
 		import ../headers/proxy-headers-port.caddy
+		import ../upstream-errors.caddy
 
 		transport http {
 			dial_timeout 1800s
@@ -148,6 +153,7 @@ uptake.akilimo.org {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:9500 {
 		import ../headers/proxy-headers.caddy
+		import ../upstream-errors.caddy
 	}
 	log {
 		output file /var/log/caddy/use-uptake.log
@@ -172,6 +178,7 @@ geo.akilimo.org {
 	}
 	reverse_proxy 127.0.0.1:9510 {
 		import ../headers/proxy-headers.caddy
+		import ../upstream-errors.caddy
 	}
 	log {
 		output file /var/log/caddy/geo-server.log
@@ -193,6 +200,7 @@ stats.akilimo.org {
 	}
 	reverse_proxy 127.0.0.1:9511 {
 		import ../headers/proxy-headers.caddy
+		import ../upstream-errors.caddy
 	}
 	log {
 		output file /var/log/caddy/stats-api.log

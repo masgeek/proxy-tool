@@ -15,6 +15,7 @@ munywele.co.ke {
 
 	reverse_proxy 127.0.0.1:9200 {
 		import ../headers/proxy-headers.caddy
+		import ../upstream-errors.caddy
 		#header_up X-Forwarded-Port {server_port}
 	}
 
@@ -40,6 +41,7 @@ api.munywele.co.ke, api.tsobu.co.ke {
 
 	reverse_proxy 127.0.0.1:9200 {
 		import ../headers/proxy-headers.caddy
+		import ../upstream-errors.caddy
 	}
 
 	log {
@@ -78,6 +80,7 @@ http://api.munywele.co.ke, http://api.tsobu.co.ke {
 
 		reverse_proxy 127.0.0.1:9200 {
 			import ../headers/proxy-headers.caddy
+			import ../upstream-errors.caddy
 		}
 	}
 
@@ -105,6 +108,7 @@ sms.munywele.co.ke {
 
 	reverse_proxy 127.0.0.1:9201 {
 		import ../headers/proxy-headers.caddy
+		import ../upstream-errors.caddy
 	}
 
 	log {
@@ -126,6 +130,7 @@ portal.munywele.co.ke {
 	handle @allowed {
 		reverse_proxy 127.0.0.1:9201 {
 			import ../headers/proxy-headers.caddy
+			import ../upstream-errors.caddy
 		}
 	}
 
@@ -154,6 +159,7 @@ n8n.munywele.co.ke {
 
 	reverse_proxy 127.0.0.1:9700 {
 		import ../headers/proxy-headers.caddy
+		import ../upstream-errors.caddy
 	}
 
 	log {
@@ -173,6 +179,7 @@ fees.munywele.co.ke {
 
 	reverse_proxy 127.0.0.1:9400 {
 		import ../headers/proxy-headers.caddy
+		import ../upstream-errors.caddy
 	}
 
 	log {
@@ -192,6 +199,7 @@ fees-dev.munywele.co.ke {
 
 	reverse_proxy 127.0.0.1:9401 {
 		import ../headers/proxy-headers.caddy
+		import ../upstream-errors.caddy
 	}
 
 	log {
@@ -210,6 +218,7 @@ logs.munywele.co.ke, logs.akilimo.org {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:9600 {
 		import ../headers/proxy-headers.caddy
+		import ../upstream-errors.caddy
 	}
 	log {
 		output file /var/log/caddy/grafana.log
@@ -226,12 +235,16 @@ mqtt.munywele.co.ke {
 	# Connection URL: wss://mqtt.munywele.co.ke/mqtt
 	@mqtt path /mqtt /mqtt/*
 	handle @mqtt {
-		reverse_proxy http://127.0.0.1:8083
+		reverse_proxy http://127.0.0.1:8083 {
+			import ../upstream-errors.caddy
+		}
 	}
 
 	# EMQX Web Dashboard
 	handle {
-		reverse_proxy http://127.0.0.1:18083
+		reverse_proxy http://127.0.0.1:18083 {
+			import ../upstream-errors.caddy
+		}
 	}
 }
 
@@ -244,6 +257,7 @@ sonar.munywele.co.ke {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:9900 {
 		import ../headers/proxy-headers.caddy
+		import ../upstream-errors.caddy
 	}
 	log {
 		output file /var/log/caddy/sonar.log
@@ -260,6 +274,7 @@ api.farm.munywele.co.ke {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:9300 {
 		import ../headers/proxy-headers.caddy
+		import ../upstream-errors.caddy
 	}
 	log {
 		output file /var/log/caddy/farm-api.log
@@ -276,6 +291,7 @@ farm.munywele.co.ke {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:9301 {
 		import ../headers/proxy-headers.caddy
+		import ../upstream-errors.caddy
 	}
 	log {
 		output file /var/log/caddy/farm-web.log
@@ -300,6 +316,7 @@ s3.munywele.co.ke {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:9612 {
 		import ../headers/proxy-headers.caddy
+		import ../upstream-errors.caddy
 	}
 	log {
 		output file /var/log/caddy/s3.log
@@ -316,6 +333,7 @@ s3-console.munywele.co.ke {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:9614 {
 		import ../headers/proxy-headers.caddy
+		import ../upstream-errors.caddy
 	}
 	log {
 		output file /var/log/caddy/s3-console.log
@@ -332,6 +350,7 @@ monitor.munywele.co.ke {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:19999 {
 		import ../headers/proxy-headers.caddy
+		import ../upstream-errors.caddy
 	}
 	log {
 		output file /var/log/caddy/netdata.log
@@ -348,6 +367,7 @@ flow.munywele.co.ke {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:9710 {
 		import ../headers/proxy-headers.caddy
+		import ../upstream-errors.caddy
 	}
 	log {
 		output file /var/log/caddy/activepieces.log
@@ -364,6 +384,7 @@ caddy.munywele.co.ke {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:9621 {
 		import ../headers/proxy-headers.caddy
+		import ../upstream-errors.caddy
 	}
 	log {
 		output file /var/log/caddy/caddy-manager.log
@@ -380,6 +401,7 @@ beszel.munywele.co.ke {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:9625 {
 		import ../headers/proxy-headers.caddy
+		import ../upstream-errors.caddy
 	}
 	log {
 		output file /var/log/caddy/beszel.log
@@ -396,6 +418,7 @@ lnk.munywele.co.ke, lnk.agwise.org, lnk.akilimo.org {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:9660 {
 		import ../headers/proxy-headers.caddy
+		import ../upstream-errors.caddy
 	}
 	log {
 		output file /var/log/caddy/shortener.log
