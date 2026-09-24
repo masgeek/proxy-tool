@@ -1,0 +1,4 @@
+handle_errors {
+	@upstream_down expression {http.error.status_code} == 502
+	respond @upstream_down "Service temporarily unavailable. Please try again later." 503
+}
