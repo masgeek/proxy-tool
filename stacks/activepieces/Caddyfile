@@ -15,10 +15,7 @@ flow.munywele.co.ke {
         encode zstd gzip
 
         reverse_proxy 127.0.0.1:9710 {
-                header_up Host {host}
-                header_up X-Real-IP {remote_host}
-                header_up X-Forwarded-Host {host}
-                header_up X-Forwarded-Proto {scheme}
+                import proxy_headers_forwarded_host_proto
         }
 
         @disallowed {

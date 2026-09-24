@@ -19,14 +19,7 @@ n8n.munywele.co.ke {
         encode zstd gzip
 
         reverse_proxy 127.0.0.1:9700 {
-                header_up Host {host}
-                header_up X-Real-IP {remote_host}
-
-                # Required for n8n editor websocket connections
-                header_up Connection {>Connection}
-                header_up Upgrade {>Upgrade}
-
-
+                import proxy_headers_websocket
         }
 
         @disallowed {

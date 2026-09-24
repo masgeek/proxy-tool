@@ -19,9 +19,7 @@ lnk.munywele.co.ke {
 
         handle {
                 reverse_proxy 127.0.0.1:9660 {
-                        header_up X-Forwarded-Host {host}
-                        header_up X-Forwarded-Proto {scheme}
-                        header_up X-Forwarded-Port {server_port}
+                        import proxy_headers_forwarded_port
                 }
         }
 }
@@ -65,9 +63,7 @@ lnk.agwise.org {
 
         handle {
                 reverse_proxy 127.0.0.1:9660 {
-                        header_up X-Forwarded-Host {host}
-                        header_up X-Forwarded-Proto {scheme}
-                        header_up X-Forwarded-Port {server_port}
+                        import proxy_headers_forwarded_port
                 }
         }
 }
@@ -84,9 +80,7 @@ lnk.akilimo.org {
 
         handle {
                 reverse_proxy 127.0.0.1:9660 {
-                        header_up X-Forwarded-Host {host}
-                        header_up X-Forwarded-Proto {scheme}
-                        header_up X-Forwarded-Port {server_port}
+                        import proxy_headers_forwarded_port
                 }
         }
 }
