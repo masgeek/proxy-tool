@@ -70,7 +70,26 @@ loki.source.docker "applications" {
   host       = "unix:///var/run/docker.sock"
   targets    = discovery.relabel.applications.output
   labels     = {log_type = "container"}
+  forward_to = [loki.process.applications.receiver]
+}
+
+loki.process "applications" {
   forward_to = [loki.write.default.receiver]
+
+  stage.drop {
+    expression        = "(?i)(GET|HEAD) /(health|healthz|ready|readiness|live|livez)([/? ]|$)"
+    drop_counter_reason = "health_check"
+  }
+
+  stage.drop {
+    expression        = "(?i)favicon\\.ico"
+    drop_counter_reason = "favicon"
+  }
+
+  stage.drop {
+    longer_than         = "32KB"
+    drop_counter_reason = "oversized"
+  }
 }
 
 loki.write "default" {
@@ -80,19 +99,4 @@ loki.write "default" {
 }
 
 // ---------------------------------------------------------------------------
-// Metrics: self-scrape and remote write to Prometheus
-// ---------------------------------------------------------------------------
-prometheus.scrape "agent" {
-  targets = [
-    {"__address__" = "127.0.0.1:12345"},
-  ]
-  forward_to       = [prometheus.remote_write.metrics.receiver]
-  scrape_interval  = "30s"
-  scrape_timeout   = "10s"
-}
-
-prometheus.remote_write "metrics" {
-  endpoint {
-    url = "http://prometheus:9090/api/v1/write"
-  }
-}
+// Logs only: Prometheus metrics are handled by Netdata.

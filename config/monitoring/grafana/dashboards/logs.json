@@ -166,7 +166,7 @@
       "targets": [
         {
           "expr": "{log_type=\"container\", service_name=~\"fuelrod-sms|fees|fees-dev|akilimo\"} |~ \"(?i)(error|exception|traceback|critical|alert|emergency)\"",
-          "maxLines": 500,
+          "maxLines": 200,
           "refId": "A"
         }
       ]
@@ -190,17 +190,17 @@
       "targets": [
         {
           "expr": "{log_type=\"container\", service_name=~\"fuelrod-sms|fees|fees-dev|akilimo\"}",
-          "maxLines": 500,
+          "maxLines": 100,
           "refId": "A"
         }
       ]
     }
   ],
   "schemaVersion": 39,
-  "refresh": "1m",
+  "refresh": "5m",
   "tags": ["loki", "logs", "applications"],
   "templating": { "list": [] },
-  "time": { "from": "now-30m", "to": "now" },
+  "time": { "from": "now-15m", "to": "now" },
   "timepicker": {},
   "timezone": "",
   "title": "Application Logs",

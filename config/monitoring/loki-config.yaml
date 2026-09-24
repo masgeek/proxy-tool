@@ -36,16 +36,16 @@ query_range:
 limits_config:
   metric_aggregation_enabled: false
   reject_old_samples: true
-  reject_old_samples_max_age: ${LOKI_REJECT_OLD_SAMPLES_AGE:-168h}
-  max_entries_limit_per_query: ${LOKI_MAX_ENTRIES_LIMIT:-2000}
-  max_query_lookback: ${LOKI_MAX_QUERY_LOOKBACK:-168h}
-  max_query_bytes_read: ${LOKI_MAX_QUERY_BYTES_READ:-512MB}
-  query_timeout: ${LOKI_QUERY_TIMEOUT:-60s}
-  max_query_parallelism: ${LOKI_MAX_QUERY_PARALLELISM:-4}
-  tsdb_max_query_parallelism: ${LOKI_TSDB_MAX_QUERY_PARALLELISM:-8}
-  split_queries_by_interval: ${LOKI_SPLIT_QUERIES_BY_INTERVAL:-1h}
+  reject_old_samples_max_age: ${LOKI_REJECT_OLD_SAMPLES_AGE:-48h}
+  max_entries_limit_per_query: ${LOKI_MAX_ENTRIES_LIMIT:-1000}
+  max_query_lookback: ${LOKI_MAX_QUERY_LOOKBACK:-48h}
+  max_query_bytes_read: ${LOKI_MAX_QUERY_BYTES_READ:-128MB}
+  query_timeout: ${LOKI_QUERY_TIMEOUT:-30s}
+  max_query_parallelism: ${LOKI_MAX_QUERY_PARALLELISM:-2}
+  tsdb_max_query_parallelism: ${LOKI_TSDB_MAX_QUERY_PARALLELISM:-4}
+  split_queries_by_interval: ${LOKI_SPLIT_QUERIES_BY_INTERVAL:-30m}
   allow_structured_metadata: true
-  retention_period: ${LOKI_RETENTION_PERIOD:-168h}
+  retention_period: ${LOKI_RETENTION_PERIOD:-48h}
   ingestion_rate_mb: ${LOKI_INGESTION_RATE_MB:-5}
   ingestion_burst_size_mb: ${LOKI_INGESTION_BURST_SIZE_MB:-10}
 
