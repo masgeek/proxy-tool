@@ -1,6 +1,6 @@
 # Testing the Production Caddyfile
 
-Run these checks on the production host before reloading Caddy. Do not overwrite the live configuration until both validation commands pass.
+Run these checks on the production host before restarting Caddy. Do not overwrite the live configuration until both validation commands pass.
 
 ## 1. Verify the compiled modules
 
@@ -48,7 +48,7 @@ sudo cp config/caddy/snippets/disallowed-*.caddy /etc/caddy/snippets/
 sudo cp config/caddy/snippets/headers/*.caddy /etc/caddy/snippets/headers/
 sudo cp config/caddy/snippets/domains/*.caddy /etc/caddy/snippets/domains/
 sudo caddy validate --config /etc/caddy/Caddyfile
-sudo caddy reload --config /etc/caddy/Caddyfile
+sudo systemctl restart caddy
 ```
 
 If validation or reload fails, use the standalone rollback script:
