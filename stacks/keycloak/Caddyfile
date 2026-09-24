@@ -16,7 +16,7 @@ keycloak.example.com {
                 level debug
         }
 
-        encode gzip
+        encode zstd gzip
 
         reverse_proxy 127.0.0.1:9850 {
                 header_up Host {host}

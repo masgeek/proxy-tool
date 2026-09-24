@@ -12,7 +12,7 @@ flow.munywele.co.ke {
                 level debug
         }
 
-        encode gzip
+        encode zstd gzip
 
         reverse_proxy 127.0.0.1:9710 {
                 header_up Host {host}

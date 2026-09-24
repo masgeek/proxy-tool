@@ -5,6 +5,7 @@
 
 beszel.munywele.co.ke {
         tls dev@munywele.co.ke
+        encode zstd gzip
 
         log {
                 output file /var/log/caddy/beszel.log

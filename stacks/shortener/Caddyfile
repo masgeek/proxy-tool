@@ -9,6 +9,7 @@
 # -----------------------------------------------------------------------------
 lnk.munywele.co.ke {
         tls dev@munywele.co.ke
+        encode zstd gzip
 
         log {
                 output file /var/log/caddy/lnk.log
@@ -33,6 +34,7 @@ lnk.munywele.co.ke {
 # -----------------------------------------------------------------------------
 lnk-admin.munywele.co.ke {
         tls dev@munywele.co.ke
+        encode zstd gzip
 
         log {
                 output file /var/log/caddy/lnk-admin.log
@@ -53,6 +55,7 @@ lnk-admin.munywele.co.ke {
 # -----------------------------------------------------------------------------
 lnk.agwise.org {
         tls dev@munywele.co.ke
+        encode zstd gzip
 
         log {
                 output file /var/log/caddy/lnk-agwise.log
@@ -71,6 +74,7 @@ lnk.agwise.org {
 
 lnk.akilimo.org {
         tls dev@munywele.co.ke
+        encode zstd gzip
 
         log {
                 output file /var/log/caddy/lnk-akilimo.log

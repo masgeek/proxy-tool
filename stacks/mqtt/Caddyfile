@@ -1,4 +1,5 @@
 mqtt.munywele.co.ke {
+    encode zstd gzip
     # EMQX MQTT over Secure WebSockets (WSS)
     # Connection URL: wss://mqtt.munywele.co.ke/mqtt
     @mqtt path /mqtt /mqtt/*

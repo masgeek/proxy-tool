@@ -16,7 +16,7 @@ logs.munywele.co.ke, logs.akilimo.org {
                 level debug
         }
 
-        encode gzip
+        encode zstd gzip
 
         reverse_proxy 127.0.0.1:9600 {
                 header_up Host {host}

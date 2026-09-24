@@ -17,7 +17,7 @@ akilimo.org {
         }
 
         root * /mnt/data/extra_storage/services/akilimo
-        encode gzip
+        encode zstd gzip
 
         @disallowed {
                 path /xmlrpc.php
@@ -62,7 +62,7 @@ portal.akilimo.org {
         }
 
         root * /mnt/data/extra_storage/services/portal
-        encode gzip
+        encode zstd gzip
 
         @disallowed {
                 path /xmlrpc.php
@@ -104,7 +104,7 @@ new.akilimo.org {
         }
 
         root * /mnt/data/extra_storage/services/new_akilimo
-        encode gzip
+        encode zstd gzip
 
         @disallowed {
                 path /xmlrpc.php
@@ -145,7 +145,7 @@ dev.akilimo.org {
                 level debug
         }
 
-        encode gzip
+        encode zstd gzip
 
         reverse_proxy 127.0.0.1:9100 {
                 header_up Host                {host}
@@ -180,7 +180,7 @@ api.akilimo.org {
                 level debug
         }
 
-        encode gzip
+        encode zstd gzip
 
         rewrite * /api{uri}
 
