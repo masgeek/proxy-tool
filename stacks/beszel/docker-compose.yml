@@ -25,7 +25,7 @@ services:
     hostname: beszel
     restart: unless-stopped
     ports:
-      - "127.0.0.1:${BESZEL_HUB_PORT:-9625}:8090"
+      - "127.0.0.1:9625:8090"
     volumes:
       - beszel-data:/beszel_data
     networks:
