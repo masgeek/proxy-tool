@@ -14,6 +14,7 @@ proxy-tool/
 │   ├── automation/            ← n8n
 │   ├── activepieces/          ← Activepieces app + worker
 │   ├── monitoring/            ← Loki and Alloy application logs
+│   ├── loki-dashboard/        ← Browser UI for Loki
 │   ├── netdata/               ← Netdata host/container metrics
 │   ├── fuelrod/               ← Fuelrod service, SMS portal, SMS gateway
 │   ├── farm/                  ← Farm Manager API, web, migrations
@@ -29,6 +30,7 @@ proxy-tool/
 │   ├── supervisor/            ← Supervisor process configs (common/, fuelrod/, fees/, akilimo/)
 │   ├── nginx/                 ← NGINX configs
 │   ├── monitoring/            ← Loki and Alloy application logs
+│   ├── loki-dashboard/        ← Browser UI for Loki
 │   ├── netdata/               ← Netdata host/container metrics
 │   └── init/pgsql/            ← PostgreSQL init scripts (run on first container start)
 ├── log/
@@ -132,8 +134,9 @@ docker compose -f stacks/cache/docker-compose.yml up -d
 docker compose -f stacks/automation/docker-compose.yml up -d
 docker compose -f stacks/activepieces/docker-compose.yml up -d
 
-# 5. Monitoring, Netdata, and applications
+# 5. Monitoring, log UI, Netdata, and applications
 docker compose -f stacks/monitoring/docker-compose.yml up -d
+docker compose -f stacks/loki-dashboard/docker-compose.yml up -d
 docker compose -f stacks/netdata/docker-compose.yml up -d
 docker compose -f stacks/fuelrod/docker-compose.yml up -d
 docker compose -f stacks/farm/docker-compose.yml up -d
@@ -215,7 +218,9 @@ Each stack has its own `.env` (gitignored) sourced from `.env.example`. Stacks s
 | `cache` | `REDIS_PASSWORD`, `REDIS_DEV_PASSWORD` |
 | `automation` | `POSTGRES_*` (must match databases), n8n runtime settings |
 | `activepieces` | `AP_FRONTEND_URL`, `AP_ENCRYPTION_KEY`, `AP_JWT_SECRET`, `AP_WORKER_TOKEN`, `POSTGRES_*`, optional `REDIS_PASSWORD` |
-| `monitoring` | `LOKI_*`, `NETDATA_*` |
+| `monitoring` | `LOKI_*` |
+| `loki-dashboard` | `LOKI_DASHBOARD_*` |
+| `netdata` | `NETDATA_*` |
 | `fuelrod` | `FUELROD_TAG`, `FUELROD_DOMAIN`, `PORTAL_DOMAIN`, `GATEWAY_DOMAIN` |
 | `farm` | `FARM_TAG`, `POSTGRES_*`, `JWT_SECRET`, `DEFAULT_PASSWORD` |
 | `akilimo` | `AKILIMO_TAG`, `USE_UPTAKE_TAG`, `AKILIMO_DOMAIN`, `MARIADB_*` |
@@ -372,6 +377,7 @@ Each stack keeps its own Caddyfile. Copy the relevant blocks into the host's glo
 | farm | `stacks/farm/Caddyfile` | `93xx` |
 | fees | `stacks/fees/Caddyfile` | `94xx` |
 | use-uptake | `stacks/use-uptake/Caddyfile` | `95xx` |
+| loki-dashboard | Loki Dashboard | `stacks/loki-dashboard/Caddyfile` | `9610` |
 | netdata | Netdata | `stacks/netdata/Caddyfile` | `19999` |
 | automation | n8n | `stacks/automation/Caddyfile` | `9700` |
 | activepieces | Activepieces app | `stacks/activepieces/Caddyfile` | `9710` |

@@ -80,6 +80,7 @@ stacks/
   ├── automation/         ← n8n
   ├── activepieces/       ← Activepieces app + worker
   ├── monitoring/         ← Loki and Alloy application logs
+  ├── loki-dashboard/     ← Browser UI for Loki
   ├── netdata/            ← Netdata host/container metrics
   ├── fuelrod/            ← Fuelrod service, SMS portal, SMS gateway
   ├── farm/               ← Farm Manager API, web, migrations
@@ -96,6 +97,7 @@ config/
   ├── supervisor/         ← Supervisor process configs per app (common/, fuelrod/, fees/, akilimo/)
   ├── nginx/              ← NGINX configs
   ├── monitoring/         ← Loki and Alloy application logs
+  ├── loki-dashboard/     ← Browser UI for Loki
   ├── netdata/            ← Netdata host/container metrics
   └── init/pgsql/         ← PostgreSQL init scripts (run on first container start)
 log/
@@ -128,6 +130,7 @@ Stacks that share postgres credentials must use matching values — copy from `s
 | `stacks/activepieces/.env` | Activepieces public URL, secrets, worker token, shared PostgreSQL credentials, optional Redis password |
 | `stacks/automation/.env` | n8n (postgres creds must match databases) |
 | `stacks/monitoring/.env` | Loki limits |
+| `stacks/loki-dashboard/.env` | Loki Dashboard image and resource settings |
 | `stacks/netdata/.env` | Netdata image and resource settings |
 | `stacks/fuelrod/.env` | Fuelrod, SMS portal, SMS gateway |
 | `stacks/farm/.env` | Farm API, web, migrations (postgres creds must match databases) |
@@ -164,7 +167,7 @@ Docker socket by Alloy.
 
 ### Monitoring Stack
 
-`stacks/monitoring/docker-compose.yml` runs Loki and Alloy for application logs. `stacks/netdata/docker-compose.yml` runs Netdata independently for host and Docker metrics. Alloy is logs-only and no longer remote-writes to Prometheus.
+`stacks/monitoring/docker-compose.yml` runs Loki and Alloy for application logs. `stacks/loki-dashboard/docker-compose.yml` runs a standalone browser UI against Loki, and `stacks/netdata/docker-compose.yml` runs Netdata independently for host and Docker metrics. Alloy is logs-only and no longer remote-writes to Prometheus.
 
 ## Versioning & CI
 

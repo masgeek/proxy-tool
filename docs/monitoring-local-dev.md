@@ -15,6 +15,7 @@ cp stacks/monitoring/.env.example stacks/monitoring/.env
 # Edit the copied file if the defaults need to be changed.
 docker compose -f stacks/monitoring/docker-compose.yml config --quiet
 docker compose -f stacks/monitoring/docker-compose.yml up -d
+docker compose -f stacks/loki-dashboard/docker-compose.yml up -d
 docker compose -f stacks/netdata/docker-compose.yml up -d
 ```
 
@@ -32,7 +33,7 @@ docker network create dokploy-network
 | Alloy | internal only | Docker log collection and filtering |
 | Netdata | `http://127.0.0.1:19999` | Host and Docker metrics UI |
 
-Use **LokiLens** or `logcli` to query Loki. Grafana is not required.
+Use the Loki Dashboard browser UI at `http://127.0.0.1:9610` for LogQL browsing. `logcli` remains useful for scripted queries. Grafana is not required.
 
 ## Test log ingestion
 
