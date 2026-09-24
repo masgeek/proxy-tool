@@ -43,7 +43,6 @@ Then deploy application stacks in dependency order:
 docker compose -f stacks/automation/docker-compose.yml up -d
 docker compose -f stacks/activepieces/docker-compose.yml up -d
 docker compose -f stacks/monitoring/docker-compose.yml up -d
-docker compose -f stacks/loki-dashboard/docker-compose.yml up -d
 docker compose -f stacks/netdata/docker-compose.yml up -d
 docker compose -f stacks/fuelrod/docker-compose.yml up -d
 docker compose -f stacks/farm/docker-compose.yml up -d
@@ -96,7 +95,7 @@ Merge the relevant stack snippet into the host Caddyfile. Activepieces uses:
 flow.munywele.co.ke → 127.0.0.1:9710
 ```
 
-The monitoring stack uses Loki and Alloy for application logs. The separate `stacks/loki-dashboard/` stack provides a small browser UI for Loki at `logs.munywele.co.ke`; set `LOKI_DASHBOARD_USER` and `LOKI_DASHBOARD_PASSWORD_HASH` in the Caddy service environment before reloading. The separate `stacks/netdata/` stack monitors host and container metrics. Netdata runs with host PID/network access and Docker socket access, so its web listener is restricted to `127.0.0.1`; expose it only through the `monitor.munywele.co.ke` Caddy snippet. Grafana and Prometheus are not part of the active stack.
+The monitoring stack uses Loki, Alloy, and the Loki Dashboard browser UI for application logs. The dashboard connects to `http://loki:3100` over `dokploy-network` and is published on `127.0.0.1:9610`; expose it through the authenticated `logs.munywele.co.ke` Caddy snippet. The separate `stacks/netdata/` stack monitors host and container metrics.
 
 Validate before reloading:
 
