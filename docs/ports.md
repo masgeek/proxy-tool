@@ -56,7 +56,7 @@ standard ports for compatibility.
 | prometheus | 9090 | 9090 | — |
 | grafana | 9600 | 3000 | `stacks/monitoring/Caddyfile` |
 | alloy | — (exposed, not published) | 12345 | — |
-| beszel | hub | 8090 | 8090 | `stacks/beszel/Caddyfile` |
+| beszel | hub | 9625 | 8090 | `stacks/beszel/Caddyfile` |
 | beszel | agent | — (exposed, not published) | 45876 | — |
 | netdata | 19999 | 19999 | `stacks/netdata/Caddyfile` |
 

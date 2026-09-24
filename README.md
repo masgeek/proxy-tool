@@ -219,7 +219,7 @@ Each stack has its own `.env` (gitignored) sourced from `.env.example`. Stacks s
 | `automation` | `POSTGRES_*` (must match databases), n8n runtime settings |
 | `activepieces` | `AP_FRONTEND_URL`, `AP_ENCRYPTION_KEY`, `AP_JWT_SECRET`, `AP_WORKER_TOKEN`, `POSTGRES_*`, optional `REDIS_PASSWORD` |
 | `monitoring` | `GRAFANA_*`, `LOKI_*` |
-| `beszel` | `BESZEL_*` |
+| `beszel` | `BESZEL_*`, host port `9625` |
 | `netdata` | `NETDATA_*` |
 | `fuelrod` | `FUELROD_TAG`, `FUELROD_DOMAIN`, `PORTAL_DOMAIN`, `GATEWAY_DOMAIN` |
 | `farm` | `FARM_TAG`, `POSTGRES_*`, `JWT_SECRET`, `DEFAULT_PASSWORD` |
