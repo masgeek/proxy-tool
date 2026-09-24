@@ -99,4 +99,19 @@ loki.write "default" {
 }
 
 // ---------------------------------------------------------------------------
-// Logs only: Prometheus metrics are handled by Netdata.
+// Metrics: self-scrape and remote write to Prometheus
+// ---------------------------------------------------------------------------
+prometheus.scrape "agent" {
+  targets = [
+    {"__address__" = "127.0.0.1:12345"},
+  ]
+  forward_to       = [prometheus.remote_write.metrics.receiver]
+  scrape_interval  = "30s"
+  scrape_timeout   = "10s"
+}
+
+prometheus.remote_write "metrics" {
+  endpoint {
+    url = "http://prometheus:9090/api/v1/write"
+  }
+}
