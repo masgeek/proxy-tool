@@ -12,9 +12,58 @@
 order rate_limit before basicauth
 order cache before reverse_proxy
 
-# -----------------------------------------------------------------------------
-# Reusable snippets
-# -----------------------------------------------------------------------------
+(security_headers) {
+	header Content-Security-Policy "upgrade-insecure-requests"
+}
+
+(proxy_headers) {
+	header_up Host {host}
+	header_up X-Real-IP {remote_host}
+}
+
+(proxy_headers_port) {
+	import proxy_headers
+	header_up X-Forwarded-Port {server_port}
+}
+
+(proxy_headers_forwarded) {
+	header_up X-Forwarded-Host {host}
+	header_up X-Forwarded-Proto {scheme}
+}
+
+(proxy_headers_forwarded_port) {
+	import proxy_headers_forwarded
+	header_up X-Forwarded-Port {server_port}
+}
+
+(proxy_headers_forwarded_host_proto) {
+	import proxy_headers
+	import proxy_headers_forwarded
+}
+
+(proxy_headers_websocket) {
+	import proxy_headers
+	header_up Connection {>Connection}
+	header_up Upgrade {>Upgrade}
+}
+
+(proxy_disallowed_basic) {
+	@disallowed {
+		path /.git/*
+		path *.sql
+	}
+	respond @disallowed "Access Denied" 403
+}
+
+(proxy_disallowed_full) {
+	@disallowed {
+		path /.git/*
+		path *.sql
+		path /xmlrpc.php
+		path_regexp user_ini \.user\.ini
+	}
+	respond @disallowed "Access Denied" 403
+}
 
 import snippets/common.caddy
 import snippets/domains/akilimo.caddy

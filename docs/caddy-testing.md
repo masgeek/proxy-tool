@@ -27,13 +27,19 @@ The aggregate Caddyfile binds the admin API to `172.17.0.1:2019`. Confirm that t
 docker network inspect bridge --format '{{(index .IPAM.Config 0).Gateway}}'
 ```
 
-If the output differs, update the `admin` address in `Caddyfile` before deployment.
+If the output differs, update the `admin` address in `config/caddy/Caddyfile` before deployment.
 
-## 4. Back up and install the live configuration
+## 4. Manually back up and copy the Caddy configuration
+
+Run these commands from the repository root. Preserve the `snippets` directory structure because the deployed Caddyfile imports it.
 
 ```bash
-sudo cp /etc/caddy/Caddyfile "/etc/caddy/Caddyfile.bak.$(date +%Y%m%d%H%M%S)"
-sudo mkdir -p /etc/caddy/snippets/domains
+timestamp=$(date +%Y%m%d%H%M%S)
+backup="/etc/caddy/backups/caddy-$timestamp.tar.gz"
+
+sudo mkdir -p /etc/caddy/backups /etc/caddy/snippets/domains
+sudo tar -czf "$backup" -C /etc/caddy Caddyfile snippets 2>/dev/null || \
+    sudo tar -czf "$backup" -C /etc/caddy Caddyfile
 sudo cp config/caddy/Caddyfile /etc/caddy/Caddyfile
 sudo cp config/caddy/snippets/common.caddy /etc/caddy/snippets/common.caddy
 sudo cp config/caddy/snippets/domains/*.caddy /etc/caddy/snippets/domains/
@@ -41,7 +47,11 @@ sudo caddy validate --config /etc/caddy/Caddyfile
 sudo caddy reload --config /etc/caddy/Caddyfile
 ```
 
-If validation or reload fails, restore the backup and do not continue testing the new configuration.
+If validation or reload fails, use the standalone rollback script:
+
+```bash
+sudo ./scripts/rollback-caddy.sh "$backup"
+```
 
 ## 5. Check routing and certificates
 
