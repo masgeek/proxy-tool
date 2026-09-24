@@ -44,8 +44,10 @@ docker compose -f stacks/akilimo/docker-compose.yml up -d
 # 7. Use-Uptake — requires akilimo (connects to Akilimo API)
 docker compose -f stacks/use-uptake/docker-compose.yml up -d
 
-# 8. Fees — requires databases
-docker compose -f stacks/fees/docker-compose.yml up -d
+# 8. Fees production — requires databases
+# 9. Fees development — independent from production
+docker compose -f stacks/fees-prod/docker-compose.yml up -d
+docker compose -f stacks/fees-dev/docker-compose.yml up -d
 
 # --- Optional / tooling stacks (order independent) ---
 docker compose -f stacks/sonar/docker-compose.yml up -d
@@ -86,7 +88,8 @@ stacks/
   ├── farm/               ← Farm Manager API, web, migrations
   ├── akilimo/            ← Akilimo API (Laravel)
   ├── use-uptake/         ← Use-Uptake frontend
-  ├── fees/               ← Fee-syncer (prod + dev)
+  ├── fees-prod/          ← Production Fee Syncer
+  ├── fees-dev/           ← Development Fee Syncer
   ├── sonar/              ← SonarQube (optional)
   ├── metabase/           ← Metabase BI (optional)
   ├── mail/               ← Mailpit SMTP relay (optional)
@@ -136,7 +139,8 @@ Stacks that share postgres credentials must use matching values — copy from `s
 | `stacks/farm/.env` | Farm API, web, migrations (postgres creds must match databases) |
 | `stacks/akilimo/.env` | Akilimo API |
 | `stacks/use-uptake/.env` | Use-Uptake frontend |
-| `stacks/fees/.env` | Fee-syncer prod + dev |
+| `stacks/fees-prod/.env` | Production Fee Syncer |
+| `stacks/fees-dev/.env` | Development Fee Syncer |
 | `stacks/sonar/.env` | SonarQube (postgres creds must match databases) |
 | `stacks/metabase/.env` | Metabase (postgres creds must match databases) |
 | `stacks/mail/.env` | Mailpit |

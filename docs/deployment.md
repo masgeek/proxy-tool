@@ -48,7 +48,8 @@ docker compose -f stacks/netdata/docker-compose.yml up -d
 docker compose -f stacks/fuelrod/docker-compose.yml up -d
 docker compose -f stacks/farm/docker-compose.yml up -d
 docker compose -f stacks/akilimo/docker-compose.yml up -d
-docker compose -f stacks/fees/docker-compose.yml up -d
+docker compose -f stacks/fees-prod/docker-compose.yml up -d
+docker compose -f stacks/fees-dev/docker-compose.yml up -d
 ```
 
 Do not add `--project-directory .` to these commands. Relative bind mounts such as `../../config/...` and stack-local `.env` loading depend on the compose file's directory.
@@ -86,7 +87,7 @@ docker compose -f stacks/activepieces/docker-compose.yml up -d
 curl http://127.0.0.1:9710/api/v1/health
 ```
 
-The app publishes `127.0.0.1:9710`; the worker has no published port.
+Fees production and development are independent Compose projects. Start `fees-prod` and `fees-dev` separately; a production update does not restart the development container. Merge each stack's Caddy snippet into the host Caddyfile.
 
 ## Beszel
 

@@ -19,7 +19,8 @@ proxy-tool/
 │   ├── fuelrod/               ← Fuelrod service, SMS portal, SMS gateway
 │   ├── farm/                  ← Farm Manager API, web, migrations
 │   ├── akilimo/               ← Akilimo API, use-uptake
-│   ├── fees/                  ← Fee-syncer (prod + dev)
+│   ├── fees-prod/             ← Production Fee Syncer
+│   ├── fees-dev/              ← Development Fee Syncer
 │   ├── sonar/                 ← SonarQube  [optional]
 │   ├── metabase/              ← Metabase BI  [optional]
 │   ├── mail/                  ← Mailpit SMTP relay  [optional]
@@ -141,7 +142,8 @@ docker compose -f stacks/netdata/docker-compose.yml up -d
 docker compose -f stacks/fuelrod/docker-compose.yml up -d
 docker compose -f stacks/farm/docker-compose.yml up -d
 docker compose -f stacks/akilimo/docker-compose.yml up -d
-docker compose -f stacks/fees/docker-compose.yml up -d
+docker compose -f stacks/fees-prod/docker-compose.yml up -d
+docker compose -f stacks/fees-dev/docker-compose.yml up -d
 ```
 
 `activepieces` must exist in PostgreSQL before starting the Activepieces stack. Adding it to `ADDITIONAL_DBS` only creates it when `pgdata-main` is empty; on an existing database volume, create it explicitly with the shared PostgreSQL owner.
@@ -212,8 +214,8 @@ Then just run `ssh munywele-tools` and all ports are forwarded automatically.
 
 Use the stack-local guide when configuring or troubleshooting a specific stack:
 
+- [Fees production](stacks/fees-prod/README.md) and [Fees development](stacks/fees-dev/README.md) — independent Fee Syncer deployments.
 - [Activepieces](stacks/activepieces/README.md) — app/worker split, database setup, secrets, and worker token.
-- [Beszel](stacks/beszel/README.md) — hub/agent setup, key/token generation, and access.
 - [Netdata](stacks/netdata/README.md) — host metrics, privileged mounts, and Caddy access.
 - [Monitoring](stacks/monitoring/README.md) — Grafana, Prometheus, Loki, Alloy, and log UI.
 
@@ -230,10 +232,11 @@ Each stack has its own `.env` (gitignored) sourced from `.env.example`. Stacks s
 | `monitoring` | `GRAFANA_*`, `LOKI_*`, shared `POSTGRES_*` and `REDIS_PASSWORD` for exporters |
 | `beszel` | `BESZEL_*`, host port `9625` |
 | `netdata` | `NETDATA_*` |
+| `fees-prod` | Production Fee Syncer settings |
+| `fees-dev` | Development Fee Syncer settings |
 | `fuelrod` | `FUELROD_TAG`, `FUELROD_DOMAIN`, `PORTAL_DOMAIN`, `GATEWAY_DOMAIN` |
 | `farm` | `FARM_TAG`, `POSTGRES_*`, `JWT_SECRET`, `DEFAULT_PASSWORD` |
 | `akilimo` | `AKILIMO_TAG`, `USE_UPTAKE_TAG`, `AKILIMO_DOMAIN`, `MARIADB_*` |
-| `fees` | `SYNCER_TAG`, `FEES_PROD_DOMAIN`, `FEES_DEV_DOMAIN` |
 | `sonar` | `SONAR_TAG`, `SONAR_DOMAIN`, `POSTGRES_*` |
 | `metabase` | `METABASE_DOMAIN`, `POSTGRES_*` |
 | `mail` | `MAILPIT_DOMAIN` |
@@ -381,13 +384,14 @@ Each stack keeps its own Caddyfile. Copy the relevant blocks into the host's glo
 
 | Stack | Service | Caddyfile | Port |
 |---|---|---|---|
-| akilimo | `stacks/akilimo/Caddyfile` | `90xx` (PHP-FPM), `91xx` (API) |
-| fuelrod | `stacks/fuelrod/Caddyfile` | `92xx` |
-| farm | `stacks/farm/Caddyfile` | `93xx` |
-| fees | `stacks/fees/Caddyfile` | `94xx` |
-| use-uptake | `stacks/use-uptake/Caddyfile` | `95xx` |
+| akilimo | API | `stacks/akilimo/Caddyfile` | `90xx` (PHP-FPM), `91xx` (API) |
+| fuelrod | API | `stacks/fuelrod/Caddyfile` | `92xx` |
+| farm | API | `stacks/farm/Caddyfile` | `93xx` |
+| fees-prod | Fee Syncer production | `stacks/fees-prod/Caddyfile` | `9400` |
+| fees-dev | Fee Syncer development | `stacks/fees-dev/Caddyfile` | `9401` |
+| use-uptake | Web | `stacks/use-uptake/Caddyfile` | `95xx` |
 | monitoring | Grafana | `stacks/monitoring/Caddyfile` | `9600` |
-| netdata | Netdata | `stacks/netdata/Caddyfile` | `19999` |
+| netdata | Host metrics | `stacks/netdata/Caddyfile` | `19999` |
 | automation | n8n | `stacks/automation/Caddyfile` | `9700` |
 | activepieces | Activepieces app | `stacks/activepieces/Caddyfile` | `9710` |
 

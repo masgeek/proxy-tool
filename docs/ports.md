@@ -14,8 +14,8 @@ standard ports for compatibility.
 | fuelrod | portal | 9201 | 80 | `stacks/fuelrod/Caddyfile` |
 | farm | api | 9300 | 3001 | — |
 | farm | web | 9301 | 80 | — |
-| fees | api | 9400 | 80 | `stacks/fees/Caddyfile` |
-| fees | dev api | 9401 | 80 | `stacks/fees/Caddyfile` |
+| fees-prod | api | 9400 | 80 | `stacks/fees-prod/Caddyfile` |
+| fees-dev | api | 9401 | 80 | `stacks/fees-dev/Caddyfile` |
 | use-uptake | web | 9500 | 4242 | — |
 | s3 | s3 api | 9612 | 8080 | `stacks/s3/Caddyfile` |
 | s3 | console | 9614 | 3000 | `stacks/s3/Caddyfile` |

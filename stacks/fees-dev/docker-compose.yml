@@ -1,0 +1,78 @@
+name: "fees-dev"
+
+# Development Fee Syncer. Deploy independently from fees-prod.
+
+networks:
+  internal:
+    name: internal
+    external: false
+  dokploy-network:
+    name: dokploy-network
+    external: true
+
+services:
+  fee.dev:
+    container_name: fee.dev
+    image: ghcr.io/masgeek/fee-syncer:${SYNCER_TAG:?SYNCER_TAG must be set}
+    hostname: fee.dev
+    restart: unless-stopped
+    pull_policy: always
+    ports:
+      - "127.0.0.1:9401:80"
+    environment:
+      APP_NAME: ${APP_NAME:-Fee Syncer dev}
+      APP_ENV: ${APP_ENV:-development}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      APP_KEY: ${APP_KEY:?APP_KEY must be set}
+      APP_URL: ${APP_URL:?APP_URL must be set}
+      DB_CONNECTION: ${DB_CONNECTION:-pgsql}
+      DB_HOST: ${DB_HOST:?DB_HOST must be set}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_DATABASE: ${DB_DATABASE:?DB_DATABASE must be set}
+      DB_USERNAME: ${DB_USERNAME:?DB_USERNAME must be set}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
+      DB_TYPE: ${DB_TYPE:-postgres}
+      CACHE_STORE: ${CACHE_STORE:-redis}
+      CACHE_TTL: ${CACHE_TTL:-30s}
+      SESSION_DRIVER: ${SESSION_DRIVER:-redis}
+      SESSION_LIFETIME: ${SESSION_LIFETIME:-120}
+      CACHE_PREFIX: ${CACHE_PREFIX:-fees-dev:}
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+      LOG_CHANNEL: ${LOG_CHANNEL:-stack}
+      LOG_STACK: ${LOG_STACK:-stderr}
+      LOG_DEPRECATIONS_CHANNEL: ${LOG_DEPRECATIONS_CHANNEL:-null}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
+      REDIS_HOST: ${REDIS_HOST:-cache-dev}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_DB: ${REDIS_DB:-0}
+      QUEUE_WORKERS: ${QUEUE_WORKERS:-1}
+      QUEUE_HEAVY_WORKERS: ${QUEUE_HEAVY_WORKERS:-1}
+      QUEUE_MAX_TRIES: ${QUEUE_MAX_TRIES:-3}
+      QUEUE_TIMEOUT: ${QUEUE_TIMEOUT:-3600}
+      QUEUE_SLEEP: ${QUEUE_SLEEP:-3}
+      CADDY_ADMIN_URL: ${CADDY_ADMIN_URL:-host.docker.internal:2019}
+      HORIZON_ENABLED: "${HORIZON_ENABLED:-false}"
+      SCHEDULER_ENABLED: "${SCHEDULER_ENABLED:-false}"
+      LARAVEL_MIGRATE: "${LARAVEL_MIGRATE:-false}"
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: "2.0"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - dokploy-network
+      - internal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
