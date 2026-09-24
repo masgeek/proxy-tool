@@ -54,7 +54,7 @@ standard ports for compatibility.
 |---------|-----------|----------------|-----------|
 | loki | 3100 | 3100 | — |
 | alloy | — (exposed, not published) | 12345 | — |
-| netdata | 19999 | 19999 | `stacks/monitoring/Caddyfile` |
+| netdata | 19999 | 19999 | `stacks/netdata/Caddyfile` |
 
 ## Automation stacks
 

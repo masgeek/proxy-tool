@@ -43,6 +43,7 @@ Then deploy application stacks in dependency order:
 docker compose -f stacks/automation/docker-compose.yml up -d
 docker compose -f stacks/activepieces/docker-compose.yml up -d
 docker compose -f stacks/monitoring/docker-compose.yml up -d
+docker compose -f stacks/netdata/docker-compose.yml up -d
 docker compose -f stacks/fuelrod/docker-compose.yml up -d
 docker compose -f stacks/farm/docker-compose.yml up -d
 docker compose -f stacks/akilimo/docker-compose.yml up -d
@@ -94,7 +95,7 @@ Merge the relevant stack snippet into the host Caddyfile. Activepieces uses:
 flow.munywele.co.ke → 127.0.0.1:9710
 ```
 
-The monitoring stack uses Loki and Alloy for application logs, plus Netdata for host and container metrics. Application logs are collected from the selected Docker containers through Alloy and forwarded to Loki. Netdata runs with host PID/network access and Docker socket access, so its web listener is restricted to `127.0.0.1`; expose it only through the `monitor.munywele.co.ke` Caddy snippet. Grafana and Prometheus are not part of the active stack.
+The monitoring stack uses Loki and Alloy for application logs. The separate `stacks/netdata/` stack monitors host and container metrics. Netdata runs with host PID/network access and Docker socket access, so its web listener is restricted to `127.0.0.1`; expose it only through the `monitor.munywele.co.ke` Caddy snippet. Grafana and Prometheus are not part of the active stack.
 
 Validate before reloading:
 

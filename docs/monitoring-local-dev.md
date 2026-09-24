@@ -1,12 +1,12 @@
 # Local Development — Monitoring Stack
 
-The active monitoring stack is Loki + Alloy for application logs and Netdata for host/container metrics. Grafana and Prometheus are not part of the deployment.
+The active log stack is Loki + Alloy for application logs. Netdata is a separate stack for host/container metrics. Grafana and Prometheus are not part of the deployment.
 
 ## Prerequisites
 
 - Docker Engine with Docker Compose v2
 - Ports 3100 and 19999 available locally if testing directly
-- A stack `.env` with the Loki and Netdata values from `stacks/monitoring/.env.example`
+- A stack `.env` with the Loki values from `stacks/monitoring/.env.example`
 
 ## Deploy the stack
 
@@ -15,6 +15,7 @@ cp stacks/monitoring/.env.example stacks/monitoring/.env
 # Edit the copied file if the defaults need to be changed.
 docker compose -f stacks/monitoring/docker-compose.yml config --quiet
 docker compose -f stacks/monitoring/docker-compose.yml up -d
+docker compose -f stacks/netdata/docker-compose.yml up -d
 ```
 
 The stack requires the external `dokploy-network`; create it first when it does not exist:
@@ -53,6 +54,7 @@ logcli --addr=http://127.0.0.1:3100 \
 
 ```bash
 docker compose -f stacks/monitoring/docker-compose.yml down
+docker compose -f stacks/netdata/docker-compose.yml down
 ```
 
 This preserves the named Loki, Alloy, and Netdata volumes. Do not add `--volumes` unless permanent monitoring data should be deleted.

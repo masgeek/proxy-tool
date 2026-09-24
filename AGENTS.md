@@ -23,7 +23,7 @@
 - PostgreSQL files in `config/init/pgsql/` and `ADDITIONAL_DBS` run only when `pgdata-main` is empty. Later environment changes do not create databases automatically.
 - The network key `internal` usually has explicit `name: internal`, so it is shared across Compose projects despite older docs calling it private per-stack.
 - Explicit container, network, and volume names bypass Compose project isolation; do not assume parallel copies of a stack are safe.
-- Application logs are emitted to Docker stdout and collected by Alloy into Loki. Farm's `uploads` and Fuelrod's `fuelrod-uploads` remain separate data volumes. Netdata handles host and container metrics; it does not replace Loki.
+- Application logs are emitted to Docker stdout and collected by Alloy into Loki. Farm's `uploads` and Fuelrod's `fuelrod-uploads` remain separate data volumes. The separate Netdata stack handles host and container metrics; it does not replace Loki.
 - Netdata uses host PID/network access, the Docker socket, `SYS_ADMIN`, and `SYS_PTRACE`; its web listener is constrained to `127.0.0.1` and exposed publicly only through Caddy.
 - Do not assume host ports are private: PostgreSQL `5432`, MariaDB `3306`, MSSQL `1433`, and Mailpit SMTP `1025` currently bind all interfaces.
 

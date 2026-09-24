@@ -28,8 +28,9 @@ docker compose -f stacks/automation/docker-compose.yml up -d
 # 5. Activepieces — requires databases, cache, and the activepieces database
 docker compose -f stacks/activepieces/docker-compose.yml up -d
 
-# 6. Monitoring — Loki, Alloy, Netdata
+# 6. Monitoring — Loki and Alloy
 docker compose -f stacks/monitoring/docker-compose.yml up -d
+docker compose -f stacks/netdata/docker-compose.yml up -d
 
 # 4. Fuelrod — requires databases; creates the shared 'uploads' volume
 docker compose -f stacks/fuelrod/docker-compose.yml up -d
@@ -78,7 +79,8 @@ stacks/
   ├── cache/              ← Redis production and development
   ├── automation/         ← n8n
   ├── activepieces/       ← Activepieces app + worker
-  ├── monitoring/         ← Loki, Alloy, Netdata
+  ├── monitoring/         ← Loki and Alloy application logs
+  ├── netdata/            ← Netdata host/container metrics
   ├── fuelrod/            ← Fuelrod service, SMS portal, SMS gateway
   ├── farm/               ← Farm Manager API, web, migrations
   ├── akilimo/            ← Akilimo API (Laravel)
@@ -93,7 +95,8 @@ stacks/
 config/
   ├── supervisor/         ← Supervisor process configs per app (common/, fuelrod/, fees/, akilimo/)
   ├── nginx/              ← NGINX configs
-  ├── monitoring/         ← Loki, Alloy, Netdata
+  ├── monitoring/         ← Loki and Alloy application logs
+  ├── netdata/            ← Netdata host/container metrics
   └── init/pgsql/         ← PostgreSQL init scripts (run on first container start)
 log/
   └── supervisor/         ← Bind-mounted log directories (fees.prod/, fees.dev/)
@@ -124,7 +127,8 @@ Stacks that share postgres credentials must use matching values — copy from `s
 | `stacks/cache/.env` | production and development Redis passwords |
 | `stacks/activepieces/.env` | Activepieces public URL, secrets, worker token, shared PostgreSQL credentials, optional Redis password |
 | `stacks/automation/.env` | n8n (postgres creds must match databases) |
-| `stacks/monitoring/.env` | Loki limits and Netdata image/resource settings |
+| `stacks/monitoring/.env` | Loki limits |
+| `stacks/netdata/.env` | Netdata image and resource settings |
 | `stacks/fuelrod/.env` | Fuelrod, SMS portal, SMS gateway |
 | `stacks/farm/.env` | Farm API, web, migrations (postgres creds must match databases) |
 | `stacks/akilimo/.env` | Akilimo API |
@@ -160,7 +164,7 @@ Docker socket by Alloy.
 
 ### Monitoring Stack
 
-`stacks/monitoring/docker-compose.yml` runs Loki and Alloy for application logs, plus Netdata for host and Docker metrics. Alloy is logs-only and no longer remote-writes to Prometheus. Config files are bind-mounted from `../../config/monitoring/` (relative to `stacks/monitoring/`).
+`stacks/monitoring/docker-compose.yml` runs Loki and Alloy for application logs. `stacks/netdata/docker-compose.yml` runs Netdata independently for host and Docker metrics. Alloy is logs-only and no longer remote-writes to Prometheus.
 
 ## Versioning & CI
 
