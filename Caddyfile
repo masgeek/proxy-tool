@@ -9,6 +9,9 @@
 	email akilimo@cgiar.org
 }
 
+order rate_limit before basicauth
+order cache before reverse_proxy
+
 # -----------------------------------------------------------------------------
 # Reusable snippets
 # -----------------------------------------------------------------------------
