@@ -97,21 +97,3 @@ loki.write "default" {
     url = sys.env("LOKI_URL") + "/loki/api/v1/push"
   }
 }
-
-// ---------------------------------------------------------------------------
-// Metrics: self-scrape and remote write to Prometheus
-// ---------------------------------------------------------------------------
-prometheus.scrape "agent" {
-  targets = [
-    {"__address__" = "127.0.0.1:12345"},
-  ]
-  forward_to       = [prometheus.remote_write.metrics.receiver]
-  scrape_interval  = "30s"
-  scrape_timeout   = "10s"
-}
-
-prometheus.remote_write "metrics" {
-  endpoint {
-    url = "http://prometheus:9090/api/v1/write"
-  }
-}
