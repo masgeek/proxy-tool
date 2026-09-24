@@ -7,10 +7,9 @@
 	# Default ACME contact for akilimo.org properties.
 	# Overridden per-site below where a different email is needed.
 	email akilimo@cgiar.org
+	order rate_limit before basicauth
+	order cache before reverse_proxy
 }
-
-order rate_limit before basicauth
-order cache before reverse_proxy
 
 import snippets/domains/akilimo.caddy
 import snippets/domains/munywele.caddy
