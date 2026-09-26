@@ -34,7 +34,7 @@ The first check targets the separate Loki stack.
 
 Loki retention is `48h` by default. Alloy drops health-check requests, favicon requests, and log lines over `32 KB` before ingestion.
 
-Preloaded dashboards include Application Logs, Caddy, Prometheus, Loki Health, Docker Containers, PostgreSQL, and Redis Cache.
+Preloaded dashboards include Application Logs, Caddy, Prometheus, Loki Health, Docker Containers, PostgreSQL, Redis Cache, and Domain Health. Domain Health uses Blackbox Exporter metrics for reachability, status codes, redirects, HTTP version, latency, and certificate expiry. Prometheus rules also alert on unreachable domains, server errors, and certificates expiring within 14 days.
 
 Prometheus, Grafana, and Loki retain their named volumes. Do not add `--volumes` during normal teardown.
 
