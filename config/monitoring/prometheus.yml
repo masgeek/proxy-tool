@@ -44,6 +44,32 @@ scrape_configs:
         labels:
           service: cadvisor
 
+  - job_name: node-exporter
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          service: host
+
+  - job_name: blackbox-http
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+          - https://geo.akilimo.org/
+          - https://stats.akilimo.org/
+          - https://sonar.munywele.co.ke/
+          - https://kvuno.agwise.org/
+          - https://api.agwise.org/
+          - https://dashboard.agwise.org/
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
   - job_name: postgres
     static_configs:
       - targets: ['postgres-exporter:9187']
