@@ -32,7 +32,7 @@
       "title": "Domains Up",
       "type": "stat",
       "targets": [
-        { "expr": "sum(probe_success{job=\"blackbox-http\"})", "legendFormat": "up", "refId": "A" }
+        { "expr": "sum(probe_success{job=\"blackbox-http\", instance=~\"$domain\"} == bool $status)", "legendFormat": "up", "refId": "A" }
       ]
     },
     {
@@ -61,7 +61,7 @@
       "title": "Domains Down",
       "type": "stat",
       "targets": [
-        { "expr": "sum(probe_success{job=\"blackbox-http\"} == bool 0)", "legendFormat": "down", "refId": "A" }
+        { "expr": "sum(probe_success{job=\"blackbox-http\", instance=~\"$domain\"} == bool $status)", "legendFormat": "down", "refId": "A" }
       ]
     },
     {
@@ -89,7 +89,7 @@
       "title": "Domains Monitored",
       "type": "stat",
       "targets": [
-        { "expr": "count(probe_success{job=\"blackbox-http\"})", "legendFormat": "domains", "refId": "A" }
+        { "expr": "count(probe_success{job=\"blackbox-http\", instance=~\"$domain\"} == bool $status)", "legendFormat": "domains", "refId": "A" }
       ]
     },
     {
@@ -101,7 +101,7 @@
           "mappings": [],
           "decimals": 1,
           "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "orange", "value": 14 }, { "color": "green", "value": 30 }] },
-          "unit": "dtdurations"
+          "unit": "none"
         },
         "overrides": []
       },
@@ -118,12 +118,12 @@
       "title": "Nearest TLS Expiry",
       "type": "stat",
       "targets": [
-        { "expr": "min(probe_ssl_earliest_cert_expiry{job=\"blackbox-http\"} - time()) / 86400", "legendFormat": "days", "refId": "A" }
+        { "expr": "min(probe_ssl_earliest_cert_expiry{job=\"blackbox-http\", instance=~\"$domain\"} - time()) / 86400", "legendFormat": "days", "refId": "A" }
       ]
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "description": "Fraction of probed hostnames answering with a 2xx response, 5 minute average.",
+      "description": "Fraction of probed hostnames answering with an expected HTTP response below 500, 5 minute average.",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -165,7 +165,7 @@
       "title": "Overall Availability",
       "type": "timeseries",
       "targets": [
-        { "expr": "avg(avg_over_time(probe_success{job=\"blackbox-http\"}[5m]))", "legendFormat": "availability", "refId": "A" }
+        { "expr": "avg(avg_over_time((probe_success{job=\"blackbox-http\", instance=~\"$domain\"} == bool $status)[5m]))", "legendFormat": "availability", "refId": "A" }
       ]
     },
     {
@@ -209,7 +209,7 @@
       "title": "Current HTTP Status Code",
       "type": "timeseries",
       "targets": [
-        { "expr": "probe_http_status_code{job=\"blackbox-http\"}", "legendFormat": "{{instance}}", "refId": "A" }
+        { "expr": "probe_http_status_code{job=\"blackbox-http\", instance=~\"$domain\"}", "legendFormat": "{{instance}}", "refId": "A" }
       ]
     },
     {
@@ -253,7 +253,7 @@
       "title": "Probe Latency",
       "type": "timeseries",
       "targets": [
-        { "expr": "probe_duration_seconds{job=\"blackbox-http\"}", "legendFormat": "{{instance}}", "refId": "A" }
+        { "expr": "probe_duration_seconds{job=\"blackbox-http\", instance=~\"$domain\"}", "legendFormat": "{{instance}}", "refId": "A" }
       ]
     },
     {
@@ -298,7 +298,7 @@
       "title": "TLS Certificate Expiry",
       "type": "timeseries",
       "targets": [
-        { "expr": "(probe_ssl_earliest_cert_expiry{job=\"blackbox-http\"} - time()) / 86400", "legendFormat": "{{instance}}", "refId": "A" }
+        { "expr": "(probe_ssl_earliest_cert_expiry{job=\"blackbox-http\", instance=~\"$domain\"} - time()) / 86400", "legendFormat": "{{instance}}", "refId": "A" }
       ]
     },
     {
@@ -347,10 +347,10 @@
         "sortBy": [{ "desc": false, "displayName": "Domain" }]
       },
       "targets": [
-        { "expr": "probe_success{job=\"blackbox-http\"}", "format": "table", "instant": true, "legendFormat": "Status", "refId": "A" },
-        { "expr": "probe_http_status_code{job=\"blackbox-http\"}", "format": "table", "instant": true, "legendFormat": "Status Code", "refId": "B" },
-        { "expr": "probe_duration_seconds{job=\"blackbox-http\"}", "format": "table", "instant": true, "legendFormat": "Latency", "refId": "C" },
-        { "expr": "(probe_ssl_earliest_cert_expiry{job=\"blackbox-http\"} - time()) / 86400", "format": "table", "instant": true, "legendFormat": "Cert Expires In", "refId": "D" }
+        { "expr": "probe_success{job=\"blackbox-http\", instance=~\"$domain\"} == bool $status", "format": "table", "instant": true, "legendFormat": "Status", "refId": "A" },
+        { "expr": "probe_http_status_code{job=\"blackbox-http\", instance=~\"$domain\"}", "format": "table", "instant": true, "legendFormat": "Status Code", "refId": "B" },
+        { "expr": "probe_duration_seconds{job=\"blackbox-http\", instance=~\"$domain\"}", "format": "table", "instant": true, "legendFormat": "Latency", "refId": "C" },
+        { "expr": "(probe_ssl_earliest_cert_expiry{job=\"blackbox-http\", instance=~\"$domain\"} - time()) / 86400", "format": "table", "instant": true, "legendFormat": "Cert Expires In", "refId": "D" }
       ],
       "title": "Per-Domain Status",
       "transformations": [
@@ -440,7 +440,7 @@
         "tooltip": { "mode": "single", "sort": "none" }
       },
       "targets": [
-        { "expr": "probe_success{job=\"blackbox-http\"}", "legendFormat": "{{instance}}", "refId": "A" }
+        { "expr": "probe_success{job=\"blackbox-http\", instance=~\"$domain\"} == bool $status", "legendFormat": "{{instance}}", "refId": "A" }
       ],
       "title": "Site Status History",
       "type": "state-timeline"
@@ -489,7 +489,7 @@
       "title": "HTTP Redirect Count",
       "type": "timeseries",
       "targets": [
-        { "expr": "probe_http_redirects{job=\"blackbox-http\"}", "legendFormat": "{{instance}}", "refId": "A" }
+        { "expr": "probe_http_redirects{job=\"blackbox-http\", instance=~\"$domain\"}", "legendFormat": "{{instance}}", "refId": "A" }
       ]
     },
     {
@@ -536,7 +536,7 @@
       "title": "HTTP Protocol Version In Use",
       "type": "timeseries",
       "targets": [
-        { "expr": "sum by (instance, service) (probe_http_version{job=\"blackbox-http\"})", "legendFormat": "{{instance}} {{service}}", "refId": "A" }
+        { "expr": "sum by (instance, service) (probe_http_version{job=\"blackbox-http\", instance=~\"$domain\"})", "legendFormat": "{{instance}} {{service}}", "refId": "A" }
       ]
     },
     {
@@ -582,7 +582,7 @@
       "title": "Response Content Length",
       "type": "timeseries",
       "targets": [
-        { "expr": "probe_http_content_length{job=\"blackbox-http\"}", "legendFormat": "{{instance}}", "refId": "A" }
+        { "expr": "probe_http_content_length{job=\"blackbox-http\", instance=~\"$domain\"}", "legendFormat": "{{instance}}", "refId": "A" }
       ]
     },
     {
@@ -638,10 +638,10 @@
       "title": "Status Code Classes",
       "type": "timeseries",
       "targets": [
-        { "expr": "sum(probe_http_status_code{job=\"blackbox-http\"} >= 200 and probe_http_status_code{job=\"blackbox-http\"} < 300)", "legendFormat": "2xx", "refId": "A" },
-        { "expr": "sum(probe_http_status_code{job=\"blackbox-http\"} >= 300 and probe_http_status_code{job=\"blackbox-http\"} < 400)", "legendFormat": "3xx", "refId": "B" },
-        { "expr": "sum(probe_http_status_code{job=\"blackbox-http\"} >= 400 and probe_http_status_code{job=\"blackbox-http\"} < 500)", "legendFormat": "4xx", "refId": "C" },
-        { "expr": "sum(probe_http_status_code{job=\"blackbox-http\"} >= 500 and probe_http_status_code{job=\"blackbox-http\"} < 600)", "legendFormat": "5xx", "refId": "D" }
+        { "expr": "sum(probe_http_status_code{job=\"blackbox-http\", instance=~\"$domain\"} >= 200 and probe_http_status_code{job=\"blackbox-http\", instance=~\"$domain\"} < 300)", "legendFormat": "2xx", "refId": "A" },
+        { "expr": "sum(probe_http_status_code{job=\"blackbox-http\", instance=~\"$domain\"} >= 300 and probe_http_status_code{job=\"blackbox-http\", instance=~\"$domain\"} < 400)", "legendFormat": "3xx", "refId": "B" },
+        { "expr": "sum(probe_http_status_code{job=\"blackbox-http\", instance=~\"$domain\"} >= 400 and probe_http_status_code{job=\"blackbox-http\", instance=~\"$domain\"} < 500)", "legendFormat": "4xx", "refId": "C" },
+        { "expr": "sum(probe_http_status_code{job=\"blackbox-http\", instance=~\"$domain\"} >= 500 and probe_http_status_code{job=\"blackbox-http\", instance=~\"$domain\"} < 600)", "legendFormat": "5xx", "refId": "D" }
       ]
     },
     {
@@ -688,7 +688,7 @@
       "title": "24h Availability By Domain",
       "type": "timeseries",
       "targets": [
-        { "expr": "avg_over_time(probe_success{job=\"blackbox-http\"}[24h])", "legendFormat": "{{instance}}", "refId": "A" }
+        { "expr": "avg_over_time((probe_success{job=\"blackbox-http\", instance=~\"$domain\"} == bool $status)[24h])", "legendFormat": "{{instance}}", "refId": "A" }
       ]
     },
     {
@@ -702,7 +702,7 @@
           "min": 0,
           "noValue": "no TLS",
           "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "orange", "value": 14 }, { "color": "green", "value": 30 }] },
-          "unit": "dtdurations"
+          "unit": "none"
         },
         "overrides": []
       },
@@ -723,14 +723,48 @@
       "title": "Certificate Days Remaining",
       "type": "bargauge",
       "targets": [
-        { "expr": "(probe_ssl_earliest_cert_expiry{job=\"blackbox-http\"} - time()) / 86400", "instant": true, "legendFormat": "{{instance}}", "refId": "A" }
+        { "expr": "(probe_ssl_earliest_cert_expiry{job=\"blackbox-http\", instance=~\"$domain\"} - time()) / 86400", "instant": true, "legendFormat": "{{instance}}", "refId": "A" }
       ]
     }
   ],
   "refresh": "1m",
   "schemaVersion": 39,
   "tags": ["caddy", "domains", "http", "blackbox"],
-  "templating": { "list": [] },
+  "templating": {
+    "list": [
+      {
+        "allValue": ".*",
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "definition": "label_values(probe_success{job=\"blackbox-http\"}, instance)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Domain",
+        "multi": true,
+        "name": "domain",
+        "options": [],
+        "query": { "query": "label_values(probe_success{job=\"blackbox-http\"}, instance)", "refId": "StandardVariableQuery" },
+        "refresh": 1,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": { "selected": true, "text": "Up", "value": "1" },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Status",
+        "multi": false,
+        "name": "status",
+        "options": [
+          { "text": "Up", "value": "1" },
+          { "text": "Down", "value": "0" }
+        ],
+        "query": "[{\"text\": \"Up\", \"value\": \"1\"}, {\"text\": \"Down\", \"value\": \"0\"}]",
+        "type": "custom"
+      }
+    ]
+  },
   "time": { "from": "now-24h", "to": "now" },
   "timepicker": {},
   "timezone": "",
