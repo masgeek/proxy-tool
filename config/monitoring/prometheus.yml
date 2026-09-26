@@ -53,7 +53,7 @@ scrape_configs:
   - job_name: blackbox-http
     metrics_path: /probe
     params:
-      module: [http_2xx]
+      module: [http_accessible]
     # Every public hostname served by the host Caddy instance, enumerated from
     # config/caddy/snippets/domains/*.caddy. Upstream hostnames (reverse_proxy
     # destinations) and the http:// compatibility block are excluded.
