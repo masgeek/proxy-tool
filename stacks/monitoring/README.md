@@ -4,7 +4,9 @@ This stack runs Grafana, Prometheus, and Alloy. Loki runs in the separate `loki`
 
 - Alloy reads selected Docker container logs and sends them to Loki.
 - Loki stores logs and serves LogQL queries.
-- Prometheus stores metrics scraped from Caddy, Loki, and Alloy.
+- Prometheus stores metrics scraped from Caddy, Loki, Alloy, Node Exporter, PostgreSQL, Redis, and Blackbox Exporter.
+- Node Exporter provides host CPU, memory, disk, filesystem, and network metrics.
+- Blackbox Exporter checks public service availability and TLS certificate validity.
 - Grafana provides the log and metrics UI at `127.0.0.1:9600`.
 
 ## Setup
@@ -36,4 +38,4 @@ Preloaded dashboards include Application Logs, Caddy, Prometheus, Loki Health, D
 
 Prometheus, Grafana, and Loki retain their named volumes. Do not add `--volumes` during normal teardown.
 
-The Docker dashboard uses privileged cAdvisor. The PostgreSQL exporter uses the shared database credentials, and the Redis exporter uses the production cache password.
+The Docker dashboard uses privileged cAdvisor. Node Exporter runs with host PID and read-only host mounts. Blackbox Exporter uses `config/monitoring/blackbox.yml` to probe public HTTPS services and certificate health. The PostgreSQL exporter uses the shared database credentials, and the Redis exporter uses the production cache password.
