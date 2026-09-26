@@ -1,0 +1,18 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "graphTooltip": 1,
+  "panels": [
+    {"id": 1, "type": "stat", "title": "Ingestion Rate", "gridPos": {"h": 5, "w": 8, "x": 0, "y": 0}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "fieldConfig": {"defaults": {"unit": "Bps"}, "overrides": []}, "options": {"reduceOptions": {"calcs": ["lastNotNull"]}}, "targets": [{"expr": "sum(rate(loki_distributor_bytes_received_total[5m]))", "legendFormat": "received", "refId": "A"}]},
+    {"id": 2, "type": "stat", "title": "Ingest Errors", "gridPos": {"h": 5, "w": 8, "x": 8, "y": 0}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}, "options": {"reduceOptions": {"calcs": ["lastNotNull"]}}, "targets": [{"expr": "sum(increase(loki_discarded_samples_total[1h]))", "legendFormat": "discarded", "refId": "A"}]},
+    {"id": 3, "type": "stat", "title": "Ingester Chunks", "gridPos": {"h": 5, "w": 8, "x": 16, "y": 0}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}, "options": {"reduceOptions": {"calcs": ["lastNotNull"]}}, "targets": [{"expr": "sum(loki_ingester_memory_chunks)", "legendFormat": "chunks", "refId": "A"}]},
+    {"id": 4, "type": "timeseries", "title": "Loki Ingestion", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 5}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "fieldConfig": {"defaults": {"unit": "Bps"}, "overrides": []}, "targets": [{"expr": "sum(rate(loki_distributor_bytes_received_total[5m]))", "legendFormat": "received", "refId": "A"}]},
+    {"id": 5, "type": "timeseries", "title": "Request Duration p95", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 5}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []}, "targets": [{"expr": "histogram_quantile(0.95, sum(rate(loki_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95", "refId": "A"}]}
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["loki", "logs"],
+  "time": {"from": "now-6h", "to": "now"},
+  "title": "Loki Health",
+  "uid": "loki-health"
+}

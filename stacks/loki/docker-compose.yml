@@ -1,0 +1,59 @@
+name: "loki"
+
+networks:
+  internal:
+    name: internal
+    external: false
+
+volumes:
+  loki_data:
+    driver: local
+    name: loki-data
+
+services:
+  loki:
+    image: grafana/loki:3.7.6
+    container_name: loki
+    hostname: loki
+    ports:
+      - "127.0.0.1:3100:3100"
+    volumes:
+      - loki_data:/loki
+      - ../../config/monitoring/loki-config.yaml:/etc/loki/local-config.yaml:ro
+    command: -config.file=/etc/loki/local-config.yaml -config.expand-env=true
+    environment:
+      LOKI_HTTP_PORT: ${LOKI_HTTP_PORT:-3100}
+      LOKI_GRPC_PORT: ${LOKI_GRPC_PORT:-9096}
+      LOKI_LOG_LEVEL: ${LOKI_LOG_LEVEL:-info}
+      LOKI_CACHE_MAX_SIZE_MB: ${LOKI_CACHE_MAX_SIZE_MB:-32}
+      LOKI_REJECT_OLD_SAMPLES_AGE: ${LOKI_REJECT_OLD_SAMPLES_AGE:-48h}
+      LOKI_MAX_ENTRIES_LIMIT: ${LOKI_MAX_ENTRIES_LIMIT:-1000}
+      LOKI_RETENTION_PERIOD: ${LOKI_RETENTION_PERIOD:-48h}
+      LOKI_MAX_QUERY_LOOKBACK: ${LOKI_MAX_QUERY_LOOKBACK:-48h}
+      LOKI_MAX_QUERY_BYTES_READ: ${LOKI_MAX_QUERY_BYTES_READ:-128MB}
+      LOKI_QUERY_TIMEOUT: ${LOKI_QUERY_TIMEOUT:-30s}
+      LOKI_MAX_QUERY_PARALLELISM: ${LOKI_MAX_QUERY_PARALLELISM:-2}
+      LOKI_TSDB_MAX_QUERY_PARALLELISM: ${LOKI_TSDB_MAX_QUERY_PARALLELISM:-4}
+      LOKI_SPLIT_QUERIES_BY_INTERVAL: ${LOKI_SPLIT_QUERIES_BY_INTERVAL:-30m}
+      LOKI_INGESTION_RATE_MB: ${LOKI_INGESTION_RATE_MB:-5}
+      LOKI_INGESTION_BURST_SIZE_MB: ${LOKI_INGESTION_BURST_SIZE_MB:-10}
+    networks:
+      - internal
+    restart: unless-stopped
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD", "/usr/bin/loki", "-health"]
+      start_period: 30s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "2"
+    deploy:
+      resources:
+        limits:
+          memory: 1536m
+          cpus: "1.0"

@@ -1,0 +1,7 @@
+handle_errors {
+	header Retry-After "120"
+	header X-Request-ID "{http.request.uuid}"
+	root * /var/www/caddy-errors
+	rewrite * /upstream-unavailable.html
+	file_server
+}

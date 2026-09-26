@@ -1,0 +1,17 @@
+# The Caddyfile is an easy way to configure your Caddy web server.
+{
+	admin 172.17.0.1:2019 {
+		origins http://localhost:2019 localhost:2019 127.0.0.1:2019 http://172.17.0.1:2019 http://host.docker.internal:2019
+	}
+
+	# Default ACME contact for akilimo.org properties.
+	# Overridden per-site below where a different email is needed.
+	email akilimo@cgiar.org
+	order rate_limit before basicauth
+	order cache before reverse_proxy
+}
+
+import snippets/domains/akilimo.caddy
+import snippets/domains/munywele.caddy
+import snippets/domains/personal.caddy
+import snippets/domains/agwise.caddy

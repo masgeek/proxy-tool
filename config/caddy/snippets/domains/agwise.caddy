@@ -1,0 +1,96 @@
+# -----------------------------------------------------------------------------
+# agwise.org domain group
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# agwise — agwise.org
+# PHP-FPM: agwise container via unix socket
+# -----------------------------------------------------------------------------
+agwise.org {
+	tls agwise@akilimo.org
+
+	root * /data/extra_storage/services/agwise_site
+	php_fastcgi unix//run/php/php8.4-fpm.sock
+	import ../wp-common.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+
+	log {
+		output file /var/log/caddy/agwise.org.log
+		format console
+		level debug
+	}
+}
+
+# Old staging hostname — redirect to the live domain instead of duplicating config.
+new.agwise.org {
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+	redir https://agwise.org{uri} permanent
+}
+
+# AgWise RAG API.
+ragapi.agwise.org {
+	tls agwise@akilimo.org
+	encode gzip zstd
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+
+	reverse_proxy 127.0.0.1:8002 {
+		import ../headers/proxy-headers.caddy
+	}
+
+	log {
+		output file /var/log/caddy/ragapi.agwise.org.log
+		format console
+	}
+}
+
+# AgWise API.
+api.agwise.org {
+	tls agwise@akilimo.org
+	encode gzip zstd
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+	reverse_proxy 127.0.0.1:8000 {
+		import ../headers/proxy-headers.caddy
+	}
+	log {
+		output file /var/log/caddy/agwise-api.log
+		format console
+	}
+}
+
+# AgWise dashboard.
+dashboard.agwise.org {
+	tls agwise@akilimo.org
+	encode gzip zstd
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+	reverse_proxy 127.0.0.1:8300 {
+		import ../headers/proxy-headers.caddy
+	}
+	log {
+		output file /var/log/caddy/agwise-dashboard.log
+		format console
+	}
+}
+
+# KVUNO service.
+kvuno.agwise.org {
+	tls agwise@akilimo.org
+	encode gzip zstd
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+	reverse_proxy 127.0.0.1:9800 {
+		import ../headers/proxy-headers.caddy
+	}
+	log {
+		output file /var/log/caddy/kvuno.log
+		format console
+	}
+}

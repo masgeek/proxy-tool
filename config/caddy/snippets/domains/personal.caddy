@@ -1,0 +1,79 @@
+# Personal repository services exposed through the host Caddy instance.
+
+track.munywele.co.ke {
+	tls dev@munywele.co.ke
+	encode gzip zstd
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+	reverse_proxy 127.0.0.1:8800 {
+		import ../headers/proxy-headers.caddy
+	}
+	log {
+		output file /var/log/caddy/track.log
+		format console
+	}
+}
+
+scrob.munywele.co.ke {
+	tls dev@munywele.co.ke
+	encode gzip zstd
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+	reverse_proxy 127.0.0.1:8900 {
+		import ../headers/proxy-headers.caddy
+	}
+	log {
+		output file /var/log/caddy/scrob.log
+		format console
+	}
+}
+
+mealie.munywele.co.ke {
+	tls dev@munywele.co.ke
+	encode gzip zstd
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+	reverse_proxy 127.0.0.1:8925 {
+		import ../headers/proxy-headers.caddy
+	}
+	log {
+		output file /var/log/caddy/mealie.log
+		format console
+	}
+}
+
+ryot.munywele.co.ke {
+	tls dev@munywele.co.ke
+	encode gzip zstd
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+	reverse_proxy 127.0.0.1:8950 {
+		import ../headers/proxy-headers.caddy
+	}
+	log {
+		output file /var/log/caddy/ryot.log
+		format console
+	}
+}
+
+paperless.munywele.co.ke {
+	tls dev@munywele.co.ke
+	encode gzip zstd
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+	request_body {
+		max_size 100MB
+	}
+	reverse_proxy 127.0.0.1:8890 {
+		import ../headers/proxy-headers.caddy
+	}
+	log {
+		output file /var/log/caddy/paperless.log
+		format console
+	}
+}

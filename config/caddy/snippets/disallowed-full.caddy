@@ -1,0 +1,7 @@
+@disallowed {
+	path /.git/*
+	path *.sql
+	path /xmlrpc.php
+	path_regexp user_ini \.user\.ini
+}
+respond @disallowed "Access Denied" 403

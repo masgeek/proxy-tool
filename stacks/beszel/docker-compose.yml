@@ -1,0 +1,73 @@
+name: "beszel"
+
+# Beszel hub and host agent for lightweight system monitoring.
+
+networks:
+  internal:
+    name: internal
+    external: false
+  dokploy-network:
+    name: dokploy-network
+    external: true
+
+volumes:
+  beszel-data:
+    driver: local
+    name: beszel-data
+  beszel-agent-data:
+    driver: local
+    name: beszel-agent-data
+
+services:
+  hub:
+    image: henrygd/beszel:${BESZEL_TAG:-latest}
+    container_name: beszel
+    hostname: beszel
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9625:8090"
+    volumes:
+      - beszel-data:/beszel_data
+    networks:
+      - dokploy-network
+      - internal
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "2"
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "${BESZEL_HUB_CPU_LIMIT:-0.5}"
+
+  agent:
+    image: henrygd/beszel-agent:${BESZEL_AGENT_TAG:-latest}
+    container_name: beszel-agent
+    restart: unless-stopped
+    expose:
+      - "${BESZEL_AGENT_PORT:-45876}"
+    environment:
+      LISTEN: 45876
+      TOKEN: ${BESZEL_UNIVERSAL_TOKEN:?BESZEL_UNIVERSAL_TOKEN must be set}
+      KEY: ${BESZEL_KEY:?BESZEL_KEY must be set}
+      HUB_URL: http://beszel:8090
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - beszel-agent-data:/var/lib/beszel-agent
+    networks:
+      - dokploy-network
+      - internal
+    depends_on:
+      - hub
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "2"
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+          cpus: "${BESZEL_AGENT_CPU_LIMIT:-0.25}"

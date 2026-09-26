@@ -16,15 +16,12 @@ api.munywele.co.ke, api.tsobu.co.ke {
                 level debug
         }
 
-        encode gzip
+        encode zstd gzip
 
         rewrite * /api{uri}
 
         reverse_proxy 127.0.0.1:9200 {
-                header_up Host {host}
-                header_up X-Real-IP {remote_host}
-
-
+                import proxy_headers
         }
 
         @disallowed {
@@ -47,13 +44,10 @@ sms.munywele.co.ke {
                 level debug
         }
 
-        encode gzip
+        encode zstd gzip
 
         reverse_proxy 127.0.0.1:9201 {
-                header_up Host {host}
-                header_up X-Real-IP {remote_host}
-
-
+                import proxy_headers
         }
 
         @disallowed {

@@ -1,28 +1,27 @@
 # =============================================================================
-# Caddy configuration for Fees stack
+# Caddy configuration for Fuelrod stack
 # Copy the relevant block(s) into your host Caddyfile
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# fee.prod — fees.munywele.co.ke
-# HTTP reverse proxy to the fee.prod container on 127.0.0.1:9400
+# fuelrod API — api.munywele.co.ke + api.tsobu.co.ke
+# HTTP reverse proxy to the fuelrod container on 127.0.0.1:9200
 # -----------------------------------------------------------------------------
-fees.munywele.co.ke {
+api.munywele.co.ke, api.tsobu.co.ke {
         tls dev@munywele.co.ke
 
         log {
-                output file /var/log/caddy/fees-prod.log
+                output file /var/log/caddy/fuelrod.log
                 format console
                 level debug
         }
 
-        encode gzip
+        encode zstd gzip
 
-        reverse_proxy 127.0.0.1:9400 {
-                header_up Host {host}
-                header_up X-Real-IP {remote_host}
+        rewrite * /api{uri}
 
-
+        reverse_proxy 127.0.0.1:9200 {
+                import proxy_headers
         }
 
         @disallowed {
@@ -33,25 +32,22 @@ fees.munywele.co.ke {
 }
 
 # -----------------------------------------------------------------------------
-# fee.dev — fees-dev.munywele.co.ke
-# HTTP reverse proxy to the fee.dev container on 127.0.0.1:9401
+# fuelrod portal — sms.munywele.co.ke
+# HTTP reverse proxy to the portal container on 127.0.0.1:9201
 # -----------------------------------------------------------------------------
-fees-dev.munywele.co.ke {
+sms.munywele.co.ke {
         tls dev@munywele.co.ke
 
         log {
-                output file /var/log/caddy/fees-dev.log
+                output file /var/log/caddy/fuelrod-portal.log
                 format console
                 level debug
         }
 
-        encode gzip
+        encode zstd gzip
 
-        reverse_proxy 127.0.0.1:9401 {
-                header_up Host {host}
-                header_up X-Real-IP {remote_host}
-
-
+        reverse_proxy 127.0.0.1:9201 {
+                import proxy_headers
         }
 
         @disallowed {

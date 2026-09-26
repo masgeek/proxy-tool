@@ -14,14 +14,16 @@ standard ports for compatibility.
 | fuelrod | portal | 9201 | 80 | `stacks/fuelrod/Caddyfile` |
 | farm | api | 9300 | 3001 | — |
 | farm | web | 9301 | 80 | — |
-| fees | api | 9400 | 80 | `stacks/fees/Caddyfile` |
-| fees | dev api | 9401 | 80 | `stacks/fees/Caddyfile` |
+| fees-prod | api | 9400 | 80 | `stacks/fees-prod/Caddyfile` |
+| fees-dev | api | 9401 | 80 | `stacks/fees-dev/Caddyfile` |
 | use-uptake | web | 9500 | 4242 | — |
 | s3 | s3 api | 9612 | 8080 | `stacks/s3/Caddyfile` |
 | s3 | console | 9614 | 3000 | `stacks/s3/Caddyfile` |
 | shortener | shortener | 9660 | 3000 | `stacks/shortener/Caddyfile` |
 | agwise-api | api | 8000 | 8000 | `stacks/agwise-api/Caddyfile` |
 | agwise-api | dashboard | 8300 | 3000 | `stacks/agwise-api/Caddyfile` |
+| caddy-manager | api | 9620 | 3500 | — |
+| caddy-manager | web | 9621 | 80 | `stacks/caddy-manager/Caddyfile` |
 | kvuno | api | 9800 | 5000 | `stacks/kvuno/Caddyfile` |
 | keycloak | keycloak | 9850 | 8080 | `stacks/keycloak/Caddyfile` |
 | sonar | sonar | 9900 | 9000 | — |
@@ -48,18 +50,25 @@ standard ports for compatibility.
 
 ## Monitoring stack
 
-| Service | Host port | Container port |
-|---------|-----------|----------------|
-| loki | 3100 | 3100 |
-| prometheus | 9090 | 9090 |
-| grafana | 9600 | 3000 |
-| alloy | — (exposed, not published) | 12345 |
+| Service | Host port | Container port | Caddyfile |
+|---------|-----------|----------------|-----------|
+| loki | 3100 | 3100 | — |
+| prometheus | 9090 | 9090 | — |
+| grafana | 9600 | 3000 | `stacks/monitoring/Caddyfile` |
+| alloy | — (exposed, not published) | 12345 | — |
+| beszel | hub | 9625 | 8090 | `stacks/beszel/Caddyfile` |
+| beszel | agent | — (exposed, not published) | 45876 | — |
+| netdata | 19999 | 19999 | `stacks/netdata/Caddyfile` |
 
-## Automation stack
+## Automation stacks
 
-| Service | Host port | Container port |
-|---------|-----------|----------------|
-| n8n | 9700 | 5678 |
+| Stack | Service | Host port | Container port | Caddyfile |
+|-------|---------|-----------|----------------|-----------|
+| automation | n8n | 9700 | 5678 | `stacks/automation/Caddyfile` |
+| activepieces | app | 9710 | 80 | `stacks/activepieces/Caddyfile` |
+| activepieces | worker | — | — | — |
+
+Activepieces publishes only the app on loopback; the worker connects internally to the app.
 
 ## Infrastructure (standard ports)
 
@@ -68,7 +77,7 @@ standard ports for compatibility.
 | databases | postgres | 5432 | 5432 |
 | databases | pgbouncer | 6432 | 5432 |
 | databases | maria | 3306 | 3306 |
-| cache | redis | 6379 | 6379 |
+| cache | cache-dev | 6379 | 6379 |
 | mail | mailpit | 1025 | 1025 |
 | mssql | mssql | 1433 | 1433 |
 
@@ -91,3 +100,5 @@ standard ports for compatibility.
 3. **Standard ports preserved** — databases and mail keep their well-known
    ports (3306, 5432, 6379, 1025, 1433) to avoid breaking client configs.
 4. **New stack?** — pick the next free 9xxx slot and add a row to this table.
+
+The production `cache` service has no published host port; only `cache-dev` publishes Redis on loopback port `6379`.

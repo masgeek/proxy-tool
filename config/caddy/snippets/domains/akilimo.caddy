@@ -1,0 +1,202 @@
+# -----------------------------------------------------------------------------
+# akilimo.org domain group
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# akilimo-hub — akilimo-hub.eastus.cloudapp.azure.com
+# -----------------------------------------------------------------------------
+akilimo-hub.eastus.cloudapp.azure.com, dokploy.munywele.co.ke, dokploy.akilimo.org {
+	encode gzip zstd
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+
+	handle /logs* {
+		reverse_proxy 127.0.0.1:9999 {
+		}
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:3000 {
+			import ../headers/proxy-headers.caddy
+		}
+	}
+}
+
+# -----------------------------------------------------------------------------
+# akilimo-site — akilimo.org
+# PHP-FPM: akilimo-site container via unix socket
+# -----------------------------------------------------------------------------
+akilimo.org {
+	root * /mnt/data/extra_storage/services/akilimo
+	php_fastcgi 127.0.0.1:9000 {
+		root /var/www/html
+	}
+	import ../wp-common.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+
+	log {
+		output file /var/log/caddy/akilimo.org.log
+		format console
+	}
+}
+
+# -----------------------------------------------------------------------------
+# akilimo-portal — portal.akilimo.org
+# PHP-FPM: akilimo-portal container via unix socket
+# -----------------------------------------------------------------------------
+portal.akilimo.org {
+	root * /mnt/data/extra_storage/services/portal
+	php_fastcgi 127.0.0.1:9001 {
+		root /var/www/html
+	}
+	import ../wp-common.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+
+	log {
+		output file /var/log/caddy/portal.akilimo.org.log
+		format console
+	}
+}
+
+# -----------------------------------------------------------------------------
+# new-akilimo — new.akilimo.org
+# PHP-FPM: new-akilimo container on 127.0.0.1:9002
+# -----------------------------------------------------------------------------
+new.akilimo.org {
+	tls akilimo@cgiar.org
+
+	root * /mnt/data/extra_storage/services/new_akilimo
+	php_fastcgi 127.0.0.1:9002 {
+		root /var/www/html
+	}
+	import ../wp-common.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+
+	log {
+		output file /var/log/caddy/new-akilimo.log
+		format console
+		level debug
+	}
+}
+
+# -----------------------------------------------------------------------------
+# akilimo-dev — app.akilimo.org, dev.akilimo.org
+# Reverse proxy to akilimo-api container root on 127.0.0.1:9100
+# -----------------------------------------------------------------------------
+app.akilimo.org, dev.akilimo.org {
+	tls akilimo@cgiar.org
+	encode gzip zstd
+	import ../disallowed-full.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+
+	reverse_proxy 127.0.0.1:9100 {
+		import ../headers/proxy-headers.caddy
+
+		transport http {
+			dial_timeout 1800s
+			response_header_timeout 1800s
+		}
+	}
+
+	log {
+		output file /var/log/caddy/akilimo-app.log
+		format console
+		level debug
+	}
+}
+
+# -----------------------------------------------------------------------------
+# akilimo-api — api.akilimo.org
+# Reverse proxy to akilimo-api container on 127.0.0.1:9100/api
+# -----------------------------------------------------------------------------
+api.akilimo.org {
+	tls akilimo@cgiar.org
+	encode gzip
+	import ../disallowed-full.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+
+	rewrite * /api{uri}
+
+	reverse_proxy 127.0.0.1:9100 {
+		import ../headers/proxy-headers-port.caddy
+
+		transport http {
+			dial_timeout 1800s
+			response_header_timeout 1800s
+		}
+	}
+
+	log {
+		output file /var/log/caddy/akilimo-api.log
+		format console
+		level debug
+	}
+}
+
+# -----------------------------------------------------------------------------
+# akilimo.org — Use-Uptake
+# -----------------------------------------------------------------------------
+uptake.akilimo.org {
+	tls akilimo@cgiar.org
+	encode gzip zstd
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+	reverse_proxy 127.0.0.1:9500 {
+		import ../headers/proxy-headers.caddy
+	}
+	log {
+		output file /var/log/caddy/use-uptake.log
+		format console
+	}
+}
+
+# -----------------------------------------------------------------------------
+# akilimo.org — GeoServer
+# -----------------------------------------------------------------------------
+geo.akilimo.org {
+	tls akilimo@cgiar.org
+	encode gzip zstd
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+	cache {
+		allowed_http_verbs GET HEAD
+		default_cache_control "public, max-age=86400, stale-while-revalidate=604800, immutable"
+		ttl 24h
+		stale 168h
+	}
+	reverse_proxy 127.0.0.1:9510 {
+		import ../headers/proxy-headers.caddy
+	}
+	log {
+		output file /var/log/caddy/geo-server.log
+		format console
+	}
+}
+
+stats.akilimo.org {
+	tls akilimo@cgiar.org
+	encode gzip zstd
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+	cache {
+		allowed_http_verbs GET HEAD
+		default_cache_control "public, max-age=300, stale-while-revalidate=1800"
+		ttl 5m
+		stale 30m
+	}
+	reverse_proxy 127.0.0.1:9511 {
+		import ../headers/proxy-headers.caddy
+	}
+	log {
+		output file /var/log/caddy/stats-api.log
+		format console
+	}
+}

@@ -1,0 +1,84 @@
+name: "geoserver"
+
+networks:
+  internal:
+    name: internal
+    external: false
+  dokploy-network:
+    name: dokploy-network
+    external: true
+
+volumes:
+  geoserver-data:
+    driver: local
+    name: geoserver-data
+
+services:
+  geoserver:
+    container_name: geoserver
+    hostname: geoserver
+    image: docker.osgeo.org/geoserver:${GEOSERVER_TAG:?GEOSERVER_TAG must be set}
+    restart: unless-stopped
+    stop_grace_period: 60s
+    environment:
+      ROOT_WEBAPP_REDIRECT: "true"
+      PROXY_BASE_URL: ${PROXY_BASE_URL:?PROXY_BASE_URL must be set}
+      INSTALL_EXTENSIONS: "true"
+      STABLE_EXTENSIONS: ${GEOSERVER_EXTENSIONS:-wps,csw}
+      EXTRA_JAVA_OPTS: "-Xms1G -Xmx1536M"
+      CORS_ENABLED: ${CORS_ENABLED:-true}
+      CORS_ALLOWED_METHODS: "GET,POST,PUT,HEAD,OPTIONS"
+      POSTGRES_JNDI_ENABLED: "true"
+      POSTGRES_HOST: ${DB_HOST:-postgres}
+      POSTGRES_PORT: ${DB_PORT:-5432}
+      POSTGRES_DB: ${DB_DATABASE:-geoserver}
+      POSTGRES_USERNAME: ${DB_USERNAME:-geoserver}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
+      POSTGRES_JNDI_RESOURCE_NAME: jdbc/postgres
+      RUN_UNPRIVILEGED: "true"
+      RUN_WITH_USER_UID: "1000"
+      RUN_WITH_USER_GID: "1000"
+      GEOSERVER_ADMIN_USER: ${GEOSERVER_ADMIN_USER:-admin}
+      GEOSERVER_ADMIN_PASSWORD: ${GEOSERVER_ADMIN_PASSWORD:?GEOSERVER_ADMIN_PASSWORD must be set}
+      GEOSERVER_CSRF_WHITELIST: ${GEOSERVER_CSRF_WHITELIST:-}
+      SKIP_DEMO_DATA: ${SKIP_DEMO_DATA:-true}
+    volumes:
+      - geoserver-data:/opt/geoserver_data
+      # Mount host directory for user uploads directly into GeoServer's data folder
+      - /var/user_uploads:/opt/geoserver_data/data/user_uploads
+    ports:
+      - "127.0.0.1:9510:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/geoserver/web/wicket/resource/org.geoserver.web.GeoServerBasePage/img/logo.png"]
+      interval: 60s
+      timeout: 20s
+      retries: 3
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: "1.0"
+    networks:
+      - dokploy-network
+      - internal
+
+  stats-api:
+    container_name: stats-api
+    hostname: stats-api
+    image: ghcr.io/masgeek/mfl-dashboard:${STATS_API_TAG:-latest}
+    restart: unless-stopped
+    stop_grace_period: 60s
+    environment:
+      GEOSERVER_BASE: ${GEOSERVER_BASE:-https://geo.akilimo.org/geoserver}
+    ports:
+      - "127.0.0.1:9511:5001"
+    mem_limit: 2G
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "2.0"
+    networks:
+      - dokploy-network
+      - internal

@@ -1,0 +1,107 @@
+name: "fees-prod"
+
+# Production Fee Syncer. Deploy after databases and cache.
+
+networks:
+  internal:
+    name: internal
+    external: false
+  dokploy-network:
+    name: dokploy-network
+    external: true
+
+services:
+  fee.prod:
+    container_name: fee.prod
+    image: ghcr.io/masgeek/fee-syncer:${SYNCER_TAG:?SYNCER_TAG must be set}
+    hostname: fee.prod
+    restart: unless-stopped
+    stop_grace_period: 30s
+    pull_policy: always
+    ports:
+      - "127.0.0.1:9400:80"
+    environment:
+      APP_NAME: ${APP_NAME:-Fee Syncer}
+      APP_ENV: ${APP_ENV:-production}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      APP_KEY: ${APP_KEY:?APP_KEY must be set}
+      APP_URL: ${APP_URL:?APP_URL must be set}
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-*}
+      DB_CONNECTION: ${DB_CONNECTION:-pgsql}
+      DB_HOST: ${DB_HOST:?DB_HOST must be set}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_DATABASE: ${DB_DATABASE:?DB_DATABASE must be set}
+      DB_USERNAME: ${DB_USERNAME:?DB_USERNAME must be set}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
+      DB_TYPE: ${DB_TYPE:-postgres}
+      CACHE_STORE: ${CACHE_STORE:-redis}
+      CACHE_TTL: ${CACHE_TTL:-30s}
+      SESSION_DRIVER: ${SESSION_DRIVER:-redis}
+      SESSION_LIFETIME: ${SESSION_LIFETIME:-120}
+      CACHE_PREFIX: ${CACHE_PREFIX:-fees:}
+      REDIS_HOST: ${REDIS_HOST:-cache}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_DB: ${REDIS_DB:-0}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-redis}
+      QUEUE_WORKERS: ${QUEUE_WORKERS:-5}
+      QUEUE_MAX_TRIES: ${QUEUE_MAX_TRIES:-3}
+      QUEUE_TIMEOUT: ${QUEUE_TIMEOUT:-3600}
+      QUEUE_SLEEP: ${QUEUE_SLEEP:-3}
+      ENV_QUEUE_TIMEOUT: ${ENV_QUEUE_TIMEOUT:-60}
+      AUTO_RECOVER_FAILED_MIGRATIONS: ${AUTO_RECOVER_FAILED_MIGRATIONS:-false}
+      LOG_LEVEL: ${LOG_LEVEL:-warning}
+      LOG_CHANNEL: ${LOG_CHANNEL:-stack}
+      LOG_STACK: ${LOG_STACK:-stderr}
+      LOG_DEPRECATIONS_CHANNEL: ${LOG_DEPRECATIONS_CHANNEL:-null}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
+      FILESYSTEM_DISK: ${FILESYSTEM_DISK:-local}
+      CADDY_ADMIN_URL: ${CADDY_ADMIN_URL:-host.docker.internal:2019}
+      HEALTHCHECK_CADDY_ADMIN: ${HEALTHCHECK_CADDY_ADMIN:-true}
+      HEALTHCHECK_LOKI: ${HEALTHCHECK_LOKI:-false}
+      HEALTHCHECK_REDIS: ${HEALTHCHECK_REDIS:-true}
+      HEALTHCHECK_STORAGE: ${HEALTHCHECK_STORAGE:-true}
+      HEALTHCHECK_DISK_SPACE: ${HEALTHCHECK_DISK_SPACE:-true}
+      HEALTHCHECK_LOGGING: ${HEALTHCHECK_LOGGING:-true}
+      HEALTHCHECK_HORIZON: ${HEALTHCHECK_HORIZON:-false}
+      HEALTHCHECK_FEES_API: ${HEALTHCHECK_FEES_API:-false}
+      HEALTHCHECK_TELEGRAM: ${HEALTHCHECK_TELEGRAM:-false}
+      AGENT_MQTT_ENABLED: ${AGENT_MQTT_ENABLED:-true}
+      AGENT_MQTT_HOST: ${AGENT_MQTT_HOST:-mqtt}
+      AGENT_MQTT_PORT: ${AGENT_MQTT_PORT:-1883}
+      AGENT_MQTT_CLIENT_ID: ${AGENT_MQTT_CLIENT_ID:-fee-prod}
+      AGENT_MQTT_TOPIC_PREFIX: ${AGENT_MQTT_TOPIC_PREFIX:-fee-syncer/agent}
+      AGENT_MQTT_USERNAME: ${AGENT_MQTT_USERNAME:?AGENT_MQTT_USERNAME must be set}
+      AGENT_MQTT_PASSWORD: ${AGENT_MQTT_PASSWORD:?AGENT_MQTT_PASSWORD must be set}
+      AGENT_MQTT_TLS: ${AGENT_MQTT_TLS:-false}
+      AGENT_MQTT_LOG_CHANNEL: ${AGENT_MQTT_LOG_CHANNEL:-mqtt}
+      OCTANE_HTTPS: ${OCTANE_HTTPS:-false}
+      HORIZON_ENABLED: "${HORIZON_ENABLED:-false}"
+      SCHEDULER_ENABLED: "${SCHEDULER_ENABLED:-false}"
+      LARAVEL_MIGRATE: "${LARAVEL_MIGRATE:-false}"
+      MAIL_MAILER: ${MAIL_MAILER:-n8n-mailer}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-Fee Syncer}
+      N8N_MAILER_AUTH: ${N8N_MAILER_AUTH:-none}
+      N8N_MAILER_URL: ${N8N_MAILER_URL:-}
+      N8N_MAILER_TOKEN: ${N8N_MAILER_TOKEN:-}
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: "2.0"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - dokploy-network
+      - internal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
