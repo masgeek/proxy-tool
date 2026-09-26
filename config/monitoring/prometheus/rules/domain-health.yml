@@ -1,0 +1,29 @@
+groups:
+  - name: domain-health
+    rules:
+      - alert: DomainDown
+        expr: probe_success{job="blackbox-http"} == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Domain is unreachable"
+          description: "{{ $labels.instance }} has failed its accessibility probe for more than 5 minutes."
+
+      - alert: DomainCertificateExpiringSoon
+        expr: (probe_ssl_earliest_cert_expiry{job="blackbox-http"} - time()) < 14 * 24 * 60 * 60
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Domain certificate is expiring soon"
+          description: "{{ $labels.instance }} has a certificate expiring within 14 days."
+
+      - alert: DomainServerError
+        expr: probe_http_status_code{job="blackbox-http"} >= 500
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Domain is returning a server error"
+          description: "{{ $labels.instance }} is returning HTTP status {{ $value }}."
