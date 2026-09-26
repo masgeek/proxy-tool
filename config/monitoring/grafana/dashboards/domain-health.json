@@ -122,6 +122,15 @@
       ]
     },
     {
+      "collapsed": false,
+      "description": "Drill-down section. Pick a domain in the Per-Domain Status table to scope every panel below to that hostname.",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 4 },
+      "id": 100,
+      "panels": [],
+      "title": "Selected Domain Details",
+      "type": "row"
+    },
+    {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "description": "Fraction of probed hostnames answering with an expected HTTP response below 500, 5 minute average.",
       "fieldConfig": {
@@ -156,7 +165,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
       "id": 5,
       "options": {
         "legend": { "calcs": ["mean", "min"], "displayMode": "table", "placement": "bottom" },
@@ -200,7 +209,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
       "id": 6,
       "options": {
         "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom" },
@@ -244,7 +253,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 13 },
       "id": 7,
       "options": {
         "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" },
@@ -289,7 +298,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 13 },
       "id": 8,
       "options": {
         "legend": { "calcs": ["min"], "displayMode": "table", "placement": "bottom" },
@@ -335,10 +344,27 @@
           {
             "matcher": { "id": "byName", "options": "Cert Expires In" },
             "properties": [{ "id": "unit", "value": "dtdurations" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Domain" },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Drill into ${__data.fields.Domain}",
+                    "url": "/d/domain-health?var-domain=${__value.raw}&var-from=${__from}&var-to=${__to}",
+                    "oneClick": false
+                  }
+                ]
+              },
+              { "id": "custom.cellOptions", "value": { "type": "link" } }
+            ]
           }
         ]
       },
-      "gridPos": { "h": 11, "w": 24, "x": 0, "y": 20 },
+      "gridPos": { "h": 11, "w": 24, "x": 0, "y": 21 },
       "id": 9,
       "options": {
         "cellHeight": "sm",
@@ -429,7 +455,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 31 },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 32 },
       "id": 10,
       "options": {
         "alignValue": "left",
@@ -480,7 +506,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 39 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 40 },
       "id": 11,
       "options": {
         "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom" },
@@ -527,7 +553,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 39 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 40 },
       "id": 12,
       "options": {
         "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom" },
@@ -573,7 +599,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 47 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 48 },
       "id": 13,
       "options": {
         "legend": { "calcs": ["lastNotNull", "min", "max"], "displayMode": "table", "placement": "bottom" },
@@ -629,7 +655,7 @@
           }
         ]
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 47 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 48 },
       "id": 14,
       "options": {
         "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom" },
@@ -679,7 +705,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 55 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 56 },
       "id": 15,
       "options": {
         "legend": { "calcs": ["lastNotNull", "min"], "displayMode": "table", "placement": "bottom" },
@@ -706,7 +732,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 55 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 56 },
       "id": 16,
       "options": {
         "displayMode": "gradient",
@@ -744,7 +770,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 63 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 64 },
       "id": 17,
       "options": {
         "cellHeight": "sm",
