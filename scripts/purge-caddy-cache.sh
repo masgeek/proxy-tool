@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-admin_url=${CADDY_ADMIN_URL:-http://127.0.0.1:2019}
+admin_url=${CADDY_ADMIN_URL:-http://172.17.0.1:2019}
 api_url=${CADDY_CACHE_API_URL:-"$admin_url/souin-api/souin"}
 
 if ! command -v curl >/dev/null 2>&1; then
