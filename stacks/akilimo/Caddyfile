@@ -16,7 +16,7 @@ akilimo.org {
                 level debug
         }
 
-        root * /mnt/data/extra_storage/services/akilimo
+        root * /data/extra_storage/services/akilimo
         encode zstd gzip
 
         @disallowed {
@@ -33,12 +33,12 @@ akilimo.org {
                 path *.css *.js *.ico *.gif *.jpg *.jpeg *.png *.svg *.webp *.woff *.woff2 *.ttf *.eot *.otf *.mp4 *.webm *.pdf *.txt *.xml
         }
         handle @static {
-                header Cache-Control "public, max-age=31536000, immutable"
+                header Cache-Control "public, max-age=7200"
                 cache {
                         allowed_http_verbs GET HEAD
-                        default_cache_control "public, max-age=31536000, stale-while-revalidate=2592000, immutable"
-                        ttl 8760h
-                        stale 720h
+                        default_cache_control "public, max-age=7200"
+                        ttl 2h
+                        stale 0s
                 }
                 file_server
         }
@@ -67,7 +67,7 @@ portal.akilimo.org {
                 level debug
         }
 
-        root * /mnt/data/extra_storage/services/portal
+        root * /data/extra_storage/services/portal
         encode zstd gzip
 
         @disallowed {
@@ -83,12 +83,12 @@ portal.akilimo.org {
                 path *.css *.js *.ico *.gif *.jpg *.jpeg *.png *.svg *.webp *.woff *.woff2 *.ttf *.eot *.otf *.mp4 *.webm *.pdf *.txt *.xml
         }
         handle @static {
-                header Cache-Control "public, max-age=31536000, immutable"
+                header Cache-Control "public, max-age=7200"
                 cache {
                         allowed_http_verbs GET HEAD
-                        default_cache_control "public, max-age=31536000, stale-while-revalidate=2592000, immutable"
-                        ttl 8760h
-                        stale 720h
+                        default_cache_control "public, max-age=7200"
+                        ttl 2h
+                        stale 0s
                 }
                 file_server
         }
@@ -115,7 +115,7 @@ new.akilimo.org {
                 level debug
         }
 
-        root * /mnt/data/extra_storage/services/new_akilimo
+        root * /data/extra_storage/services/new_akilimo
         encode zstd gzip
 
         @disallowed {
@@ -131,12 +131,12 @@ new.akilimo.org {
                 path *.css *.js *.ico *.gif *.jpg *.jpeg *.png *.svg *.webp *.woff *.woff2 *.ttf *.eot *.otf *.mp4 *.webm *.pdf *.txt *.xml
         }
         handle @static {
-                header Cache-Control "public, max-age=31536000, immutable"
+                header Cache-Control "public, max-age=7200"
                 cache {
                         allowed_http_verbs GET HEAD
-                        default_cache_control "public, max-age=31536000, stale-while-revalidate=2592000, immutable"
-                        ttl 8760h
-                        stale 720h
+                        default_cache_control "public, max-age=7200"
+                        ttl 2h
+                        stale 0s
                 }
                 file_server
         }

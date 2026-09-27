@@ -20,9 +20,9 @@ geo.akilimo.org {
 
         cache {
                 allowed_http_verbs GET HEAD
-                default_cache_control "public, max-age=86400, stale-while-revalidate=604800, immutable"
-                ttl 24h
-                stale 168h
+                default_cache_control "public, max-age=7200"
+                ttl 2h
+                stale 0s
         }
 
         reverse_proxy 127.0.0.1:9510 {
@@ -53,9 +53,9 @@ stats.akilimo.org {
 
         cache {
                 allowed_http_verbs GET HEAD
-                default_cache_control "public, max-age=300, stale-while-revalidate=1800"
-                ttl 5m
-                stale 30m
+                default_cache_control "public, max-age=120"
+                ttl 2m
+                stale 0s
         }
 
         reverse_proxy 127.0.0.1:9511 {

@@ -27,7 +27,7 @@ akilimo-hub.eastus.cloudapp.azure.com, dokploy.munywele.co.ke, dokploy.akilimo.o
 # PHP-FPM: akilimo-site container via unix socket
 # -----------------------------------------------------------------------------
 akilimo.org {
-	root * /mnt/data/extra_storage/services/akilimo-site
+	root * /data/extra_storage/services/akilimo-site
 	php_fastcgi unix//run/php/php8.4-fpm.sock
 	import ../wp-common.caddy
 	import ../headers/security-headers.caddy
@@ -45,7 +45,7 @@ akilimo.org {
 # PHP-FPM: akilimo-portal container via unix socket
 # -----------------------------------------------------------------------------
 portal.akilimo.org {
-	root * /mnt/data/extra_storage/services/portal
+	root * /data/extra_storage/services/portal
 	php_fastcgi unix//run/php/php8.4-fpm.sock
 	import ../wp-common.caddy
 	import ../headers/security-headers.caddy
@@ -64,7 +64,7 @@ portal.akilimo.org {
 new.akilimo.org {
 	tls akilimo@cgiar.org
 
-	root * /mnt/data/extra_storage/services/new_akilimo
+	root * /data/extra_storage/services/new_akilimo
 	php_fastcgi unix//run/php/php8.4-fpm.sock
 	import ../wp-common.caddy
 	import ../headers/security-headers.caddy
@@ -162,9 +162,9 @@ geo.akilimo.org {
 	import ../errors.caddy
 	cache {
 		allowed_http_verbs GET HEAD
-		default_cache_control "public, max-age=86400, stale-while-revalidate=604800, immutable"
-		ttl 24h
-		stale 168h
+			default_cache_control "public, max-age=7200"
+			ttl 2h
+			stale 0s
 	}
 	reverse_proxy 127.0.0.1:9510 {
 		import ../headers/proxy-headers.caddy
@@ -183,9 +183,9 @@ stats.akilimo.org {
 	import ../errors.caddy
 	cache {
 		allowed_http_verbs GET HEAD
-		default_cache_control "public, max-age=300, stale-while-revalidate=1800"
-		ttl 5m
-		stale 30m
+			default_cache_control "public, max-age=120"
+			ttl 2m
+			stale 0s
 	}
 	reverse_proxy 127.0.0.1:9511 {
 		import ../headers/proxy-headers.caddy
