@@ -44,7 +44,7 @@ sudo tar -czf "$backup" -C /etc/caddy Caddyfile snippets 2>/dev/null || \
     sudo tar -czf "$backup" -C /etc/caddy Caddyfile
 sudo rm -rf /etc/caddy/Caddyfile /etc/caddy/snippets /var/www/caddy-errors
 sudo mkdir -p /etc/caddy/snippets/domains /etc/caddy/snippets/headers /var/www/caddy-errors
-sudo cp config/caddy/errors/upstream-unavailable.html /var/www/caddy-errors/upstream-unavailable.html
+sudo cp config/caddy/errors/*.html /var/www/caddy-errors/
 sudo cp config/caddy/Caddyfile /etc/caddy/Caddyfile
 sudo cp config/caddy/snippets/wp-common.caddy /etc/caddy/snippets/wp-common.caddy
 sudo cp config/caddy/snippets/disallowed-*.caddy /etc/caddy/snippets/

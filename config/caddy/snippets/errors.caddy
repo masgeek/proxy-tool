@@ -1,13 +1,36 @@
 handle_errors {
-	header Retry-After "120"
 	header X-Request-ID "{http.request.uuid}"
-	vars {
-		error_status {http.error.status_code}
-	}
 	root * /var/www/caddy-errors
-	rewrite * /upstream-unavailable.html
-	templates {
-		mime text/html
+
+	@bad_gateway status 502
+	handle @bad_gateway {
+		header Retry-After "120"
+		rewrite * /bad-gateway.html
+		file_server
 	}
-	file_server
+
+	@service_unavailable status 503
+	handle @service_unavailable {
+		header Retry-After "120"
+		rewrite * /service-unavailable.html
+		file_server
+	}
+
+	@gateway_timeout status 504
+	handle @gateway_timeout {
+		header Retry-After "120"
+		rewrite * /gateway-timeout.html
+		file_server
+	}
+
+	@not_found status 404
+	handle @not_found {
+		rewrite * /not-found.html
+		file_server
+	}
+
+	handle {
+		rewrite * /upstream-unavailable.html
+		file_server
+	}
 }

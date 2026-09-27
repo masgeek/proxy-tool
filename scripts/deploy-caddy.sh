@@ -50,7 +50,7 @@ rm -f "$target_dir/Caddyfile"
 rm -rf "$target_dir/snippets"
 rm -rf /var/www/caddy-errors
 install -d -m 0755 /var/www/caddy-errors
-install -m 0644 "$source_dir/errors/upstream-unavailable.html" /var/www/caddy-errors/upstream-unavailable.html
+install -m 0644 "$source_dir"/errors/*.html /var/www/caddy-errors/
 cp -a "$stage_dir"/. "$target_dir"/
 
 if command -v systemctl >/dev/null 2>&1; then
