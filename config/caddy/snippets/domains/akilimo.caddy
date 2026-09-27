@@ -28,9 +28,7 @@ akilimo-hub.eastus.cloudapp.azure.com, dokploy.munywele.co.ke, dokploy.akilimo.o
 # -----------------------------------------------------------------------------
 akilimo.org {
 	root * /mnt/data/extra_storage/services/akilimo
-	php_fastcgi 127.0.0.1:9000 {
-		root /var/www/html
-	}
+	php_fastcgi unix//run/php/php8.4-fpm.sock
 	import ../wp-common.caddy
 	import ../headers/security-headers.caddy
 	import ../errors.caddy
@@ -41,15 +39,14 @@ akilimo.org {
 	}
 }
 
+
 # -----------------------------------------------------------------------------
 # akilimo-portal — portal.akilimo.org
 # PHP-FPM: akilimo-portal container via unix socket
 # -----------------------------------------------------------------------------
 portal.akilimo.org {
 	root * /mnt/data/extra_storage/services/portal
-	php_fastcgi 127.0.0.1:9001 {
-		root /var/www/html
-	}
+	php_fastcgi unix//run/php/php8.4-fpm.sock
 	import ../wp-common.caddy
 	import ../headers/security-headers.caddy
 	import ../errors.caddy
@@ -62,15 +59,13 @@ portal.akilimo.org {
 
 # -----------------------------------------------------------------------------
 # new-akilimo — new.akilimo.org
-# PHP-FPM: new-akilimo container on 127.0.0.1:9002
+# PHP-FPM: new-akilimo container via unix socket
 # -----------------------------------------------------------------------------
 new.akilimo.org {
 	tls akilimo@cgiar.org
 
 	root * /mnt/data/extra_storage/services/new_akilimo
-	php_fastcgi 127.0.0.1:9002 {
-		root /var/www/html
-	}
+	php_fastcgi unix//run/php/php8.4-fpm.sock
 	import ../wp-common.caddy
 	import ../headers/security-headers.caddy
 	import ../errors.caddy
