@@ -27,7 +27,7 @@ akilimo-hub.eastus.cloudapp.azure.com, dokploy.munywele.co.ke, dokploy.akilimo.o
 # PHP-FPM: akilimo-site container via unix socket
 # -----------------------------------------------------------------------------
 akilimo.org {
-	root * /data/extra_storage/services/akilimo-site
+	root * /data/extra_storage/services/akilimo
 	php_fastcgi unix//run/php/php8.4-fpm.sock
 	import ../wp-common.caddy
 	import ../headers/security-headers.caddy
