@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="robots" content="noindex">
-	<title>503 — Service temporarily unavailable</title>
+	<title>{{.Vars.error_status}} — Service temporarily unavailable</title>
 	<style>
 		:root { color-scheme: light dark; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
 		body { min-height: 100vh; margin: 0; display: grid; place-items: center; background: radial-gradient(circle at 15% 20%, #93c5fd 0, transparent 40%), radial-gradient(circle at 85% 15%, #c4b5fd 0, transparent 40%), radial-gradient(circle at 50% 90%, #fbcfe8 0, transparent 45%), #eef2ff; color: #172033; }
@@ -112,7 +112,7 @@
 
 			<rect x="4" y="4" width="192" height="192" rx="28" fill="none" stroke="#1e293b" stroke-width="2" opacity=".4"/>
 		</svg>
-		<p class="status" role="status" aria-live="polite">503</p>
+		<p class="status" role="status" aria-live="polite">{{.Vars.error_status}}</p>
 		<h1>Service temporarily unavailable</h1>
 		<p>The service is not responding right now. Please wait a couple of minutes and try again.</p>
 		<div class="actions">
