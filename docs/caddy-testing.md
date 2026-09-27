@@ -96,7 +96,21 @@ curl -sSI https://stats.akilimo.org/ | grep -Ei 'cache-status|age|cache-control'
 
 Expect a miss followed by a hit for cacheable `GET` responses. `Cache-Status` should identify the cache handler and show a TTL. `Age` should increase on a hit. Do not expect caching for rejected paths, non-GET methods, dynamic API responses, or authenticated dashboards.
 
-## 7. Roll back if necessary
+## 7. Purge the Caddy cache
+
+Flush all Souin cache entries after a deployment or content change:
+
+```bash
+sudo ./scripts/purge-caddy-cache.sh
+```
+
+Override the admin endpoint if needed:
+
+```bash
+CADDY_ADMIN_URL=http://127.0.0.1:2019 sudo ./scripts/purge-caddy-cache.sh
+```
+
+## 8. Roll back if necessary
 
 Use the standalone rollback script from the repository root:
 
