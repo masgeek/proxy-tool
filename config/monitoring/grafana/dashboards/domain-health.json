@@ -771,7 +771,7 @@
           "mappings": [],
           "noValue": "no TLS",
           "thresholds": { "mode": "absolute", "steps": [{ "color": "text", "value": null }] },
-          "unit": "date"
+          "unit": "dateTimeAsIso"
         },
         "overrides": []
       },
