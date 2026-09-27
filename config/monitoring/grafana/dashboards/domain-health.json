@@ -179,10 +179,10 @@
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "description": "Last HTTP status code returned by each probed hostname.",
+      "description": "Last HTTP status code returned by each probed hostname. Green is 0-399, yellow is 400-499, red is 500 and above.",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": { "mode": "thresholds" },
           "custom": {
             "axisBorderShow": false,
             "axisCenteredZero": false,
@@ -202,9 +202,10 @@
             "showPoints": "never",
             "spanNulls": false,
             "stacking": { "group": "A", "mode": "none" },
-            "thresholdsStyle": { "mode": "off" }
+            "thresholdsStyle": { "mode": "area" }
           },
           "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 400 }, { "color": "red", "value": 500 }] },
           "unit": "short"
         },
         "overrides": []
@@ -335,7 +336,11 @@
           },
           {
             "matcher": { "id": "byName", "options": "Status Code" },
-            "properties": [{ "id": "custom.cellOptions", "value": { "type": "color-text" } }]
+            "properties": [
+              { "id": "color", "value": { "mode": "thresholds" } },
+              { "id": "thresholds", "value": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 400 }, { "color": "red", "value": 500 }] } },
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } }
+            ]
           },
           {
             "matcher": { "id": "byName", "options": "Latency" },
@@ -779,7 +784,7 @@
         "sortBy": [{ "desc": false, "displayName": "Value" }]
       },
       "targets": [
-        { "expr": "probe_ssl_earliest_cert_expiry{job=\"blackbox-http\", instance=~\"$domain\"}", "format": "table", "instant": true, "legendFormat": "{{instance}}", "refId": "A" }
+        { "expr": "probe_ssl_earliest_cert_expiry{job=\"blackbox-http\", instance=~\"$domain\"} * 1000", "format": "table", "instant": true, "legendFormat": "{{instance}}", "refId": "A" }
       ],
       "title": "Certificate Expiry Date",
       "transformations": [
