@@ -71,6 +71,13 @@ Mount a persistent volume for the Badger cache path (e.g. `/data/caddy-cache`) s
 
 ```bash
 caddy list-modules | grep -E "cache|ratelimit|transform|badger"
+caddy list-modules | grep http.matchers.status
+```
+
+`http.matchers.status` is a built-in Caddy module. If the second command returns nothing, the installed Caddy binary is too old for `status` matchers. Rebuild with the current Caddy release using `xcaddy build` and the plugin flags above, then verify again. The configuration also supports the compatible `expression` matcher:
+
+```caddyfile
+@bad_gateway expression {http.error.status_code} == 502
 ```
 
 ---
