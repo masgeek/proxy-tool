@@ -1,0 +1,65 @@
+name: "prometheus"
+
+networks:
+  internal:
+    name: internal
+    external: false
+
+volumes:
+  prometheus_data:
+    driver: local
+    name: prometheus-data
+
+services:
+  prometheus:
+    image: prom/prometheus:v3.13.2
+    container_name: prometheus
+    hostname: prometheus
+    restart: unless-stopped
+    stop_grace_period: 30s
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=30d
+      - --storage.tsdb.retention.size=5GB
+      - --web.enable-remote-write-receiver
+      - --web.enable-lifecycle
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - prometheus_data:/prometheus
+      - type: bind
+        source: ../../config/monitoring/prometheus.yml
+        target: /etc/prometheus/prometheus.yml
+        read_only: true
+      - type: bind
+        source: ../../config/monitoring/prometheus/rules
+        target: /etc/prometheus/rules
+        read_only: true
+    networks:
+      - internal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://localhost:9090/-/ready >/dev/null || exit 1"
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: "1.0"
+        reservations:
+          memory: 256m
+          cpus: "0.25"
