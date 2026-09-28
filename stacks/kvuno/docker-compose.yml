@@ -30,6 +30,7 @@ services:
       FLASK_DEBUG: ${FLASK_DEBUG:-false}
       DEBUG_DB: ${DEBUG_DB:-false}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
       DB_DRIVER: postgresql
       DB_HOST: ${DB_HOST:-postgres}
       DB_PORT: ${DB_PORT:-5432}
@@ -77,6 +78,7 @@ services:
     restart: unless-stopped
     pull_policy: always
     environment:
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
       DEBUG_DB: ${DEBUG_DB:-false}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       DB_DRIVER: postgresql
