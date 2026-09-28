@@ -771,9 +771,14 @@
           "mappings": [],
           "noValue": "no TLS",
           "thresholds": { "mode": "absolute", "steps": [{ "color": "text", "value": null }] },
-          "unit": "dateTimeAsIso"
+          "unit": "none"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Expires" },
+            "properties": [{ "id": "unit", "value": "dateTimeAsIso" }]
+          }
+        ]
       },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 64 },
       "id": 17,
@@ -959,5 +964,5 @@
   "timezone": "",
   "title": "Domain Health",
   "uid": "domain-health",
-  "version": 4
+  "version": 6
 }
