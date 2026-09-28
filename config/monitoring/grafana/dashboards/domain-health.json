@@ -32,7 +32,7 @@
       "title": "Domains Up",
       "type": "stat",
       "targets": [
-        { "expr": "sum(probe_success{job=\"blackbox-http\", instance=~\"$domain\"} == bool $status)", "legendFormat": "up", "refId": "A" }
+        { "expr": "sum(max by (instance) (domain_health:status{job=\"blackbox-http\", instance=~\"$domain\", status=\"up\"}))", "legendFormat": "up", "refId": "A" }
       ]
     },
     {
@@ -61,7 +61,7 @@
       "title": "Domains Down",
       "type": "stat",
       "targets": [
-        { "expr": "sum(probe_success{job=\"blackbox-http\", instance=~\"$domain\"} == bool $status)", "legendFormat": "down", "refId": "A" }
+        { "expr": "sum(max by (instance) (domain_health:status{job=\"blackbox-http\", instance=~\"$domain\", status=\"down\"}))", "legendFormat": "down", "refId": "A" }
       ]
     },
     {
@@ -89,7 +89,7 @@
       "title": "Domains Monitored",
       "type": "stat",
       "targets": [
-        { "expr": "count(probe_success{job=\"blackbox-http\", instance=~\"$domain\"} == bool $status)", "legendFormat": "domains", "refId": "A" }
+        { "expr": "count(max by (instance) (domain_health:status{job=\"blackbox-http\", instance=~\"$domain\", status=~\"$status\"}))", "legendFormat": "domains", "refId": "A" }
       ]
     },
     {
@@ -174,7 +174,7 @@
       "title": "Overall Availability",
       "type": "timeseries",
       "targets": [
-        { "expr": "avg(avg_over_time((probe_success{job=\"blackbox-http\", instance=~\"$domain\"} == bool $status)[5m]))", "legendFormat": "availability", "refId": "A" }
+        { "expr": "avg(avg_over_time((max by (instance) (domain_health:status{job=\"blackbox-http\", instance=~\"$domain\", status=~\"$status\"}))[5m:]))", "legendFormat": "availability", "refId": "A" }
       ]
     },
     {
@@ -378,7 +378,7 @@
         "sortBy": [{ "desc": false, "displayName": "Domain" }]
       },
       "targets": [
-        { "expr": "probe_success{job=\"blackbox-http\", instance=~\"$domain\"} == bool $status", "format": "table", "instant": true, "legendFormat": "Status", "refId": "A" },
+        { "expr": "probe_success{job=\"blackbox-http\", instance=~\"$domain\"}", "format": "table", "instant": true, "legendFormat": "Status", "refId": "A" },
         { "expr": "probe_http_status_code{job=\"blackbox-http\", instance=~\"$domain\"}", "format": "table", "instant": true, "legendFormat": "Status Code", "refId": "B" },
         { "expr": "probe_duration_seconds{job=\"blackbox-http\", instance=~\"$domain\"}", "format": "table", "instant": true, "legendFormat": "Latency", "refId": "C" },
         { "expr": "(probe_ssl_earliest_cert_expiry{job=\"blackbox-http\", instance=~\"$domain\"} - time()) / 86400", "format": "table", "instant": true, "legendFormat": "Cert Expires In", "refId": "D" }
@@ -471,7 +471,7 @@
         "tooltip": { "mode": "single", "sort": "none" }
       },
       "targets": [
-        { "expr": "probe_success{job=\"blackbox-http\", instance=~\"$domain\"} == bool $status", "legendFormat": "{{instance}}", "refId": "A" }
+        { "expr": "max by (instance) (domain_health:status{job=\"blackbox-http\", instance=~\"$domain\", status=~\"$status\"})", "legendFormat": "{{instance}}", "refId": "A" }
       ],
       "title": "Site Status History",
       "type": "state-timeline"
@@ -719,7 +719,7 @@
       "title": "24h Availability By Domain",
       "type": "timeseries",
       "targets": [
-        { "expr": "avg_over_time((probe_success{job=\"blackbox-http\", instance=~\"$domain\"} == bool $status)[24h])", "legendFormat": "{{instance}}", "refId": "A" }
+        { "expr": "avg_over_time((max by (instance) (domain_health:status{job=\"blackbox-http\", instance=~\"$domain\", status=~\"$status\"}))[24h:])", "legendFormat": "{{instance}}", "refId": "A" }
       ]
     },
     {
@@ -852,7 +852,7 @@
       "title": "7-Day Availability Heatmap",
       "type": "timeseries",
       "targets": [
-        { "expr": "avg_over_time((probe_success{job=\"blackbox-http\", instance=~\"$domain\"} == bool $status)[30m])", "interval": "30m", "legendFormat": "{{instance}}", "refId": "A" }
+        { "expr": "avg_over_time((max by (instance) (domain_health:status{job=\"blackbox-http\", instance=~\"$domain\", status=~\"$status\"}))[30m:])", "interval": "30m", "legendFormat": "{{instance}}", "refId": "A" }
       ]
     },
     {
@@ -884,7 +884,7 @@
       "title": "7-Day Uptime",
       "type": "stat",
       "targets": [
-        { "expr": "avg(avg_over_time((probe_success{job=\"blackbox-http\", instance=~\"$domain\"} == bool $status)[7d]))", "legendFormat": "uptime", "refId": "A" }
+        { "expr": "avg(avg_over_time((max by (instance) (domain_health:status{job=\"blackbox-http\", instance=~\"$domain\", status=~\"$status\"}))[7d:]))", "legendFormat": "uptime", "refId": "A" }
       ]
     },
     {
@@ -942,13 +942,14 @@
         "type": "query"
       },
       {
-        "current": { "selected": true, "text": "Up", "value": "1" },
+        "current": { "selected": true, "text": "All", "value": ".*" },
         "hide": 0,
         "includeAll": false,
         "label": "Status",
         "multi": false,
         "name": "status",
-        "query": "Up : 1,Down : 0",
+        "options": [],
+        "query": "All : .*,Up : up,Down : down",
         "type": "custom"
       }
     ]
@@ -958,5 +959,5 @@
   "timezone": "",
   "title": "Domain Health",
   "uid": "domain-health",
-  "version": 2
+  "version": 4
 }
