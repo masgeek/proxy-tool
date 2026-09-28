@@ -1,24 +1,25 @@
 # Monitoring
 
-This stack runs Grafana, Prometheus, and Alloy. Loki runs in the separate `loki` stack.
+This stack runs Alloy and the metric exporters. Grafana, Prometheus, and Loki run in separate stacks on the shared `internal` network.
 
 - Alloy reads selected Docker container logs and sends them to Loki.
 - Loki stores logs and serves LogQL queries.
 - Prometheus stores metrics scraped from Caddy, Loki, Alloy, Node Exporter, PostgreSQL, Redis, and Blackbox Exporter.
 - Node Exporter provides host CPU, memory, disk, filesystem, and network metrics.
 - Blackbox Exporter checks public service availability and TLS certificate validity.
-- Grafana provides the log and metrics UI at `127.0.0.1:9600`.
+- Grafana provides the log and metrics UI at `127.0.0.1:9600` from the separate `grafana` stack.
+- Prometheus stores metrics in the separate `prometheus` stack.
 
 ## Setup
 
 ```bash
 cp .env.example .env
-# Set GRAFANA_ADMIN_USER, GRAFANA_ADMIN_PASSWORD, POSTGRES_USER, POSTGRES_PASSWORD, and REDIS_PASSWORD.
+# Set POSTGRES_USER, POSTGRES_PASSWORD, and REDIS_PASSWORD. Grafana and Prometheus settings live in their own stacks.
 docker compose --env-file .env config --quiet
 docker compose up -d
 ```
 
-Start the separate Loki stack before or alongside this stack. Both stacks share the named `internal` network and Loki service name.
+Start the separate Grafana, Prometheus, and Loki stacks before or alongside this stack. All stacks share the named `internal` network and their service names.
 
 The Caddy route is `logs.munywele.co.ke`; merge `Caddyfile` into the host Caddyfile. Grafana handles application authentication.
 
