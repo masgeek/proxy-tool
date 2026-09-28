@@ -1,5 +1,6 @@
 handle_errors {
 	header X-Request-ID "{http.request.uuid}"
+	header Content-Type "text/html; charset=utf-8"
 	root * /var/www/caddy-errors
 
 	@bad_gateway expression {http.error.status_code} == 502
