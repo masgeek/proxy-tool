@@ -136,6 +136,29 @@ docker compose --env-file stacks/<stack>/.env \
   -f stacks/<stack>/docker-compose.yml config --quiet
 ```
 
+### Stack Revision Tracking
+
+Every service in every `stacks/*/docker-compose.yml` receives:
+
+```yaml
+STACK_REVISION: ${STACK_REVISION:-0}
+```
+
+Compose only recreates a container when its resolved configuration changes. Editing a
+bind-mounted file, a Caddyfile snippet, or an `ADDITIONAL_DBS` entry changes nothing in
+the service definition, so `up -d` leaves the old container running. `STACK_REVISION`
+gives each edit a value that does change.
+
+Dokploy should set `STACK_REVISION` to the current Unix epoch on every deploy:
+
+```bash
+date +%s
+```
+
+A changing value forces a recreate of every service in the stack. The `:-0` default
+keeps manual `docker compose` runs working without the variable set, though those runs
+will not benefit from automatic recreation.
+
 ## Adding a Stack
 
 1. Create `stacks/<name>/docker-compose.yml` and keep bind mounts relative to that directory.

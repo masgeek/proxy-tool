@@ -84,6 +84,7 @@ services:
       N8N_MAILER_AUTH: ${N8N_MAILER_AUTH:-none}
       N8N_MAILER_URL: ${N8N_MAILER_URL:-}
       N8N_MAILER_TOKEN: ${N8N_MAILER_TOKEN:-}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     deploy:
       resources:
         limits:

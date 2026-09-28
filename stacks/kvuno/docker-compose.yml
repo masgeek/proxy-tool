@@ -46,6 +46,7 @@ services:
       CELERY_TASK_RETRY_DELAY: ${CELERY_TASK_RETRY_DELAY:-60}
       SERVER_URL_PROD: ${SERVER_URL_PROD:-}
       REMOTE_RDS_URLS: ${REMOTE_RDS_URLS:-}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
 
     volumes:
       - kvuno-data:/app/static/data
@@ -96,6 +97,7 @@ services:
       REMOTE_RDS_URLS: ${REMOTE_RDS_URLS:-}
 
       RDS_COLUMN_MAP: ${RDS_COLUMN_MAP:-}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     volumes:
       - kvuno-data:/app/static/data
     networks:

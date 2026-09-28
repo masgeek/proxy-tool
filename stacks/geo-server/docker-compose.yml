@@ -42,6 +42,7 @@ services:
       GEOSERVER_ADMIN_PASSWORD: ${GEOSERVER_ADMIN_PASSWORD:?GEOSERVER_ADMIN_PASSWORD must be set}
       GEOSERVER_CSRF_WHITELIST: ${GEOSERVER_CSRF_WHITELIST:-}
       SKIP_DEMO_DATA: ${SKIP_DEMO_DATA:-true}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     volumes:
       - geoserver-data:/opt/geoserver_data
       # Mount host directory for user uploads directly into GeoServer's data folder
@@ -71,6 +72,7 @@ services:
     stop_grace_period: 60s
     environment:
       GEOSERVER_BASE: ${GEOSERVER_BASE:-https://geo.akilimo.org/geoserver}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     ports:
       - "127.0.0.1:9511:5001"
     mem_limit: 2G

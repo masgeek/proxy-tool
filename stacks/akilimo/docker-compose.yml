@@ -66,6 +66,7 @@ services:
       MAIL_ENCRYPTION: ${MAIL_ENCRYPTION:-null}
       MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-noreply@akilimo.org}
       MAIL_FROM_NAME: ${MAIL_FROM_NAME:-Akilimo}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     logging:
       driver: json-file
       options:

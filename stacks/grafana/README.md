@@ -12,3 +12,5 @@ docker compose up -d
 ```
 
 Grafana is available at `127.0.0.1:9600`. Dashboards and the Prometheus datasource are provisioned from `config/monitoring/grafana/`.
+
+Set `GRAFANA_REVISION` in Dokploy’s stack environment to the repository commit SHA. The Compose file passes this value into Grafana, so each Dokploy auto-deploy can recreate the container when the commit changes.

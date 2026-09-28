@@ -36,6 +36,7 @@ services:
       EMQX_NODE__COOKIE: ${MQTT_NODE_COOKIE:?MQTT_NODE_COOKIE is required}
       EMQX_DASHBOARD__DEFAULT_USERNAME: ${MQTT_DASHBOARD_USERNAME:-admin}
       EMQX_DASHBOARD__DEFAULT_PASSWORD: ${MQTT_DASHBOARD_PASSWORD:?MQTT_DASHBOARD_PASSWORD is required}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     volumes:
       - emqx-data:/opt/emqx/data
       - emqx-log:/opt/emqx/log

@@ -20,6 +20,8 @@ volumes:
 
 services:
   hub:
+    environment:
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     image: henrygd/beszel:${BESZEL_TAG:-latest}
     container_name: beszel
     hostname: beszel
@@ -53,6 +55,7 @@ services:
       TOKEN: ${BESZEL_UNIVERSAL_TOKEN:?BESZEL_UNIVERSAL_TOKEN must be set}
       KEY: ${BESZEL_KEY:?BESZEL_KEY must be set}
       HUB_URL: http://beszel:8090
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - beszel-agent-data:/var/lib/beszel-agent

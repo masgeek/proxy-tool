@@ -21,6 +21,8 @@ volumes:
 
 services:
   cache:
+    environment:
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     image: redis:8
     container_name: redis
     hostname: cache
@@ -45,6 +47,8 @@ services:
       start_period: 10s
 
   cache-dev:
+    environment:
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     image: redis:8
     container_name: redis-dev
     hostname: cache-dev

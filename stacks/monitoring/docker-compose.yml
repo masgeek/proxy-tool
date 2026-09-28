@@ -18,6 +18,8 @@ volumes:
 
 services:
   cadvisor:
+    environment:
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     image: ghcr.io/google/cadvisor:${CADVISOR_TAG:-v0.60.5}
     container_name: cadvisor
     hostname: cadvisor
@@ -46,6 +48,8 @@ services:
           cpus: "0.25"
 
   node-exporter:
+    environment:
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     image: prom/node-exporter:${NODE_EXPORTER_TAG:-v1.9.1}
     container_name: node-exporter
     hostname: node-exporter
@@ -73,6 +77,8 @@ services:
           cpus: "0.1"
 
   blackbox-exporter:
+    environment:
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     image: prom/blackbox-exporter:${BLACKBOX_EXPORTER_TAG:-v0.27.0}
     container_name: blackbox-exporter
     hostname: blackbox-exporter
@@ -105,6 +111,7 @@ services:
       DATA_SOURCE_URI: ${POSTGRES_EXPORTER_URI:-postgres:5432/postgres?sslmode=disable}
       DATA_SOURCE_USER: ${DB_USERNAME:?DB_USERNAME must be set}
       DATA_SOURCE_PASS: ${DB_PASSWORD:?DB_PASSWORD must be set}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     networks:
       - internal
     logging:
@@ -126,6 +133,7 @@ services:
     environment:
       REDIS_ADDR: cache:6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     networks:
       - internal
     logging:
@@ -158,6 +166,7 @@ services:
       - /etc/alloy/config.alloy
     environment:
       LOKI_URL: http://loki:3100
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     networks:
       - internal
     logging:

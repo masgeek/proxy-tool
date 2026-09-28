@@ -23,6 +23,7 @@ services:
     pull_policy: always
     environment:
       FUELROD_API_URL: ${FUELROD_API_URL:-http://fuelrod/api}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     deploy:
       resources:
         limits:

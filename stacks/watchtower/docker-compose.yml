@@ -9,6 +9,7 @@ services:
       PRUNE_VOLUMES: 'false'
       AUTO_UPDATE: 'false'
       TIMER: 1080
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     mem_limit: 128m

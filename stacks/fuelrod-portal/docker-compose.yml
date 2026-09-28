@@ -26,6 +26,7 @@ services:
     pull_policy: always
     environment:
       API_UPSTREAM: ${FUELROD_API_URL:-http://fuelrod/api}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     volumes:
       - sms-data:/app/data
     deploy:

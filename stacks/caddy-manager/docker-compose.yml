@@ -62,6 +62,7 @@ services:
       SEED_USERNAME: ${SEED_USERNAME:-admin}
       SEED_PASSWORD: ${SEED_PASSWORD:?SEED_PASSWORD is required}
       SEED_ROLE: ${SEED_ROLE:-admin}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     networks:
       - internal
       - dokploy-network
@@ -101,6 +102,7 @@ services:
       DB_HOST: ${DB_HOST:-postgres}
       DB_PORT: ${DB_PORT:-5432}
       DB_NAME: ${DB_NAME:-caddy}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     healthcheck:
       test: [ "CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3500/api/health').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))\"" ]
       interval: 10s

@@ -5,6 +5,8 @@ name: "netdata"
 
 services:
   netdata:
+    environment:
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     image: netdata/netdata:${NETDATA_TAG:-latest}
     container_name: netdata
     hostname: netdata

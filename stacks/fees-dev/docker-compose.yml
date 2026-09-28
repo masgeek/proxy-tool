@@ -55,6 +55,7 @@ services:
       HORIZON_ENABLED: "${HORIZON_ENABLED:-false}"
       SCHEDULER_ENABLED: "${SCHEDULER_ENABLED:-false}"
       LARAVEL_MIGRATE: "${LARAVEL_MIGRATE:-false}"
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     deploy:
       resources:
         limits:
