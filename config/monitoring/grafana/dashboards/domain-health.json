@@ -948,10 +948,6 @@
         "label": "Status",
         "multi": false,
         "name": "status",
-        "options": [
-          { "text": "Up", "value": "1" },
-          { "text": "Down", "value": "0" }
-        ],
         "query": "Up : 1,Down : 0",
         "type": "custom"
       }
@@ -962,5 +958,5 @@
   "timezone": "",
   "title": "Domain Health",
   "uid": "domain-health",
-  "version": 1
+  "version": 2
 }
