@@ -952,7 +952,7 @@
           { "text": "Up", "value": "1" },
           { "text": "Down", "value": "0" }
         ],
-        "query": "[{\"text\": \"Up\", \"value\": \"1\"}, {\"text\": \"Down\", \"value\": \"0\"}]",
+        "query": "Up : 1,Down : 0",
         "type": "custom"
       }
     ]
