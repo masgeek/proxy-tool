@@ -1,6 +1,16 @@
 groups:
   - name: domain-health
     rules:
+      - record: domain_health:status
+        expr: probe_success{job="blackbox-http"} == 1
+        labels:
+          status: up
+
+      - record: domain_health:status
+        expr: probe_success{job="blackbox-http"} == 0
+        labels:
+          status: down
+
       - alert: DomainDown
         expr: probe_success{job="blackbox-http"} == 0
         for: 5m
