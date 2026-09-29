@@ -1,3 +1,7 @@
+gerbil:
+  start_port: 51820
+  base_endpoint: "pangolin.munywele.co.ke"
+
 app:
   dashboard_url: "https://pangolin.munywele.co.ke"
   log_level: "info"
