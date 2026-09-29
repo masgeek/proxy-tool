@@ -1,0 +1,44 @@
+name: "pangolin"
+
+networks:
+  internal:
+    name: internal
+    external: false
+
+volumes:
+  pangolin_data:
+    driver: local
+    name: pangolin-data
+
+services:
+  pangolin:
+    image: docker.io/fosrl/pangolin:latest
+    container_name: pangolin
+    hostname: pangolin
+    restart: unless-stopped
+    environment:
+      SERVER_SECRET: ${SERVER_SECRET:?SERVER_SECRET must be set}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
+    volumes:
+      - pangolin_data:/app/config
+      - ./config/config.yml:/app/config/config.yml:ro
+    ports:
+      - "127.0.0.1:9320:3000"
+      - "127.0.0.1:9322:3002"
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/"]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: "1.0"
