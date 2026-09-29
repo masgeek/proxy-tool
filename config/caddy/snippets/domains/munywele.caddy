@@ -253,31 +253,6 @@ sonar.munywele.co.ke {
 	}
 }
 
-pangolin.munywele.co.ke {
-	tls dev@munywele.co.ke
-	encode gzip zstd
-	import ../disallowed-basic.caddy
-	import ../headers/security-headers.caddy
-	import ../errors.caddy
-
-	handle /api/v1* {
-		reverse_proxy 127.0.0.1:9320 {
-			import ../headers/proxy-headers.caddy
-		}
-	}
-
-	handle {
-		reverse_proxy 127.0.0.1:9322 {
-			import ../headers/proxy-headers.caddy
-		}
-	}
-
-	log {
-		output file /var/log/caddy/pangolin.log
-		format console
-	}
-}
-
 # Farm API.
 api.farm.munywele.co.ke {
 	tls dev@munywele.co.ke
