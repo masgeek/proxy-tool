@@ -25,7 +25,8 @@ services:
       PROXY_BASE_URL: ${PROXY_BASE_URL:?PROXY_BASE_URL must be set}
       INSTALL_EXTENSIONS: "true"
       STABLE_EXTENSIONS: ${GEOSERVER_EXTENSIONS:-wps,csw}
-      EXTRA_JAVA_OPTS: "-Xms1G -Xmx1536M"
+      # Reduced initial heap to 512M to free up 512MB RAM on boot, capped at 1536M
+      EXTRA_JAVA_OPTS: "-Xms512M -Xmx1536M -Djava.io.tmpdir=/tmp"
       CORS_ENABLED: ${CORS_ENABLED:-true}
       CORS_ALLOWED_METHODS: "GET,POST,PUT,HEAD,OPTIONS"
       POSTGRES_JNDI_ENABLED: "true"
@@ -47,6 +48,8 @@ services:
       - geoserver-data:/opt/geoserver_data
       # Mount host directory for user uploads directly into GeoServer's data folder
       - /var/user_uploads:/opt/geoserver_data/data/user_uploads
+      # Offloads temporary raster/tile processing to Azure ephemeral local SSD
+      - /mnt/tmp:/tmp
     ports:
       - "127.0.0.1:9510:8080"
     healthcheck:
@@ -75,11 +78,10 @@ services:
       STACK_REVISION: ${STACK_REVISION:-1790584804}
     ports:
       - "127.0.0.1:9511:5001"
-    mem_limit: 2G
     deploy:
       resources:
         limits:
-          memory: 2G
+          memory: 2g
           cpus: "2.0"
     networks:
       - dokploy-network
