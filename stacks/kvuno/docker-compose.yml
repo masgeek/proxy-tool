@@ -20,7 +20,7 @@ volumes:
 services:
   kvuno:
     container_name: kvuno
-    image: ghcr.io/cgiar-agwise/kvuno-api:${KVUNO_TAG:-latest}
+    image: ghcr.io/cgiar-agwise/kvuno-api:${KVUNO_TAG:-develop}
     hostname: kvuno
     restart: unless-stopped
     pull_policy: always
@@ -74,7 +74,7 @@ services:
   worker:
     container_name: kvuno-worker
     hostname: kvuno-worker
-    image: ghcr.io/cgiar-agwise/kvuno-worker:${KVUNO_TAG:-latest}
+    image: ghcr.io/cgiar-agwise/kvuno-worker:${KVUNO_TAG:-develop}
     restart: unless-stopped
     pull_policy: always
     environment:
