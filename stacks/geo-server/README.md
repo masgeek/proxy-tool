@@ -1,6 +1,8 @@
-# GeoServer and Stats API
+# GeoServer
 
-This stack runs GeoServer on `127.0.0.1:9510` and the Stats API on `127.0.0.1:9511`. The public routes are `geo.akilimo.org` and `stats.akilimo.org`.
+This stack runs GeoServer on `127.0.0.1:9510`. The public route is `geo.akilimo.org`.
+
+The Stats API is deployed separately from `stacks/stats-api` on `127.0.0.1:9511` and exposed through `stats.akilimo.org`.
 
 ## Scheduled maintenance
 
