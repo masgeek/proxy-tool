@@ -20,10 +20,12 @@ Pangolin runs with Gerbil and Traefik for tunneling on a dedicated public IP. It
    docker compose up -d
    ```
 
-Pangolin/Traefik binds these ports on the dedicated IP:
+Pangolin/Traefik binds these host ports on the dedicated private IP:
 
-- `80/tcp` and `443/tcp`
+- `8080/tcp` and `8443/tcp`
 - `51820/udp` and `21820/udp`
+
+Configure Azure load balancing/port mapping from public `20.102.57.207:80` to `10.2.0.5:8080` and public `20.102.57.207:443` to `10.2.0.5:8443`. This leaves host Caddy’s existing `80/443` listeners untouched.
 
 Point `pangolin.munywele.co.ke` DNS at the dedicated IP. Complete first-time setup at:
 

@@ -57,8 +57,8 @@ services:
     ports:
       - "${PANGOLIN_PUBLIC_IP:?PANGOLIN_PUBLIC_IP must be set}:51820:51820/udp"
       - "${PANGOLIN_PUBLIC_IP:?PANGOLIN_PUBLIC_IP must be set}:21820:21820/udp"
-      - "${PANGOLIN_PUBLIC_IP:?PANGOLIN_PUBLIC_IP must be set}:443:443"
-      - "${PANGOLIN_PUBLIC_IP:?PANGOLIN_PUBLIC_IP must be set}:80:80"
+      - "${PANGOLIN_PUBLIC_IP:?PANGOLIN_PUBLIC_IP must be set}:8443:8443"
+      - "${PANGOLIN_PUBLIC_IP:?PANGOLIN_PUBLIC_IP must be set}:8080:8080"
     logging:
       driver: json-file
       options:
