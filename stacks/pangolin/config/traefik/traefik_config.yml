@@ -34,9 +34,9 @@ certificatesResolvers:
 
 entryPoints:
   web:
-    address: ":80"
+    address: ":8080"
   websecure:
-    address: ":443"
+    address: ":8443"
     transport:
       respondingTimeouts:
         readTimeout: "30m"
