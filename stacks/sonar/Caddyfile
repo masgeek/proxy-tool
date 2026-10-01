@@ -1,0 +1,26 @@
+# =============================================================================
+# Caddy configuration for SonarQube stack
+# Copy the relevant block(s) into your host Caddyfile
+# =============================================================================
+
+sonar.munywele.co.ke {
+        tls dev@munywele.co.ke
+
+        log {
+                output file /var/log/caddy/sonar.log
+                format console
+                level debug
+        }
+
+        encode zstd gzip
+
+        reverse_proxy 127.0.0.1:9900 {
+                import proxy_headers
+        }
+
+        @disallowed {
+                path /.git/*
+                path *.sql
+        }
+        respond @disallowed "Access Denied" 403
+}

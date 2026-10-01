@@ -37,21 +37,93 @@ scrape_configs:
       - targets: ['loki:3100']
         labels:
           service: loki
-          
-  # Uncomment when postgres-exporter service is added.
-  # - job_name: postgres
-  #   metrics_path: /metrics
-  #   static_configs:
-  #     - targets:
-  #         - postgres-exporter:9187
-  #       labels:
-  #         service: postgres
 
-  # Uncomment when redis-exporter service is added.
-  # - job_name: redis
-  #   metrics_path: /metrics
-  #   static_configs:
-  #     - targets:
-  #         - redis-exporter:9121
-  #       labels:
-  #         service: redis
+  - job_name: cadvisor
+    static_configs:
+      - targets: ['cadvisor:8080']
+        labels:
+          service: cadvisor
+
+  - job_name: node-exporter
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          service: host
+
+  - job_name: blackbox-http
+    metrics_path: /probe
+    params:
+      module: [http_accessible]
+    # Every public hostname served by the host Caddy instance, enumerated from
+    # config/caddy/snippets/domains/*.caddy. Upstream hostnames (reverse_proxy
+    # destinations) and the http:// compatibility block are excluded.
+    static_configs:
+      - targets:
+          # akilimo.caddy
+          - https://akilimo-hub.eastus.cloudapp.azure.com/
+          - https://dokploy.munywele.co.ke/
+          - https://dokploy.akilimo.org/
+          - https://akilimo.org/
+          - https://portal.akilimo.org/
+          - https://new.akilimo.org/
+          - https://app.akilimo.org/
+          - https://dev.akilimo.org/
+          - https://api.akilimo.org/
+          - https://uptake.akilimo.org/
+          - https://geo.akilimo.org/
+          - https://stats.akilimo.org/
+          # munywele.caddy
+          - https://munywele.co.ke/
+          - https://api.munywele.co.ke/
+          - https://api.tsobu.co.ke/
+          - https://sms.munywele.co.ke/
+          - https://portal.munywele.co.ke/
+          - https://n8n.munywele.co.ke/
+          - https://fees.munywele.co.ke/
+          - https://fees-dev.munywele.co.ke/
+          - https://logs.munywele.co.ke/
+          - https://logs.akilimo.org/
+          - https://mqtt.munywele.co.ke/
+          - https://sonar.munywele.co.ke/
+          - https://api.farm.munywele.co.ke/
+          - https://farm.munywele.co.ke/
+          - https://s3.munywele.co.ke/
+          - https://s3-console.munywele.co.ke/
+          - https://monitor.munywele.co.ke/
+          - https://flow.munywele.co.ke/
+          - https://caddy.munywele.co.ke/
+          - https://beszel.munywele.co.ke/
+          - https://lnk.munywele.co.ke/
+          - https://lnk.agwise.org/
+          - https://lnk.akilimo.org/
+          # personal.caddy
+          - https://track.munywele.co.ke/
+          - https://scrob.munywele.co.ke/
+          - https://mealie.munywele.co.ke/
+          - https://ryot.munywele.co.ke/
+          - https://paperless.munywele.co.ke/
+          # agwise.caddy
+          - https://agwise.org/
+          - https://ragapi.agwise.org/
+          - https://api.agwise.org/
+          - https://dashboard.agwise.org/
+          - https://kvuno.agwise.org/
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  - job_name: postgres
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+        labels:
+          service: postgres
+
+  - job_name: redis
+    static_configs:
+      - targets: ['redis-exporter:9121']
+        labels:
+          service: redis

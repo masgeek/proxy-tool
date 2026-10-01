@@ -50,6 +50,7 @@ services:
       DB_POSTGRESDB_SCHEMA: ${DB_WORKFLOW_SCHEMA:-workflow}
       DB_POSTGRESDB_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
       DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     deploy:
       resources:
         limits:

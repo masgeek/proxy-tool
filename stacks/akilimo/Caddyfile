@@ -5,7 +5,7 @@
 
 # -----------------------------------------------------------------------------
 # akilimo-site — akilimo.org
-# PHP-FPM: akilimo-site container on 127.0.0.1:9000
+# PHP-FPM: akilimo-site container via unix socket
 # -----------------------------------------------------------------------------
 akilimo.org {
         tls akilimo@cgiar.org
@@ -16,8 +16,8 @@ akilimo.org {
                 level debug
         }
 
-        root * /mnt/data/extra_storage/services/akilimo
-        encode gzip
+        root * /data/extra_storage/services/akilimo
+        encode zstd gzip
 
         @disallowed {
                 path /xmlrpc.php
@@ -33,14 +33,18 @@ akilimo.org {
                 path *.css *.js *.ico *.gif *.jpg *.jpeg *.png *.svg *.webp *.woff *.woff2 *.ttf *.eot *.otf *.mp4 *.webm *.pdf *.txt *.xml
         }
         handle @static {
-                header Cache-Control "public, max-age=31536000, immutable"
+                header Cache-Control "public, max-age=7200"
+                cache {
+                        allowed_http_verbs GET HEAD
+                        default_cache_control "public, max-age=7200"
+                        ttl 2h
+                        stale 0s
+                }
                 file_server
         }
 
         # PHP requests
-        php_fastcgi 127.0.0.1:9000 {
-                root /var/www/html
-        }
+        php_fastcgi unix//run/php/php8.4-fpm.sock
 
         # WordPress permalink fallback — passes original query string through
         try_files {path} {path}/ /index.php?{query}
@@ -50,7 +54,7 @@ akilimo.org {
 
 # -----------------------------------------------------------------------------
 # akilimo-portal — portal.akilimo.org
-# PHP-FPM: akilimo-portal container on 127.0.0.1:9001
+# PHP-FPM: akilimo-portal container via unix socket
 # -----------------------------------------------------------------------------
 portal.akilimo.org {
         tls akilimo@cgiar.org
@@ -61,8 +65,8 @@ portal.akilimo.org {
                 level debug
         }
 
-        root * /mnt/data/extra_storage/services/portal
-        encode gzip
+        root * /data/extra_storage/services/portal
+        encode zstd gzip
 
         @disallowed {
                 path /xmlrpc.php
@@ -77,13 +81,17 @@ portal.akilimo.org {
                 path *.css *.js *.ico *.gif *.jpg *.jpeg *.png *.svg *.webp *.woff *.woff2 *.ttf *.eot *.otf *.mp4 *.webm *.pdf *.txt *.xml
         }
         handle @static {
-                header Cache-Control "public, max-age=31536000, immutable"
+                header Cache-Control "public, max-age=7200"
+                cache {
+                        allowed_http_verbs GET HEAD
+                        default_cache_control "public, max-age=7200"
+                        ttl 2h
+                        stale 0s
+                }
                 file_server
         }
 
-        php_fastcgi 127.0.0.1:9001 {
-                root /var/www/html
-        }
+        php_fastcgi unix//run/php/php8.4-fpm.sock
 
         try_files {path} {path}/ /index.php?{query}
 
@@ -92,7 +100,7 @@ portal.akilimo.org {
 
 # -----------------------------------------------------------------------------
 # new-akilimo — new.akilimo.org
-# PHP-FPM: new-akilimo container on 127.0.0.1:9002
+# PHP-FPM: new-akilimo container via unix socket
 # -----------------------------------------------------------------------------
 new.akilimo.org {
         tls akilimo@cgiar.org
@@ -103,8 +111,8 @@ new.akilimo.org {
                 level debug
         }
 
-        root * /mnt/data/extra_storage/services/new_akilimo
-        encode gzip
+        root * /data/extra_storage/services/new_akilimo
+        encode zstd gzip
 
         @disallowed {
                 path /xmlrpc.php
@@ -119,13 +127,17 @@ new.akilimo.org {
                 path *.css *.js *.ico *.gif *.jpg *.jpeg *.png *.svg *.webp *.woff *.woff2 *.ttf *.eot *.otf *.mp4 *.webm *.pdf *.txt *.xml
         }
         handle @static {
-                header Cache-Control "public, max-age=31536000, immutable"
+                header Cache-Control "public, max-age=7200"
+                cache {
+                        allowed_http_verbs GET HEAD
+                        default_cache_control "public, max-age=7200"
+                        ttl 2h
+                        stale 0s
+                }
                 file_server
         }
 
-        php_fastcgi 127.0.0.1:9002 {
-                root /var/www/html
-        }
+        php_fastcgi unix//run/php/php8.4-fpm.sock
 
         try_files {path} {path}/ /index.php?{query}
 
@@ -145,12 +157,10 @@ dev.akilimo.org {
                 level debug
         }
 
-        encode gzip
+        encode zstd gzip
 
         reverse_proxy 127.0.0.1:9100 {
-                header_up Host                {host}
-                header_up X-Real-IP           {remote_host}
-                header_up X-Forwarded-Port    {server_port}
+                import proxy_headers_port
 
                 transport http {
                         dial_timeout            1800s
@@ -180,14 +190,12 @@ api.akilimo.org {
                 level debug
         }
 
-        encode gzip
+        encode zstd gzip
 
         rewrite * /api{uri}
 
         reverse_proxy 127.0.0.1:9100 {
-                header_up Host                {host}
-                header_up X-Real-IP           {remote_host}
-                header_up X-Forwarded-Port    {server_port}
+                import proxy_headers_port
 
                 transport http {
                         dial_timeout            1800s

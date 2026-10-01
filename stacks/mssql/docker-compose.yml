@@ -26,6 +26,7 @@ services:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?MSSQL_SA_PASSWORD is required}
       MSSQL_PID: ${MSSQL_PID:-Developer}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     ports:
       - "1433:1433"
     volumes:

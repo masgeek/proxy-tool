@@ -16,12 +16,10 @@ keycloak.example.com {
                 level debug
         }
 
-        encode gzip
+        encode zstd gzip
 
         reverse_proxy 127.0.0.1:9850 {
-                header_up Host {host}
-                header_up X-Real-IP {remote_host}
-                header_up X-Forwarded-Proto {scheme}
+                import proxy_headers_forwarded_host_proto
         }
 
         @disallowed {

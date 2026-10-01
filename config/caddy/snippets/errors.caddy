@@ -1,0 +1,37 @@
+handle_errors {
+	header X-Request-ID "{http.request.uuid}"
+	header Content-Type "text/html; charset=utf-8"
+	root * /var/www/caddy-errors
+
+	@bad_gateway expression {http.error.status_code} == 502
+	handle @bad_gateway {
+		header Retry-After "120"
+		rewrite * /bad-gateway.html
+		file_server
+	}
+
+	@service_unavailable expression {http.error.status_code} == 503
+	handle @service_unavailable {
+		header Retry-After "120"
+		rewrite * /service-unavailable.html
+		file_server
+	}
+
+	@gateway_timeout expression {http.error.status_code} == 504
+	handle @gateway_timeout {
+		header Retry-After "120"
+		rewrite * /gateway-timeout.html
+		file_server
+	}
+
+	@not_found expression {http.error.status_code} == 404
+	handle @not_found {
+		rewrite * /not-found.html
+		file_server
+	}
+
+	handle {
+		rewrite * /upstream-unavailable.html
+		file_server
+	}
+}

@@ -1,0 +1,26 @@
+# =============================================================================
+# Caddy configuration for caddy-manager stack
+# Copy the relevant block(s) into your host Caddyfile
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# caddy.munywele.co.ke — caddy-manager (web UI)
+# Web-facing admin interface. The api (Caddy admin integration) is not exposed;
+# it stays internal on host 9620.
+# -----------------------------------------------------------------------------
+caddy.munywele.co.ke {
+        tls dev@munywele.co.ke
+        encode zstd gzip
+
+        log {
+                output file /var/log/caddy/caddy-manager.log
+                format console
+                level debug
+        }
+
+        handle {
+                reverse_proxy 127.0.0.1:9621 {
+                        import proxy_headers_forwarded_port
+                }
+        }
+}
