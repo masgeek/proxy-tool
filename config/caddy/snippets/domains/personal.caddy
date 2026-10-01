@@ -77,3 +77,20 @@ paperless.munywele.co.ke {
 		format console
 	}
 }
+
+
+
+jelly.munywele.co.ke {
+	tls dev@munywele.co.ke
+	encode gzip zstd
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+	reverse_proxy 127.0.0.1:8930 {
+		import ../headers/proxy-headers.caddy
+	}
+	log {
+		output file /var/log/caddy/jellystat.log
+		format console
+	}
+}
