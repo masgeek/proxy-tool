@@ -14,7 +14,7 @@ services:
   prometheus:
     environment:
       STACK_REVISION: ${STACK_REVISION:-1790584805}
-    image: prom/prometheus:v3.13.2
+    image: prom/prometheus:v3.15.0
     container_name: prometheus
     hostname: prometheus
     restart: unless-stopped
