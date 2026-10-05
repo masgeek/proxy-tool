@@ -28,18 +28,6 @@ s3.munywele.co.ke {
         }
         respond @disallowed "Access Denied" 403
 
-        header {
-                Access-Control-Allow-Origin "https://s3-console.munywele.co.ke"
-                Access-Control-Allow-Credentials "true"
-                Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
-                Access-Control-Allow-Headers "Authorization, Content-Type, X-Requested-With"
-        }
-
-        @preflight {
-                method OPTIONS
-        }
-        respond @preflight 204
-
         handle {
                 reverse_proxy 127.0.0.1:9612 {
                         import proxy_headers_forwarded_port
