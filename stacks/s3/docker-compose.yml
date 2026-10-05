@@ -88,12 +88,19 @@ services:
       - internal
     deploy:
       resources:
+        # Sized for range reads. A single-threaded client pulling a 1.3 GB CSV
+        # measured ~2.9 MB/s at the old 0.5 CPU cap, which made a full scan take
+        # over eight minutes and left each import chunk uncomfortably close to a
+        # 60s queue timeout. Range GET throughput here is CPU bound — SigV4
+        # signing and streaming are done inline per request — so CPU is what
+        # moves the needle. Memory is not the constraint: Alarik streams object
+        # bodies to disk with bounded memory, so body size does not drive it.
         limits:
+          memory: 2g
+          cpus: "2.0"
+        reservations:
           memory: 512m
           cpus: "0.5"
-        reservations:
-          memory: 128m
-          cpus: "0.1"
 
   console:
     container_name: s3-console
