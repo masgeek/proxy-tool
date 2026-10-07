@@ -90,7 +90,13 @@ services:
       REDIS_HOST: ${REDIS_HOST:-cache}
       REDIS_PORT: ${REDIS_PORT:-6379}
       REDIS_PASSWORD: ${REDIS_PASSWORD:-null}
-
+      # S3 (Optional)
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+      AWS_BUCKET: ${AWS_BUCKET:-}
+      AWS_USE_PATH_STYLE_ENDPOINT: ${AWS_USE_PATH_STYLE_ENDPOINT:-true}
+      AWS_ENDPOINT: ${AWS_ENDPOINT:-http://s3:8080}
       # Mail
       MAIL_MAILER: ${MAIL_MAILER:-smtp}
       # MAIL_HOST: ${MAIL_HOST:?MAIL_HOST must be set}
