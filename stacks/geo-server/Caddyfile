@@ -1,0 +1,70 @@
+# =============================================================================
+# Caddy configuration for GeoServer stack
+# Copy the relevant block(s) into your host Caddyfile
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# geo-server — geo.akilimo.org
+# HTTP reverse proxy to the GeoServer container on 127.0.0.1:9510
+# -----------------------------------------------------------------------------
+geo.akilimo.org {
+        tls akilimo@cgiar.org
+
+        log {
+                output file /var/log/caddy/geo-server.log
+                format console
+                level debug
+        }
+
+        encode zstd gzip
+
+        cache {
+                allowed_http_verbs GET HEAD
+                default_cache_control "public, max-age=7200"
+                ttl 2h
+                stale 0s
+        }
+
+        reverse_proxy 127.0.0.1:9510 {
+                import proxy_headers
+        }
+
+        @disallowed {
+                path /.git/*
+                path *.sql
+        }
+        respond @disallowed "Access Denied" 403
+}
+
+# -----------------------------------------------------------------------------
+# stats-api — stats.akilimo.org
+# HTTP reverse proxy to the stats-api container on 127.0.0.1:9511
+# -----------------------------------------------------------------------------
+stats.akilimo.org {
+        tls akilimo@cgiar.org
+
+        log {
+                output file /var/log/caddy/stats-api.log
+                format console
+                level debug
+        }
+
+        encode zstd gzip
+
+        cache {
+                allowed_http_verbs GET HEAD
+                default_cache_control "public, max-age=120"
+                ttl 2m
+                stale 0s
+        }
+
+        reverse_proxy 127.0.0.1:9511 {
+                import proxy_headers
+        }
+
+        @disallowed {
+                path /.git/*
+                path *.sql
+        }
+        respond @disallowed "Access Denied" 403
+}

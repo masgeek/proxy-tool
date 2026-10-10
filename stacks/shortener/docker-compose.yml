@@ -83,6 +83,7 @@ services:
       OIDC_SCOPE: ${OIDC_SCOPE:-}
       OIDC_EMAIL_CLAIM: ${OIDC_EMAIL_CLAIM:-}
       OIDC_BUTTON_TEXT: ${OIDC_BUTTON_TEXT:-Log in with OIDC}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     ports:
       - "127.0.0.1:9660:3000"
     networks:

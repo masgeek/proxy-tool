@@ -1,0 +1,55 @@
+name: "invoice"
+
+networks:
+  internal:
+    name: internal
+    external: false
+  dokploy-network:
+    name: dokploy-network
+    external: true
+
+volumes:
+  invoice_storage:
+    driver: local
+    name: invoice-storage
+
+services:
+  invoice:
+    image: invoiceninja/invoiceninja-debian:${INVOICENINJA_TAG:-latest}
+    container_name: invoice
+    hostname: invoice
+    restart: unless-stopped
+    environment:
+      APP_URL: ${APP_URL:-https://invoice.munywele.co.ke}
+      APP_KEY: ${APP_KEY:?APP_KEY must be set}
+      APP_ENV: ${APP_ENV:-production}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      REQUIRE_HTTPS: ${REQUIRE_HTTPS:-true}
+      DB_HOST: ${DB_HOST:-maria}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_DATABASE: ${DB_DATABASE:?DB_DATABASE must be set}
+      DB_USERNAME: ${DB_USERNAME:?DB_USERNAME must be set}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
+      REDIS_HOST: ${REDIS_HOST:-cache}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      IN_USER_EMAIL: ${IN_USER_EMAIL:-}
+      IN_PASSWORD: ${IN_PASSWORD:-}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
+    ports:
+      - "127.0.0.1:9705:80"
+    volumes:
+      - invoice_storage:/var/www/html/storage
+    networks:
+      - dokploy-network
+      - internal
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: "2.0"

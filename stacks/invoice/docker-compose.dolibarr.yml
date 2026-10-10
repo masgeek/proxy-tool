@@ -1,0 +1,58 @@
+name: "invoice"
+
+networks:
+  internal:
+    name: internal
+    external: false
+  dokploy-network:
+    name: dokploy-network
+    external: true
+
+volumes:
+  dolibarr_documents:
+    driver: local
+    name: dolibarr-documents
+  dolibarr_custom:
+    driver: local
+    name: dolibarr-custom
+
+services:
+  invoice:
+    image: dolibarr/dolibarr:${DOLIBARR_TAG:-latest}
+    container_name: invoice
+    hostname: invoice
+    restart: unless-stopped
+    environment:
+          DOLI_INSTALL_AUTO: ${INSTALL_AUTO:-0}
+          DOLI_DB_TYPE: pgsql
+          DOLI_DB_HOST: ${DB_HOST:-postgres}
+          DOLI_DB_HOST_PORT: ${DB_PORT:-5432}
+          DOLI_DB_NAME: ${DB_DATABASE:?DB_DATABASE must be set}
+          DOLI_DB_USER: ${DB_USERNAME:?DB_USERNAME must be set}
+          DOLI_DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
+          DOLI_URL_ROOT: ${APP_URL:-https://invoice.munywele.co.ke}
+          DOLI_ADMIN_LOGIN: ${ADMIN_USER:-admin}
+          DOLI_ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set}
+          DOLI_COMPANY_NAME: ${COMPANY_NAME:-Invoice Company}
+          DOLI_COMPANY_COUNTRYCODE: ${COMPANY_COUNTRYCODE:-KE}
+          WWW_USER_ID: ${WWW_USER_ID:-33}
+          WWW_GROUP_ID: ${WWW_GROUP_ID:-33}
+          STACK_REVISION: ${STACK_REVISION:-1790584804}
+    ports:
+      - "127.0.0.1:9705:80"
+    volumes:
+      - dolibarr_documents:/var/www/documents
+      - dolibarr_custom:/var/www/html/custom
+    networks:
+      - dokploy-network
+      - internal
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: "2.0"

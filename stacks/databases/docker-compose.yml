@@ -38,6 +38,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
       ADDITIONAL_DBS: ${ADDITIONAL_DBS:-}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     networks:
       - dokploy-network
       - internal
@@ -76,6 +77,7 @@ services:
       - POOL_MODE=${PGBOUNCER_POOL_MODE:-transaction}
       - MAX_CLIENT_CONN=${PGBOUNCER_MAX_CLIENT_CONN:-200}
       - DEFAULT_POOL_SIZE=${PGBOUNCER_POOL_SIZE:-20}
+      - STACK_REVISION=${STACK_REVISION:-0}
     ports:
       - "6432:5432"
     depends_on:
@@ -109,6 +111,7 @@ services:
       MARIADB_USER: ${MARIADB_USER:?MARIADB_USER is required}
       MARIADB_PASSWORD: ${MARIADB_PASSWORD:?MARIADB_PASSWORD is required}
       MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "no"
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     volumes:
       - maria_db:/var/lib/mysql
       # - ./mariadb:/etc/mysql/conf.d

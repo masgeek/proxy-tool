@@ -20,16 +20,17 @@ volumes:
 services:
   kvuno:
     container_name: kvuno
-    image: masgeek/kvuno-api:${KVUNO_TAG:-latest}
+    image: ghcr.io/cgiar-agwise/kvuno-api:${KVUNO_TAG:-develop}
     hostname: kvuno
     restart: unless-stopped
     pull_policy: always
     ports:
-      - "127.0.0.1:9800:5000"
+      - "127.0.0.1:9800:80"
     environment:
       FLASK_DEBUG: ${FLASK_DEBUG:-false}
       DEBUG_DB: ${DEBUG_DB:-false}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
       DB_DRIVER: postgresql
       DB_HOST: ${DB_HOST:-postgres}
       DB_PORT: ${DB_PORT:-5432}
@@ -38,6 +39,8 @@ services:
       DB_NAME: ${DB_SCHEMA:?DB_SCHEMA must be set}
       SORT_JSON: ${SORT_JSON:-0}
       HOUSEKEEPING_ENABLED: ${HOUSEKEEPING_ENABLED:-true}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
       HOUSEKEEPING_MAX_WORKERS: ${HOUSEKEEPING_MAX_WORKERS:-1}
       CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://cache:6379/5}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://cache:6379/5}
@@ -46,6 +49,7 @@ services:
       CELERY_TASK_RETRY_DELAY: ${CELERY_TASK_RETRY_DELAY:-60}
       SERVER_URL_PROD: ${SERVER_URL_PROD:-}
       REMOTE_RDS_URLS: ${REMOTE_RDS_URLS:-}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
 
     volumes:
       - kvuno-data:/app/static/data
@@ -55,7 +59,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:5000/health"]
+      test: ["CMD", "curl", "-f", "http://127.0.0.1/health"]
       interval: 60s
       timeout: 10s
       retries: 5
@@ -72,10 +76,11 @@ services:
   worker:
     container_name: kvuno-worker
     hostname: kvuno-worker
-    image: masgeek/kvuno-worker:${KVUNO_TAG:-latest}
+    image: ghcr.io/cgiar-agwise/kvuno-worker:${KVUNO_TAG:-develop}
     restart: unless-stopped
     pull_policy: always
     environment:
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
       DEBUG_DB: ${DEBUG_DB:-false}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       DB_DRIVER: postgresql
@@ -84,8 +89,8 @@ services:
       DB_USER: ${DB_USERNAME:?DB_USERNAME must be set}
       DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
       DB_NAME: ${DB_SCHEMA:?DB_SCHEMA must be set}
-      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://cache:6379/5}
-      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://cache:6379/5}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/5}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/5}
       CELERY_TASK_DEFAULT_QUEUE: ${CELERY_TASK_DEFAULT_QUEUE:-kvuno}
       CELERY_TASK_MAX_RETRIES: ${CELERY_TASK_MAX_RETRIES:-10}
       CELERY_TASK_RETRY_DELAY: ${CELERY_TASK_RETRY_DELAY:-60}
@@ -96,6 +101,7 @@ services:
       REMOTE_RDS_URLS: ${REMOTE_RDS_URLS:-}
 
       RDS_COLUMN_MAP: ${RDS_COLUMN_MAP:-}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     volumes:
       - kvuno-data:/app/static/data
     networks:
