@@ -162,12 +162,9 @@ geo.akilimo.org {
 	import ../errors.caddy
 	cache {
 		allowed_http_verbs GET HEAD
-			default_cache_control "public, max-age=7200"
-			badger {
-				path /var/lib/caddy/cache
-			}
-			ttl 2h
-			stale 0s
+		default_cache_control "public, max-age=7200"
+		ttl 2h
+		stale 0s
 	}
 	reverse_proxy 127.0.0.1:9510 {
 		import ../headers/proxy-headers.caddy
@@ -186,12 +183,9 @@ stats.akilimo.org {
 	import ../errors.caddy
 	cache {
 		allowed_http_verbs GET HEAD
-			default_cache_control "public, max-age=120"
-			badger {
-				path /var/lib/caddy/cache
-			}
-			ttl 2m
-			stale 0s
+		default_cache_control "public, max-age=120"
+		ttl 2m
+		stale 0s
 	}
 	reverse_proxy 127.0.0.1:9511 {
 		import ../headers/proxy-headers.caddy

@@ -20,17 +20,14 @@ respond @wp_disallowed 403
 	header @wp_static Cache-Control "public, max-age=7200"
 
 handle @wp_static {
-	cache {
-		allowed_http_verbs GET HEAD
+		cache {
+			allowed_http_verbs GET HEAD
 			default_cache_control "public, max-age=7200"
-			badger {
-				path /var/lib/caddy/cache
-			}
 			ttl 2h
 			stale 0s
+		}
+		file_server
 	}
-	file_server
-}
 
 header {
 	X-Content-Type-Options "nosniff"
