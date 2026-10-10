@@ -27,6 +27,7 @@ cp -a "$source_dir"/. "$stage_dir"/
 caddy validate --config "$stage_dir/Caddyfile"
 
 install -d -m 0755 "$target_dir"
+install -d -o caddy -g caddy -m 0750 /var/lib/caddy/cache
 backup_dir="$target_dir/backups"
 install -d -m 0755 "$backup_dir"
 timestamp=$(date +%Y%m%d%H%M%S)
