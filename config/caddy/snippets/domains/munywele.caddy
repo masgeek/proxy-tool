@@ -264,7 +264,7 @@ invoice.munywele.co.ke {
 		import ../headers/proxy-headers.caddy
 	}
 	log {
-		output file /var/log/caddy/dolibarr.log
+		output file /var/log/caddy/invoice.log
 		format console
 	}
 }
