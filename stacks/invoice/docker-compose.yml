@@ -12,9 +12,9 @@ volumes:
   dolibarr_documents:
     driver: local
     name: dolibarr-documents
-  dolibarr_var:
+  dolibarr_custom:
     driver: local
-    name: dolibarr-var
+    name: dolibarr-custom
 
 services:
   dolibarr:
@@ -23,21 +23,24 @@ services:
     hostname: dolibarr
     restart: unless-stopped
     environment:
-      DB_TYPE: pgsql
-      DB_HOST: ${DB_HOST:-postgres}
-      DB_PORT: ${DB_PORT:-5432}
-      DB_NAME: ${DB_DATABASE:?DB_DATABASE must be set}
-      DB_USER: ${DB_USERNAME:?DB_USERNAME must be set}
-      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
-      ADMIN_USER: ${ADMIN_USER:?ADMIN_USER must be set}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set}
-      INSTALL_AUTO: ${INSTALL_AUTO:-1}
-      STACK_REVISION: ${STACK_REVISION:-1790584804}
+          DOLI_INSTALL_AUTO: ${INSTALL_AUTO:-0}
+          DOLI_DB_TYPE: pgsql
+          DOLI_DB_HOST: ${DB_HOST:-postgres}
+          DOLI_DB_HOST_PORT: ${DB_PORT:-5432}
+          DOLI_DB_NAME: ${DB_DATABASE:?DB_DATABASE must be set}
+          DOLI_DB_USER: ${DB_USERNAME:?DB_USERNAME must be set}
+          DOLI_DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
+          DOLI_URL_ROOT: ${APP_URL:-https://invoice.munywele.co.ke}
+          DOLI_ADMIN_LOGIN: ${ADMIN_USER:-admin}
+          DOLI_ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set}
+          DOLI_COMPANY_NAME: ${COMPANY_NAME:-Invoice Company}
+          DOLI_COMPANY_COUNTRYCODE: ${COMPANY_COUNTRYCODE:-KE}
+          STACK_REVISION: ${STACK_REVISION:-1790584804}
     ports:
       - "127.0.0.1:9705:80"
     volumes:
-      - dolibarr_documents:/var/www/html/documents
-      - dolibarr_var:/var/www/html/var
+      - dolibarr_documents:/var/www/documents
+      - dolibarr_custom:/var/www/html/custom
     networks:
       - dokploy-network
       - internal
