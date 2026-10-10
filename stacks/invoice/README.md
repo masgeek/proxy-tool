@@ -1,19 +1,19 @@
 # Invoice
 
-This stack runs Dolibarr as the invoicing and ERP application. It is published on `127.0.0.1:9705` and exposed publicly through `invoice.munywele.co.ke`.
+This stack runs Invoice Ninja using the shared `maria` database and `cache` Redis services. The application is published on `127.0.0.1:9705` and exposed through `invoice.munywele.co.ke`.
+
+The previous Dolibarr Compose configuration is preserved as `docker-compose.dolibarr.yml` and is not deployed by this stack.
 
 ## Setup
 
-1. Create a PostgreSQL database and user in the shared `databases` stack:
+1. Generate an application key:
 
-   ```sql
-   CREATE DATABASE invoice;
-   CREATE USER dolibarr WITH PASSWORD 'change_me';
-   GRANT ALL PRIVILEGES ON DATABASE invoice TO dolibarr;
+   ```bash
+   docker run --rm -it invoiceninja/invoiceninja-debian php artisan key:generate --show
    ```
 
-2. Copy `.env.example` to `.env` and set `DB_PASSWORD`, `ADMIN_PASSWORD`, and the company details.
-3. Keep `INSTALL_AUTO=0`; the official image requires manual PostgreSQL installation.
+2. Copy `.env.example` to `.env` and set `APP_KEY`, `DB_PASSWORD`, and `REDIS_PASSWORD`. Ensure the shared `maria` database has the `invoice` database/user and that the shared `cache` Redis password is set.
+3. Optionally set `IN_USER_EMAIL` and `IN_PASSWORD` for first-start account creation, then remove them after setup.
 4. Start the stack:
 
    ```bash
@@ -21,26 +21,4 @@ This stack runs Dolibarr as the invoicing and ERP application. It is published o
    docker compose up -d
    ```
 
-5. Open `https://invoice.munywele.co.ke/install` and complete the PostgreSQL installation.
-6. Create the install lock so the container starts normally:
-
-   ```bash
-   docker exec invoice touch /var/www/documents/install.lock
-   docker exec invoice ls -l /var/www/documents/install.lock
-   ```
-
-   The lock is stored in the persistent `dolibarr-documents` volume and survives restarts. The Compose service name is also `invoice`:
-
-   ```bash
-   docker compose exec invoice touch /var/www/documents/install.lock
-   ```
-
-The image follows the official tag model: use `latest`, `develop`, or a pinned `x.y.z` release in `DOLIBARR_TAG`.
-
-If external module installation reports that it cannot write to `/var/www/html/custom`, fix the persistent volume ownership once:
-
-```bash
-docker exec -u root invoice chown -R www-data:www-data /var/www/html/custom
-```
-
-Back up the PostgreSQL database and the `dolibarr-documents` and `dolibarr-custom` volumes before upgrades.
+Open `https://invoice.munywele.co.ke` after the stack is healthy. Back up the shared MariaDB database and the `invoice-storage` volume before upgrades.

@@ -9,40 +9,36 @@ networks:
     external: true
 
 volumes:
-  dolibarr_documents:
+  invoice_storage:
     driver: local
-    name: dolibarr-documents
-  dolibarr_custom:
-    driver: local
-    name: dolibarr-custom
+    name: invoice-storage
 
 services:
   invoice:
-    image: dolibarr/dolibarr:${DOLIBARR_TAG:-latest}
+    image: invoiceninja/invoiceninja-debian:${INVOICENINJA_TAG:-latest}
     container_name: invoice
     hostname: invoice
     restart: unless-stopped
     environment:
-          DOLI_INSTALL_AUTO: ${INSTALL_AUTO:-0}
-          DOLI_DB_TYPE: pgsql
-          DOLI_DB_HOST: ${DB_HOST:-postgres}
-          DOLI_DB_HOST_PORT: ${DB_PORT:-5432}
-          DOLI_DB_NAME: ${DB_DATABASE:?DB_DATABASE must be set}
-          DOLI_DB_USER: ${DB_USERNAME:?DB_USERNAME must be set}
-          DOLI_DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
-          DOLI_URL_ROOT: ${APP_URL:-https://invoice.munywele.co.ke}
-          DOLI_ADMIN_LOGIN: ${ADMIN_USER:-admin}
-          DOLI_ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set}
-          DOLI_COMPANY_NAME: ${COMPANY_NAME:-Invoice Company}
-          DOLI_COMPANY_COUNTRYCODE: ${COMPANY_COUNTRYCODE:-KE}
-          WWW_USER_ID: ${WWW_USER_ID:-33}
-          WWW_GROUP_ID: ${WWW_GROUP_ID:-33}
-          STACK_REVISION: ${STACK_REVISION:-1790584804}
+      APP_URL: ${APP_URL:-https://invoice.munywele.co.ke}
+      APP_KEY: ${APP_KEY:?APP_KEY must be set}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      REQUIRE_HTTPS: ${REQUIRE_HTTPS:-true}
+      DB_HOST: ${DB_HOST:-maria}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_DATABASE: ${DB_DATABASE:?DB_DATABASE must be set}
+      DB_USERNAME: ${DB_USERNAME:?DB_USERNAME must be set}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
+      REDIS_HOST: ${REDIS_HOST:-cache}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
+      IN_USER_EMAIL: ${IN_USER_EMAIL:-}
+      IN_PASSWORD: ${IN_PASSWORD:-}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     ports:
       - "127.0.0.1:9705:80"
     volumes:
-      - dolibarr_documents:/var/www/documents
-      - dolibarr_custom:/var/www/html/custom
+      - invoice_storage:/var/www/html/storage
     networks:
       - dokploy-network
       - internal
