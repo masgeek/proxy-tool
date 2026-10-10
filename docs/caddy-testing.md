@@ -111,7 +111,39 @@ Override the admin endpoint if needed:
 CADDY_ADMIN_URL=http://127.0.0.1:2019 sudo ./scripts/purge-caddy-cache.sh
 ```
 
-## 8. Roll back if necessary
+## 8. Badger cache permissions
+
+If Caddy logs `permission denied` opening `/var/lib/caddy/cache/*.mem`, the Caddy service user cannot read the persistent Badger database:
+
+```bash
+sudo systemctl stop caddy
+```
+
+```bash
+sudo chown -R caddy:caddy /var/lib/caddy/cache
+```
+
+```bash
+sudo chmod -R u+rwX,go-rwx /var/lib/caddy/cache
+```
+
+```bash
+sudo systemctl start caddy
+```
+
+```bash
+sudo journalctl -u caddy -n 50 --no-pager
+```
+
+Confirm the service user with:
+
+```bash
+systemctl show caddy -p User
+```
+
+---
+
+## 9. Roll back if necessary
 
 Use the standalone rollback script from the repository root:
 
