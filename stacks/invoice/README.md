@@ -37,4 +37,10 @@ This stack runs Dolibarr as the invoicing and ERP application. It is published o
 
 The image follows the official tag model: use `latest`, `develop`, or a pinned `x.y.z` release in `DOLIBARR_TAG`.
 
+If external module installation reports that it cannot write to `/var/www/html/custom`, fix the persistent volume ownership once:
+
+```bash
+docker exec -u root invoice chown -R www-data:www-data /var/www/html/custom
+```
+
 Back up the PostgreSQL database and the `dolibarr-documents` and `dolibarr-custom` volumes before upgrades.
