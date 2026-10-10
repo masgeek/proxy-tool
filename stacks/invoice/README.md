@@ -12,8 +12,8 @@ This stack runs Dolibarr as the invoicing and ERP application. It is published o
    GRANT ALL PRIVILEGES ON DATABASE invoice TO dolibarr;
    ```
 
-2. Copy `.env.example` to `.env` and set `DB_PASSWORD`.
-3. Set `ADMIN_PASSWORD` for the initial Dolibarr administrator account.
+2. Copy `.env.example` to `.env` and set `DB_PASSWORD`, `ADMIN_PASSWORD`, and the company details.
+3. Keep `INSTALL_AUTO=0`; the official image requires manual PostgreSQL installation.
 4. Start the stack:
 
    ```bash
@@ -21,4 +21,11 @@ This stack runs Dolibarr as the invoicing and ERP application. It is published o
    docker compose up -d
    ```
 
-Open `https://invoice.munywele.co.ke` after the application is healthy. Back up the PostgreSQL database and the `dolibarr-documents` and `dolibarr-var` volumes before upgrades.
+5. Open `https://invoice.munywele.co.ke/install` and complete the PostgreSQL installation.
+6. Create the install lock so the container starts normally:
+
+   ```bash
+   docker compose exec dolibarr touch /var/www/documents/install.lock
+   ```
+
+Back up the PostgreSQL database and the `dolibarr-documents` and `dolibarr-custom` volumes before upgrades.
