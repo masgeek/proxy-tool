@@ -71,10 +71,27 @@ Mount a persistent volume for the Badger cache path (e.g. `/data/caddy-cache`) s
 
 ```bash
 caddy list-modules | grep -E "cache|ratelimit|transform|badger"
+```
+
+```bash
 caddy list-modules | grep http.matchers.status
 ```
 
-`http.matchers.status` is a built-in Caddy module. If the second command returns nothing, the installed Caddy binary is too old for `status` matchers. Rebuild with the current Caddy release using `xcaddy build` and the plugin flags above, then verify again. The configuration also supports the compatible `expression` matcher:
+Verify the Badger storage module specifically:
+
+```bash
+caddy list-modules | grep 'storages.cache.badger'
+```
+
+This must return a module before using a `badger { ... }` cache block. If the log reports `unknown module: storages.cache.badger`, the binary contains the cache handler but was built without the Badger storage plugin. Rebuild with both modules:
+
+```bash
+xcaddy build \
+  --with github.com/caddyserver/cache-handler \
+  --with github.com/darkweak/storages/badger/caddy
+```
+
+If the `http.matchers.status` command returns nothing, the installed Caddy binary is too old for `status` matchers. Rebuild with the current Caddy release using the plugin flags above. The configuration also supports the compatible `expression` matcher:
 
 ```caddyfile
 @bad_gateway expression {http.error.status_code} == 502
