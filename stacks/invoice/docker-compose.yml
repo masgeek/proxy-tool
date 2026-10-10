@@ -22,6 +22,7 @@ services:
     environment:
       APP_URL: ${APP_URL:-https://invoice.munywele.co.ke}
       APP_KEY: ${APP_KEY:?APP_KEY must be set}
+      APP_ENV: ${APP_ENV:-production}
       APP_DEBUG: ${APP_DEBUG:-false}
       REQUIRE_HTTPS: ${REQUIRE_HTTPS:-true}
       DB_HOST: ${DB_HOST:-maria}
