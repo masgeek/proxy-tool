@@ -17,10 +17,10 @@ volumes:
     name: dolibarr-custom
 
 services:
-  dolibarr:
+  invoice:
     image: dolibarr/dolibarr:${DOLIBARR_TAG:-latest}
-    container_name: dolibarr
-    hostname: dolibarr
+    container_name: invoice
+    hostname: invoice
     restart: unless-stopped
     environment:
           DOLI_INSTALL_AUTO: ${INSTALL_AUTO:-0}

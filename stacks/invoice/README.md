@@ -25,7 +25,14 @@ This stack runs Dolibarr as the invoicing and ERP application. It is published o
 6. Create the install lock so the container starts normally:
 
    ```bash
-   docker compose exec dolibarr touch /var/www/documents/install.lock
+   docker exec invoice touch /var/www/documents/install.lock
+   docker exec invoice ls -l /var/www/documents/install.lock
+   ```
+
+   The lock is stored in the persistent `dolibarr-documents` volume and survives restarts. The Compose service name is also `invoice`:
+
+   ```bash
+   docker compose exec invoice touch /var/www/documents/install.lock
    ```
 
 The image follows the official tag model: use `latest`, `develop`, or a pinned `x.y.z` release in `DOLIBARR_TAG`.
