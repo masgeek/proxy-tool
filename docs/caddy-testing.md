@@ -43,6 +43,7 @@ sudo mkdir -p /etc/caddy/backups
 sudo tar -czf "$backup" -C /etc/caddy Caddyfile snippets 2>/dev/null || \
     sudo tar -czf "$backup" -C /etc/caddy Caddyfile
 sudo rm -rf /etc/caddy/Caddyfile /etc/caddy/snippets /var/www/caddy-errors
+sudo install -d -o caddy -g caddy -m 0750 /var/lib/caddy/cache
 sudo mkdir -p /etc/caddy/snippets/domains /etc/caddy/snippets/headers /var/www/caddy-errors
 sudo cp config/caddy/errors/*.html /var/www/caddy-errors/
 sudo cp config/caddy/Caddyfile /etc/caddy/Caddyfile
