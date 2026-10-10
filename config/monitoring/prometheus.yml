@@ -86,6 +86,7 @@ scrape_configs:
           - https://logs.akilimo.org/
           - https://mqtt.munywele.co.ke/
           - https://sonar.munywele.co.ke/
+          - https://invoice.munywele.co.ke/
           - https://api.farm.munywele.co.ke/
           - https://farm.munywele.co.ke/
           - https://s3.munywele.co.ke/

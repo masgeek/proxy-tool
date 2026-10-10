@@ -1,0 +1,53 @@
+name: "invoice"
+
+networks:
+  internal:
+    name: internal
+    external: false
+  dokploy-network:
+    name: dokploy-network
+    external: true
+
+volumes:
+  dolibarr_documents:
+    driver: local
+    name: dolibarr-documents
+  dolibarr_var:
+    driver: local
+    name: dolibarr-var
+
+services:
+  dolibarr:
+    image: dolibarr/dolibarr:${DOLIBARR_TAG:-13}
+    container_name: dolibarr
+    hostname: dolibarr
+    restart: unless-stopped
+    environment:
+      DB_TYPE: pgsql
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:?DB_NAME must be set}
+      DB_USER: ${DB_USER:?DB_USER must be set}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
+      ADMIN_USER: ${ADMIN_USER:?ADMIN_USER must be set}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set}
+      INSTALL_AUTO: ${INSTALL_AUTO:-1}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
+    ports:
+      - "127.0.0.1:9705:80"
+    volumes:
+      - dolibarr_documents:/var/www/html/documents
+      - dolibarr_var:/var/www/html/var
+    networks:
+      - dokploy-network
+      - internal
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: "2.0"

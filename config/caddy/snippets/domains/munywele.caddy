@@ -253,6 +253,22 @@ sonar.munywele.co.ke {
 	}
 }
 
+# Dolibarr invoicing.
+invoice.munywele.co.ke {
+	tls dev@munywele.co.ke
+	encode gzip zstd
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+	reverse_proxy 127.0.0.1:9705 {
+		import ../headers/proxy-headers.caddy
+	}
+	log {
+		output file /var/log/caddy/dolibarr.log
+		format console
+	}
+}
+
 # Farm API.
 api.farm.munywele.co.ke {
 	tls dev@munywele.co.ke
