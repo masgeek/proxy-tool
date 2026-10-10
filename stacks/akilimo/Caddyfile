@@ -37,6 +37,12 @@ akilimo.org {
                 cache {
                         allowed_http_verbs GET HEAD
                         default_cache_control "public, max-age=7200"
+                        badger {
+                                path /var/lib/caddy/cache
+                                configuration {
+                                        syncWrites true
+                                }
+                        }
                         ttl 2h
                         stale 0s
                 }
@@ -85,6 +91,12 @@ portal.akilimo.org {
                 cache {
                         allowed_http_verbs GET HEAD
                         default_cache_control "public, max-age=7200"
+                        badger {
+                                path /var/lib/caddy/cache
+                                configuration {
+                                        syncWrites true
+                                }
+                        }
                         ttl 2h
                         stale 0s
                 }
@@ -131,6 +143,12 @@ new.akilimo.org {
                 cache {
                         allowed_http_verbs GET HEAD
                         default_cache_control "public, max-age=7200"
+                        badger {
+                                path /var/lib/caddy/cache
+                                configuration {
+                                        syncWrites true
+                                }
+                        }
                         ttl 2h
                         stale 0s
                 }
