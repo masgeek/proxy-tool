@@ -26,10 +26,10 @@ munywele.co.ke {
 }
 
 # -----------------------------------------------------------------------------
-# fuelrod API — api.munywele.co.ke + api.tsobu.co.ke
+# fuelrod API — api.munywele.co.ke
 # Reverse proxy on 127.0.0.1:9200
 # -----------------------------------------------------------------------------
-api.munywele.co.ke, api.tsobu.co.ke {
+api.munywele.co.ke {
 	tls dev@munywele.co.ke
 	encode gzip
 	import ../disallowed-basic.caddy
@@ -62,7 +62,7 @@ api.munywele.co.ke, api.tsobu.co.ke {
 # The User-Agent matcher is a compatibility filter, not a security boundary.
 # User-Agent headers can be spoofed.
 # -----------------------------------------------------------------------------
-http://api.munywele.co.ke, http://api.tsobu.co.ke {
+http://api.munywele.co.ke {
 	import ../headers/security-headers.caddy
 	import ../errors.caddy
 

@@ -76,6 +76,7 @@ scrape_configs:
           - https://munywele.co.ke/
           - https://api.munywele.co.ke/
           - https://api.tsobu.co.ke/
+          - https://sms.tsobu.co.ke/
           - https://sms.munywele.co.ke/
           - https://portal.munywele.co.ke/
           - https://n8n.munywele.co.ke/

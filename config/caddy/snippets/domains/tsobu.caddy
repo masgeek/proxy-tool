@@ -1,0 +1,64 @@
+# Tsobu domain group.
+
+api.tsobu.co.ke {
+	tls dev@munywele.co.ke
+	encode gzip
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+
+	rewrite * /api{uri}
+
+	reverse_proxy 127.0.0.1:9200 {
+		import ../headers/proxy-headers.caddy
+	}
+
+	log {
+		output file /var/log/caddy/tsobu-api.log
+		format console
+	}
+}
+
+http://api.tsobu.co.ke {
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+
+	@activex {
+		path /v1/sms/plain
+		header User-Agent "WinHTTP ActiveXperts*"
+	}
+
+	handle @activex {
+		import ../disallowed-basic.caddy
+		rewrite * /api{uri}
+		reverse_proxy 127.0.0.1:9200 {
+			import ../headers/proxy-headers.caddy
+		}
+	}
+
+	handle {
+		redir https://{host}{uri} 308
+	}
+
+	log {
+		output file /var/log/caddy/tsobu-api-http.log
+		format console
+	}
+}
+
+sms.tsobu.co.ke {
+	tls dev@munywele.co.ke
+	encode gzip
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+
+	reverse_proxy 127.0.0.1:9201 {
+		import ../headers/proxy-headers.caddy
+	}
+
+	log {
+		output file /var/log/caddy/tsobu-portal.log
+		format console
+	}
+}
