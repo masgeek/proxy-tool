@@ -18,7 +18,7 @@ volumes:
 
 services:
   dolibarr:
-    image: dolibarr/dolibarr:${DOLIBARR_TAG:-13}
+    image: dolibarr/dolibarr:${DOLIBARR_TAG:-latest}
     container_name: dolibarr
     hostname: dolibarr
     restart: unless-stopped

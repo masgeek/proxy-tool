@@ -28,4 +28,6 @@ This stack runs Dolibarr as the invoicing and ERP application. It is published o
    docker compose exec dolibarr touch /var/www/documents/install.lock
    ```
 
+The image follows the official tag model: use `latest`, `develop`, or a pinned `x.y.z` release in `DOLIBARR_TAG`.
+
 Back up the PostgreSQL database and the `dolibarr-documents` and `dolibarr-custom` volumes before upgrades.
