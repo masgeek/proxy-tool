@@ -1,0 +1,36 @@
+services:
+  budget:
+    container_name: budget
+    image: ghcr.io/ulsklyc/yuvomi:${YUVOMI_TAG:-latest}
+    hostname: budget
+    restart: unless-stopped
+    environment:
+      PORT: "3000"
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET must be set}
+      DB_ENCRYPTION_KEY: ${DB_ENCRYPTION_KEY:-}
+      APP_URL: ${APP_URL:-https://budget.munywele.co.ke}
+      TZ: ${TZ:-Africa/Nairobi}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
+    ports:
+      - "127.0.0.1:9720:3000"
+    volumes:
+      - budget_data:/data
+      - budget_backups:/backups
+      - budget_modules:/modules
+      - budget_documents:/documents
+    networks:
+      - dokploy-network
+      - internal
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: "1.0"
+        reservations:
+          memory: 256m
+          cpus: "0.1"

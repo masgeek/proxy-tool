@@ -1,0 +1,36 @@
+services:
+  budget:
+    container_name: budget
+    image: ghcr.io/sysadminsmedia/homebox:${HOMEBOX_TAG:-latest}
+    hostname: budget
+    restart: unless-stopped
+    environment:
+      HBOX_WEB_PORT: "3100"
+      HBOX_LISTEN_ADDR: 0.0.0.0:3100
+      HBOX_PUBLIC_URL: ${APP_URL:-https://budget.munywele.co.ke}
+      HBOX_DATABASE_DRIVER: ${HOMEBOX_DB_DRIVER:-postgres}
+      HBOX_DATABASE_POSTGRES_CONNECTION_STRING: ${DB_CONNECTION_STRING:-}
+      HBOX_STORAGE_TYPE: ${HOMEBOX_STORAGE_TYPE:-local}
+      HBOX_STORAGE_DATA: /data
+      TZ: ${TZ:-Africa/Nairobi}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
+    ports:
+      - "127.0.0.1:9720:3100"
+    volumes:
+      - homebox_data:/data
+    networks:
+      - dokploy-network
+      - internal
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: "1.0"
+        reservations:
+          memory: 256m
+          cpus: "0.1"

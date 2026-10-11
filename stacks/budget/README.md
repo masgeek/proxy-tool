@@ -1,59 +1,91 @@
 # Budget
 
-Household planning stack. The engine is [Yuvomi](https://yuvomi.cloud), a MIT-licensed self-hosted family planner covering tasks, calendar, meals and recipes, shopping, pantry, documents, budget, health, contacts and rewards.
+Household budgeting and planning stack. Exactly one application runs at a time on `127.0.0.1:9720`, served publicly at `budget.munywele.co.ke`.
 
-Single container, no external database. Published on `127.0.0.1:9720` and served publicly at `budget.munywele.co.ke`.
+| App | Compose file | Database | API |
+| --- | --- | --- | --- |
+| Yuvomi (default) | `services/yuvomi.yml` | SQLite | REST + OpenAPI 3.1, MCP at `/mcp` |
+| Actual Budget | `services/actual-budget.yml` | PostgreSQL | REST (sync server) |
+| Firefly III | `services/firefly-iii.yml` | PostgreSQL + Redis | REST |
+| Homebox | `services/homebox.yml` | PostgreSQL | REST |
+
+The main `docker-compose.yml` declares shared networks and volumes, plus one `budget` service that pulls its definition from a single file with `extends`. Changing that one `extends.file` value swaps the application.
 
 ## Setup
 
-1. Copy `.env.example` to `.env` and generate the two secrets:
+1. Copy `.env.example` to `.env` and fill in the secrets for the app you plan to run:
 
    ```bash
-   cp .env.example .env
-   openssl rand -hex 32   # SESSION_SECRET
-   openssl rand -hex 32   # DB_ENCRYPTION_KEY (optional)
+   cp stacks/budget/.env.example stacks/budget/.env
    ```
 
-   Yuvomi refuses to start while `SESSION_SECRET` or `DB_ENCRYPTION_KEY` still contain their placeholder values.
+2. For PostgreSQL apps, create the database on the shared `postgres` service first:
 
-2. Validate and start:
+   ```bash
+   docker exec postgres createdb --username "$POSTGRES_USER" --owner "$POSTGRES_USER" actual_budget
+   ```
+
+3. Validate and start:
 
    ```bash
    docker compose --env-file stacks/budget/.env -f stacks/budget/docker-compose.yml config --quiet
    docker compose --env-file stacks/budget/.env -f stacks/budget/docker-compose.yml up -d budget
    ```
 
-3. Open `https://budget.munywele.co.ke`. The first visit walks through creating the admin account.
+4. Open `https://budget.munywele.co.ke`. Yuvomi and Homebox walk through first-run setup; Actual Budget creates the first budget in the browser; Firefly III registers an admin user on first visit.
 
-## Encryption decision
+## Switching application
 
-`DB_ENCRYPTION_KEY` turns on SQLCipher for `/data/yuvomi.db`. There is no recovery path or back door: lose the key and the database is unreadable. Either
+Edit `extends.file` in `docker-compose.yml`:
 
-- set it and store the key with your other critical secrets, or
-- leave it empty to keep the SQLite file readable
+```yaml
+services:
+  budget:
+    extends:
+      file: ./services/actual-budget.yml
+      service: budget
+```
 
-Decide this before the first deploy, because restoring an unencrypted backup into an encrypted installation (or the reverse) needs the key.
+Then recreate:
 
-## HTTPS
+```bash
+docker compose --env-file stacks/budget/.env -f stacks/budget/docker-compose.yml up -d budget
+```
 
-The app is served through Caddy over TLS. This is required for web push notifications, which browsers refuse to deliver over plain HTTP on non-localhost origins.
+Only one service file may be referenced at a time. All apps bind `127.0.0.1:9720`, so they can never run simultaneously.
 
-## Outbound requests
+## Common variables
 
-Out of the box the only outbound call is a version check against the GitHub releases API. Enabling calendar (holidays), weather, currency rates, push channels, cloud document storage, or backup upload makes additional outbound requests.
+All service files read the same names, so switching apps changes only `extends.file` and the database block:
 
-## Modules
+| Variable | Purpose |
+| --- | --- |
+| `APP_URL` | Public URL, used for links, callbacks and OAuth |
+| `APP_ENV`, `APP_DEBUG` | Environment mode |
+| `APP_KEY` | Application key (Firefly III `APP_KEY`, Actual Budget signing) |
+| `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | PostgreSQL connection |
+| `DB_CONNECTION_STRING` | Homebox connection string (derive it from the values above) |
+| `REDIS_*` | Firefly III cache/session Redis |
+| `SESSION_SECRET`, `DB_ENCRYPTION_KEY` | Yuvomi session and optional SQLCipher key |
+| `TZ` | Container timezone |
+| `STACK_REVISION` | Deployment revision marker |
 
-Schedule, waste collection and inventory are off by default upstream. Everything else can be switched off per household from the admin settings; disabled modules disappear from the menu.
+### Per-app settings
+
+- **Yuvomi** — `SESSION_SECRET` is required; `DB_ENCRYPTION_KEY` enables SQLCipher with no recovery path if lost. State is one SQLite file at `/data/yuvomi.db`.
+- **Actual Budget** — set `ACTUAL_HTTPS=false` because Caddy terminates TLS. Import format: `DB_CONNECTION` is `postgres`, and the database name goes in `DB_NAME`.
+- **Firefly III** — `TRUSTED_PROXIES=**` is needed behind Caddy, otherwise generated links use the wrong scheme. `APP_KEY` must be a long random string.
+- **Homebox** — takes a single `DB_CONNECTION_STRING`; keep it in sync with the `DB_*` values when switching back and forth.
 
 ## Backups
 
-- `budget-data` — contains the SQLite database at `/data/yuvomi.db`; copying that one file is a full data export
-- `budget-backups` — scheduled backup archives written by the app
-- `budget-documents` — only needed when documents are stored locally rather than on WebDAV or Google Drive
-- `budget-modules` — module assets
+PostgreSQL apps are covered by the repository's `db-backup/` tooling:
 
-Yuvomi also has a built-in scheduled backup with optional WebDAV upload and restores in the browser, but a host-level file copy is still the durable backup.
+- Actual Budget: `actual_budget` database + `actual-budget-files` volume
+- Firefly III: `firefly` database + `firefly-upload` volume
+- Homebox: `homebox` database + `homebox-data` volume
+
+Yuvomi keeps everything in `budget-data` (`/data/yuvomi.db`); a host-level file copy or `sqlite3 yuvomi.db ".backup"` is the backup, plus `budget-documents` if documents are stored locally.
 
 ## Routing
 
