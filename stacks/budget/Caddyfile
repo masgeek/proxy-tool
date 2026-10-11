@@ -1,0 +1,11 @@
+# Standalone snippet for the budget stack (Yuvomi).
+# The host Caddyfile imports the shared copy from config/caddy/snippets/domains/budget.caddy
+budget.munywele.co.ke {
+	import snippets/security-headers.caddy
+	import snippets/errors.caddy
+
+	reverse_proxy 127.0.0.1:9720 {
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+}

@@ -16,3 +16,4 @@ import snippets/domains/munywele.caddy
 import snippets/domains/tsobu.caddy
 import snippets/domains/personal.caddy
 import snippets/domains/agwise.caddy
+import snippets/domains/budget.caddy

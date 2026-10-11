@@ -1,0 +1,78 @@
+name: "budget"
+
+# Household planning stack — engine: Yuvomi (MIT, self-hosted family planner).
+#
+#   budget.munywele.co.ke — Yuvomi app, host 9710
+#
+# Single container, no external database. All state is one SQLite file at
+# /data/yuvomi.db, so backup is a file copy of the data volume plus the
+# documents volume if documents are stored locally.
+#
+# Yuvomi refuses to start while SESSION_SECRET or DB_ENCRYPTION_KEY still hold
+# their placeholder values. DB_ENCRYPTION_KEY enables SQLCipher and has NO
+# recovery path: losing the key means losing the database. Clear the line to run
+# unencrypted instead, and decide this before the first deploy.
+#
+# HTTPS matters: web push notifications only work behind TLS, which Caddy
+# provides. The only outbound call made by default is a GitHub release version
+# check; calendar, weather, push, cloud storage and backup features make further
+# calls once enabled in the app.
+
+networks:
+  internal:
+    name: internal
+    external: false
+  dokploy-network:
+    name: dokploy-network
+    external: true
+
+volumes:
+  budget_data:
+    driver: local
+    name: budget-data
+  budget_backups:
+    driver: local
+    name: budget-backups
+  budget_modules:
+    driver: local
+    name: budget-modules
+  budget_documents:
+    driver: local
+    name: budget-documents
+
+services:
+  budget:
+    container_name: budget
+    image: ghcr.io/ulsklyc/yuvomi:${YUVOMI_TAG:-latest}
+    hostname: budget
+    restart: unless-stopped
+    environment:
+      PORT: "3000"
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET must be set}
+      DB_ENCRYPTION_KEY: ${DB_ENCRYPTION_KEY:-}
+      APP_URL: ${APP_URL:-https://budget.munywele.co.ke}
+      TZ: ${TZ:-Africa/Nairobi}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
+    ports:
+      - "127.0.0.1:9720:3000"
+    volumes:
+      - budget_data:/data
+      - budget_backups:/backups
+      - budget_modules:/modules
+      - budget_documents:/documents
+    networks:
+      - dokploy-network
+      - internal
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: "1.0"
+        reservations:
+          memory: 256m
+          cpus: "0.1"

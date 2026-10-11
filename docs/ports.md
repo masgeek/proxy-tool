@@ -65,6 +65,8 @@ standard ports for compatibility.
 | Stack | Service | Host port | Container port | Caddyfile |
 |-------|---------|-----------|----------------|-----------|
 | automation | n8n | 9700 | 5678 | `stacks/automation/Caddyfile` |
+| invoice | invoice | 9705 | 80 | `stacks/invoice/Caddyfile` |
+| budget | budget | 9720 | 3000 | `stacks/budget/Caddyfile` |
 | activepieces | app | 9710 | 80 | `stacks/activepieces/Caddyfile` |
 | activepieces | worker | — | — | — |
 
