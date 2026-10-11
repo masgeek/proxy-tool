@@ -38,6 +38,8 @@ services:
       AP_REDIS_HOST: cache
       AP_REDIS_PORT: 6379
       AP_REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      # Logical database on the shared `cache` service — see docs/redis-databases.md
+      AP_REDIS_DB: ${REDIS_DB:-6}
       AP_QUEUE_UI_ENABLED: "false"
       STACK_REVISION: ${STACK_REVISION:-1790584804}
     ports:
