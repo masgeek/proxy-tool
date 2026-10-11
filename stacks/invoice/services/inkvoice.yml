@@ -5,12 +5,12 @@ services:
     hostname: inkvoice
     restart: unless-stopped
     environment:
-      ADMIN_USER: ${INKVOICE_ADMIN_USER:-admin}
-      ADMIN_PASS: ${INKVOICE_ADMIN_PASSWORD:-}
-      JWT_SECRET: ${INKVOICE_JWT_SECRET:-}
-      COOKIE_SECURE: "true"
-      ENABLE_HSTS: ${INKVOICE_ENABLE_HSTS:-false}
-      DATABASE_PATH: /app/data/invoice.db
+      ADMIN_USER: ${ADMIN_USER:-admin}
+      ADMIN_PASS: ${ADMIN_PASSWORD:-}
+      JWT_SECRET: ${APP_KEY:-}
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      ENABLE_HSTS: ${ENABLE_HSTS:-false}
+      DATABASE_PATH: ${DATABASE_PATH:-/app/data/invoice.db}
       TZ: ${TZ:-Africa/Nairobi}
       STACK_REVISION: ${STACK_REVISION:-1790584804}
     ports:

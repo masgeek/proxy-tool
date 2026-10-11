@@ -52,7 +52,33 @@ Then recreate the stack:
 docker compose --env-file .env up -d
 ```
 
-Only one service file may be referenced at a time. All three bind `127.0.0.1:9705`, so they can never run simultaneously.
+Only one service file may be referenced at a time. All services bind `127.0.0.1:9705`, so they can never run simultaneously.
+
+## Common variables
+
+Every service file reads the same variable names, so switching applications only changes `extends.file` and, where required, the database block:
+
+| Variable | Purpose |
+| --- | --- |
+| `APP_URL` | Public URL used by the app |
+| `APP_DOMAIN` | Host name without scheme |
+| `APP_ENV`, `APP_DEBUG` | Environment mode |
+| `APP_KEY` | Application secret (Inkvoice JWT secret, Invoice Ninja key) |
+| `ADMIN_USER`, `ADMIN_PASSWORD` | First admin account |
+| `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | Database connection |
+| `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` | Redis connection (Invoice Ninja) |
+| `TZ` | Container timezone |
+| `STACK_REVISION` | Deployment revision marker |
+
+Dolibarr maps these onto its `DOLI_*` variables, InvoiceShelf uses them natively, and Inkvoice uses `APP_KEY` plus `ADMIN_*` with embedded SQLite. Only app-specific extras keep their own names, such as `WWW_USER_ID` for Dolibarr and `SESSION_*`, `SCHEDULER_ENABLED`, and `PHP_OPCACHE_ENABLE` for InvoiceShelf.
+
+### Database differences
+
+The `DB_*` values must match the selected application:
+
+- Invoice Ninja and InvoiceShelf: shared `maria` service, port `3306`
+- Dolibarr: shared `postgres` service, port `5432`
+- Inkvoice: no database service; set `DATABASE_PATH` only if the default SQLite path changes
 
 ## Dependencies
 
