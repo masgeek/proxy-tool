@@ -1,0 +1,46 @@
+services:
+  invoice:
+    image: invoiceshelf/invoiceshelf:${INVOICESHELF_TAG:-latest}
+    container_name: invoiceshelf
+    hostname: invoiceshelf
+    restart: unless-stopped
+    environment:
+      APP_NAME: InvoiceShelf
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: ${INVOICESHELF_APP_URL:-https://invoice.munywele.co.ke}
+      SESSION_DOMAIN: ${INVOICESHELF_SESSION_DOMAIN:-invoice.munywele.co.ke}
+      SANCTUM_STATEFUL_DOMAINS: ${INVOICESHELF_APP_URL:-https://invoice.munywele.co.ke}
+      DB_CONNECTION: mariadb
+      DB_HOST: ${INVOICESHELF_DB_HOST:-maria}
+      DB_PORT: ${INVOICESHELF_DB_PORT:-3306}
+      DB_DATABASE: ${INVOICESHELF_DB_NAME:-invoiceshelf}
+      DB_USERNAME: ${INVOICESHELF_DB_USERNAME:-invoiceshelf}
+      DB_PASSWORD: ${INVOICESHELF_DB_PASSWORD:-}
+      CACHE_STORE: file
+      SESSION_DRIVER: file
+      SESSION_LIFETIME: "240"
+      SCHEDULER_ENABLED: "true"
+      AUTORUN_ENABLED: "true"
+      AUTORUN_LARAVEL_MIGRATION: "false"
+      AUTORUN_LARAVEL_OPTIMIZE: "false"
+      PHP_OPCACHE_ENABLE: "1"
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
+    ports:
+      - "127.0.0.1:9705:8080"
+    volumes:
+      - invoiceshelf_storage:/var/www/html/storage/
+      - invoiceshelf_modules:/var/www/html/Modules/
+    networks:
+      - dokploy-network
+      - internal
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: "2.0"

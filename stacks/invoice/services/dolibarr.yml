@@ -1,0 +1,40 @@
+services:
+  invoice:
+    image: dolibarr/dolibarr:${DOLIBARR_TAG:-latest}
+    container_name: dolibarr
+    hostname: dolibarr
+    restart: unless-stopped
+    environment:
+      DOLI_INSTALL_AUTO: "0"
+      DOLI_DB_TYPE: pgsql
+      DOLI_DB_HOST: ${DOLIBARR_DB_HOST:-postgres}
+      DOLI_DB_HOST_PORT: ${DOLIBARR_DB_PORT:-5432}
+      DOLI_DB_NAME: ${DOLIBARR_DB_NAME:-dolibarr}
+      DOLI_DB_USER: ${DOLIBARR_DB_USERNAME:-dolibarr}
+      DOLI_DB_PASSWORD: ${DOLIBARR_DB_PASSWORD:-}
+      DOLI_URL_ROOT: ${DOLIBARR_APP_URL:-https://invoice.munywele.co.ke}
+      DOLI_ADMIN_LOGIN: ${DOLIBARR_ADMIN_USER:-admin}
+      DOLI_ADMIN_PASSWORD: ${DOLIBARR_ADMIN_PASSWORD:-}
+      DOLI_COMPANY_NAME: ${DOLIBARR_COMPANY_NAME:-Dolibarr Company}
+      DOLI_COMPANY_COUNTRYCODE: ${DOLIBARR_COMPANY_COUNTRYCODE:-KE}
+      WWW_USER_ID: ${WWW_USER_ID:-33}
+      WWW_GROUP_ID: ${WWW_GROUP_ID:-33}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
+    ports:
+      - "127.0.0.1:9705:80"
+    volumes:
+      - dolibarr_documents:/var/www/documents
+      - dolibarr_custom:/var/www/html/custom
+    networks:
+      - dokploy-network
+      - internal
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: "2.0"
