@@ -85,11 +85,14 @@ services:
       SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-true}
       FILESYSTEM_DISK: ${FILESYSTEM_DISK:-local}
 
-      # Redis — host must be the redis service name, not 127.0.0.1
+      # Redis — dedicated broker instance in the cache stack, database 2.
+      # Host must be the instance name, not 127.0.0.1.
       REDIS_CLIENT: ${REDIS_CLIENT:-phpredis}
-      REDIS_HOST: ${REDIS_HOST:-cache}
+      REDIS_HOST: ${REDIS_HOST:-redis-jobs}
       REDIS_PORT: ${REDIS_PORT:-6379}
       REDIS_PASSWORD: ${REDIS_PASSWORD:-null}
+      REDIS_DB: ${REDIS_DB:-2}
+      REDIS_CACHE_DB: ${REDIS_CACHE_DB:-2}
       # S3 (Optional)
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}

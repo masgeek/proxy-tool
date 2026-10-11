@@ -4,7 +4,7 @@ Household budgeting and planning stack. Exactly one application runs at a time o
 
 | App | Compose file | Database | API |
 | --- | --- | --- | --- |
-| Firefly III (default) | `services/firefly-iii.yml` | PostgreSQL + Redis | REST |
+| Firefly III (default) | `services/firefly-iii.yml` | PostgreSQL + own Redis | REST |
 | Yuvomi | `services/yuvomi.yml` | SQLite | REST + OpenAPI 3.1, MCP at `/mcp` |
 | Actual Budget | `services/actual-budget.yml` | PostgreSQL | REST (sync server) |
 | Econumo | `services/econumo.yml` | PostgreSQL | REST + MCP |
@@ -73,7 +73,7 @@ All service files read the same names, so switching apps changes only `extends.f
 | `APP_ENV`, `APP_DEBUG` | Environment mode |
 | `APP_KEY` | Application key (Firefly III `APP_KEY`, Actual Budget signing) |
 | `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | PostgreSQL connection |
-| `REDIS_*` | Firefly III cache/session Redis (logical database `REDIS_CACHE_DB=1`; see `docs/redis-databases.md`) |
+| `REDIS_*` | Firefly III cache, session and queue Redis (`redis-budget`; see `docs/redis-instances.md`) |
 | `SESSION_SECRET`, `DB_ENCRYPTION_KEY` | Yuvomi session and optional SQLCipher key |
 | `TZ` | Container timezone |
 | `STACK_REVISION` | Deployment revision marker |

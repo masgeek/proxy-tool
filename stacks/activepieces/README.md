@@ -28,7 +28,7 @@ Activepieces runs as two services: `app` and `worker`. The app owns the UI/API a
 
    Put the two generated values in `AP_ENCRYPTION_KEY` and `AP_JWT_SECRET`. Enter the same JWT secret when generating `AP_WORKER_TOKEN`, then copy the token into the `.env`.
 
-5. Set `POSTGRES_USER` and `POSTGRES_PASSWORD` to the shared database credentials. Set `REDIS_PASSWORD` to the production cache password, or leave it empty when Redis authentication is disabled.
+5. Set `POSTGRES_USER` and `POSTGRES_PASSWORD` to the shared database credentials. Set `REDIS_PASSWORD` to the cache stack's `REDIS_JOBS_PASSWORD` (see `docs/redis-instances.md`), matching the production cache password, or leave it empty when Redis authentication is disabled.
 
 ## Start and verify
 

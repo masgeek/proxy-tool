@@ -82,7 +82,7 @@ The `DB_*` values must match the selected application:
 
 ## Dependencies
 
-- Invoice Ninja uses the shared `maria` database and `cache` Redis service (logical database `REDIS_DB=2`, see `docs/redis-databases.md`)
+- Invoice Ninja uses the shared `maria` database and its own `redis-invoice` instance from the cache stack (see `docs/redis-instances.md`)
 - Dolibarr uses the shared `postgres` service with the `dolibarr` database and user
 - Inkvoice stores all state in SQLite at `/app/data/invoice.db` on the `inkvoice-data` volume
 - InvoiceShelf uses the shared `maria` service with the `invoiceshelf` database and user, plus its `invoiceshelf-storage` and `invoiceshelf-modules` volumes

@@ -35,11 +35,10 @@ services:
       AP_POSTGRES_USERNAME: ${POSTGRES_USER:?POSTGRES_USER must be set}
       AP_POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
       AP_REDIS_TYPE: STANDALONE
-      AP_REDIS_HOST: cache
+      AP_REDIS_HOST: redis-jobs
       AP_REDIS_PORT: 6379
       AP_REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-      # Logical database on the shared `cache` service — see docs/redis-databases.md
-      AP_REDIS_DB: ${REDIS_DB:-6}
+      AP_REDIS_DB: ${REDIS_DB:-0}
       AP_QUEUE_UI_ENABLED: "false"
       STACK_REVISION: ${STACK_REVISION:-1790584804}
     ports:

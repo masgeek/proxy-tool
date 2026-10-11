@@ -17,10 +17,10 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-}
       CACHE_DRIVER: ${CACHE_DRIVER:-redis}
       CACHE_STORE: ${CACHE_STORE:-redis}
-      REDIS_HOST: ${REDIS_HOST:-cache}
+      REDIS_HOST: ${REDIS_HOST:-redis-budget}
       REDIS_PORT: ${REDIS_PORT:-6379}
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-      REDIS_CACHE_DB: ${REDIS_CACHE_DB:-1}
+      REDIS_CACHE_DB: ${REDIS_CACHE_DB:-0}
       TRUSTED_PROXIES: ${TRUSTED_PROXIES:-**}
       ALLOW_WEBHOOKS: ${ALLOW_WEBHOOKS:-true}
       TZ: ${TZ:-Africa/Nairobi}

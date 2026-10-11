@@ -8,15 +8,13 @@ name: "budget"
 # same host port, so they can never run simultaneously.
 #
 #   services/yuvomi.yml         — family planner, SQLite (no external DB)
-#   services/firefly-iii.yml    — expense tracking, PostgreSQL + shared Redis (default)
+#   services/firefly-iii.yml    — expense tracking, PostgreSQL + dedicated Redis (default)
 #   services/actual-budget.yml  — budgeting, PostgreSQL
 #   services/econumo.yml        — family budgeting, PostgreSQL (DATABASE_URL)
 #   services/ezbookkeeping.yml  — bookkeeping, PostgreSQL (EBK_* env)
 #
-# PostgreSQL apps reuse the shared `postgres` service; Firefly III also uses
-# the shared `cache` Redis. Databases must exist before first start:
-#   docker exec postgres createdb --username "$POSTGRES_USER" \
-#     --owner "$POSTGRES_USER" actual_budget
+# PostgreSQL apps reuse the shared `postgres` service. Firefly III (the default
+# app) uses this stack's dedicated Redis instead of the shared `cache` service.
 
 networks:
   internal:

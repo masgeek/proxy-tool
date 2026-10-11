@@ -40,7 +40,7 @@ services:
       SESSION_DRIVER: ${SESSION_DRIVER:-redis}
       SESSION_LIFETIME: ${SESSION_LIFETIME:-120}
       # Redis
-      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_HOST: ${REDIS_HOST:-cache}
       REDIS_PORT: ${REDIS_PORT:-6379}
       # Queue
       QUEUE_CONNECTION: ${QUEUE_CONNECTION:-redis}
