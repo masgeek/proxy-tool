@@ -51,5 +51,5 @@ volumes:
 services:
   budget:
     extends:
-      file: ./services/yuvomi.yml
+      file: ./services/actual-budget.yml
       service: budget
