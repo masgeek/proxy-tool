@@ -4,9 +4,9 @@ Household budgeting and planning stack. Exactly one application runs at a time o
 
 | App | Compose file | Database | API |
 | --- | --- | --- | --- |
-| Yuvomi (default) | `services/yuvomi.yml` | SQLite | REST + OpenAPI 3.1, MCP at `/mcp` |
+| Firefly III (default) | `services/firefly-iii.yml` | PostgreSQL + Redis | REST |
+| Yuvomi | `services/yuvomi.yml` | SQLite | REST + OpenAPI 3.1, MCP at `/mcp` |
 | Actual Budget | `services/actual-budget.yml` | PostgreSQL | REST (sync server) |
-| Firefly III | `services/firefly-iii.yml` | PostgreSQL + Redis | REST |
 | Econumo | `services/econumo.yml` | PostgreSQL | REST + MCP |
 | ezBookkeeping | `services/ezbookkeeping.yml` | PostgreSQL | REST |
 
@@ -20,20 +20,28 @@ The main `docker-compose.yml` declares shared networks and volumes, plus one `bu
    cp stacks/budget/.env.example stacks/budget/.env
    ```
 
-2. For PostgreSQL apps, create the database on the shared `postgres` service first:
+2. Create the database and role on the shared `postgres` service. For the default app:
 
    ```bash
-   docker exec postgres createdb --username "$POSTGRES_USER" --owner "$POSTGRES_USER" actual_budget
+   docker exec postgres createdb --username "$POSTGRES_USER" --owner "$POSTGRES_USER" firefly
    ```
 
-3. Validate and start:
+   Add the database name to `.env` as `DB_DATABASE` and the role as `DB_USERNAME`.
+
+3. Set `APP_KEY` to exactly 32 characters for Firefly III:
+
+   ```bash
+   head /dev/urandom | LC_ALL=C tr -dc 'A-Za-z0-9' | head -c 32 && echo
+   ```
+
+4. Validate and start:
 
    ```bash
    docker compose --env-file stacks/budget/.env -f stacks/budget/docker-compose.yml config --quiet
    docker compose --env-file stacks/budget/.env -f stacks/budget/docker-compose.yml up -d budget
    ```
 
-4. Open `https://budget.munywele.co.ke`. Yuvomi walks through first-run setup; Actual Budget creates the first budget in the browser; Firefly III registers an admin user on first visit.
+5. Open `https://budget.munywele.co.ke`. Firefly III registers an admin user on first visit; Yuvomi walks through first-run setup; Actual Budget creates the first budget in the browser.
 
 ## Switching application
 

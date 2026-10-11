@@ -8,8 +8,8 @@ name: "budget"
 # same host port, so they can never run simultaneously.
 #
 #   services/yuvomi.yml         — family planner, SQLite (no external DB)
+#   services/firefly-iii.yml    — expense tracking, PostgreSQL + shared Redis (default)
 #   services/actual-budget.yml  — budgeting, PostgreSQL
-#   services/firefly-iii.yml    — expense tracking, PostgreSQL + shared Redis
 #   services/econumo.yml        — family budgeting, PostgreSQL (DATABASE_URL)
 #   services/ezbookkeeping.yml  — bookkeeping, PostgreSQL (EBK_* env)
 #
@@ -61,5 +61,5 @@ volumes:
 services:
   budget:
     extends:
-      file: ./services/yuvomi.yml
+      file: ./services/firefly-iii.yml
       service: budget

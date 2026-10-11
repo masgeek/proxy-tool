@@ -16,7 +16,7 @@ services:
       DB_USER: ${DB_USERNAME:-actual_budget}
       DB_PASSWORD: ${DB_PASSWORD:-}
       TZ: ${TZ:-Africa/Nairobi}
-      STACK_REVISION: ${STACK_REVISION:-1790584804}
+      STACK_REVISION: ${STACK_REVISION:-1791743363}
     ports:
       - "127.0.0.1:9720:5006"
     volumes:

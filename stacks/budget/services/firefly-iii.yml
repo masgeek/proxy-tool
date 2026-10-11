@@ -24,7 +24,7 @@ services:
       TRUSTED_PROXIES: ${TRUSTED_PROXIES:-**}
       ALLOW_WEBHOOKS: ${ALLOW_WEBHOOKS:-true}
       TZ: ${TZ:-Africa/Nairobi}
-      STACK_REVISION: ${STACK_REVISION:-1790584804}
+      STACK_REVISION: ${STACK_REVISION:-1791743363}
     ports:
       - "127.0.0.1:9720:8080"
     volumes:
