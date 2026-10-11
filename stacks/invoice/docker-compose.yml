@@ -31,5 +31,5 @@ volumes:
 services:
   invoice:
     extends:
-      file: ./services/invoice-ninja.yml
+      file: ./services/dolibarr.yml
       service: invoice
