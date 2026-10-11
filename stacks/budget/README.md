@@ -73,7 +73,7 @@ All service files read the same names, so switching apps changes only `extends.f
 | `APP_ENV`, `APP_DEBUG` | Environment mode |
 | `APP_KEY` | Application key (Firefly III `APP_KEY`, Actual Budget signing) |
 | `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | PostgreSQL connection |
-| `REDIS_*` | Firefly III cache/session Redis |
+| `REDIS_*` | Firefly III cache/session Redis (logical database `REDIS_CACHE_DB=1`; see `docs/redis-databases.md`) |
 | `SESSION_SECRET`, `DB_ENCRYPTION_KEY` | Yuvomi session and optional SQLCipher key |
 | `TZ` | Container timezone |
 | `STACK_REVISION` | Deployment revision marker |
