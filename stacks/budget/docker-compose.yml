@@ -12,7 +12,6 @@ name: "budget"
 #   services/firefly-iii.yml    — expense tracking, PostgreSQL + shared Redis
 #   services/econumo.yml        — family budgeting, PostgreSQL (DATABASE_URL)
 #   services/ezbookkeeping.yml  — bookkeeping, PostgreSQL (EBK_* env)
-#   services/expenseowl.yml     — lightweight expense tracking, PostgreSQL
 #
 # PostgreSQL apps reuse the shared `postgres` service; Firefly III also uses
 # the shared `cache` Redis. Databases must exist before first start:
@@ -58,9 +57,6 @@ volumes:
   ezbookkeeping_logs:
     driver: local
     name: ezbookkeeping-logs
-  expenseowl_data:
-    driver: local
-    name: expenseowl-data
 
 services:
   budget:

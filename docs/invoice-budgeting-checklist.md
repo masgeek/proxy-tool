@@ -13,14 +13,14 @@ Context for every item below:
 ## FrankenPHP applicability
 
 FrankenPHP is a PHP application server and is relevant only to PHP apps. Of the
-applications covered here:
+applications covered here (ExpenseOwl was evaluated and excluded because it ships
+no authentication of its own and relies entirely on proxy auth):
 
 | App | Runtime | FrankenPHP relevant |
 | --- | --- | --- |
 | Firefly III | PHP (Laravel) | Only if you build your own image; the official `fireflyiii/core` image already bundles nginx + PHP-FPM, so do not swap it |
 | Econumo | Go (single distroless binary) | No |
 | ezBookkeeping | Go | No |
-| ExpenseOwl | Go | No |
 
 If you later move Firefly III to FrankenPHP, use the `dunglas/frankenphp` base image,
 mount the application at `/app`, and keep the container port at 8080 with Caddy still
@@ -151,45 +151,6 @@ Stack file: `stacks/budget/services/econumo.yml`
 - [ ] Create classifications (categories) before recurring transactions reference them.
 - [ ] Update currency rates via the container CLI (`/app/econumo`) or the scheduled job rather than by hand.
 - [ ] Use the REST API or the MCP endpoint for automated tagging and transaction creation instead of scraping the UI.
-
----
-
-## 4. ExpenseOwl
-
-Stack file: `stacks/budget/services/expenseowl.yml`
-
-### Database provisioning and schema isolation
-
-- [ ] Create role and database:
-      `docker exec postgres psql -U "$POSTGRES_USER" -c "CREATE ROLE expenseowl LOGIN PASSWORD '…';"`
-      `docker exec postgres psql -U "$POSTGRES_USER" -c "CREATE DATABASE expenseowl OWNER expenseowl;"`
-- [ ] Grant schema privileges: `GRANT ALL ON SCHEMA public TO expenseowl;`
-- [ ] Postgres support landed in v4.0; stay on v4 or newer or `STORAGE_TYPE=postgres` is ignored and it silently falls back to JSON.
-- [ ] Add `expenseowl` to the `db-backup` database list.
-
-### Environment and application configuration
-
-- [ ] Set `STORAGE_TYPE=postgres`.
-- [ ] Set `STORAGE_URL=postgres:5432/expenseowl` — this is `SERVER/DB`, not a URL, so no `postgres://` prefix and no credentials in it.
-- [ ] Set `STORAGE_SSL=disable` for the internal network; use `require` or `verify-full` only if you terminate TLS to PostgreSQL.
-- [ ] Set `STORAGE_USER=expenseowl` and `STORAGE_PASS=…`.
-- [ ] Set `TZ=Africa/Nairobi`.
-- [ ] **Authentication**: ExpenseOwl ships without its own auth and expects proxy authentication. Put it behind Caddy basic auth (`basicauth` + `basic_auth`) or an OIDC/authelia/Authentik front door. Do not publish it unprotected.
-- [ ] FrankenPHP does not apply — ExpenseOwl is a Go binary serving its own static assets.
-
-### Persistence and volumes
-
-- [ ] Mount `expenseowl-data` at `/app/data` even in Postgres mode: the app still writes data-directory files and CSV exports there.
-- [ ] Keep the default `json` mode only for evaluation; Postgres plus this volume is the production shape.
-
-### Data ingestion and invoicing flow
-
-- [ ] Open the app, set currency symbol, monthly start date, and categories in app settings.
-- [ ] Create the initial category list before importing, so rows map to existing categories.
-- [ ] Import historical data with the built-in CSV importer and reconcile against your bank statement.
-- [ ] Create recurring transactions for fixed monthly costs.
-- [ ] Use tags for the finer classification ExpenseOwl does not model with accounts.
-- [ ] Export CSV regularly; it is the supported data-portability path out of the app.
 
 ---
 
