@@ -1,0 +1,39 @@
+services:
+  budget:
+    container_name: budget
+    image: ghcr.io/econumo/econumo:${ECONUMO_TAG:-latest}
+    hostname: budget
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgres://econumo:change_me@postgres:5432/econumo?sslmode=disable}
+      BASE_URL: ${APP_URL:-https://budget.munywele.co.ke}
+      MAILER_DSN: ${MAILER_DSN:-}
+      TZ: ${TZ:-Africa/Nairobi}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
+    ports:
+      - "127.0.0.1:9720:80"
+    volumes:
+      - econumo_db:/app/var/db
+      - econumo_jwt:/app/var/jwt
+    networks:
+      - dokploy-network
+      - internal
+    healthcheck:
+      test: ["CMD", "/app/econumo", "health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "1.0"
+        reservations:
+          memory: 128m
+          cpus: "0.1"

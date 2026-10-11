@@ -7,6 +7,9 @@ Household budgeting and planning stack. Exactly one application runs at a time o
 | Yuvomi (default) | `services/yuvomi.yml` | SQLite | REST + OpenAPI 3.1, MCP at `/mcp` |
 | Actual Budget | `services/actual-budget.yml` | PostgreSQL | REST (sync server) |
 | Firefly III | `services/firefly-iii.yml` | PostgreSQL + Redis | REST |
+| Econumo | `services/econumo.yml` | PostgreSQL | REST + MCP |
+| ezBookkeeping | `services/ezbookkeeping.yml` | PostgreSQL | REST |
+| ExpenseOwl | `services/expenseowl.yml` | PostgreSQL | web UI + CSV |
 
 The main `docker-compose.yml` declares shared networks and volumes, plus one `budget` service that pulls its definition from a single file with `extends`. Changing that one `extends.file` value swaps the application.
 
@@ -80,6 +83,9 @@ All service files read the same names, so switching apps changes only `extends.f
   A `SQLITE_CANTOPEN` error on start means exactly this: the container could not write `/data/yuvomi.db`.
 - **Actual Budget** — set `ACTUAL_HTTPS=false` because Caddy terminates TLS. Import format: `DB_CONNECTION` is `postgres`, and the database name goes in `DB_NAME`.
 - **Firefly III** — `TRUSTED_PROXIES=**` is needed behind Caddy, otherwise generated links use the wrong scheme. `APP_KEY` must be a long random string.
+- **Econumo** — takes a single `DATABASE_URL` (`postgres://user:pass@host:5432/db?sslmode=disable`), not `DB_*`. The `econumo-jwt` volume holds the JWT keypair and must be backed up with the database, otherwise every existing session token is invalidated after a restore.
+- **ezBookkeeping** — configuration is `EBK_*`; `APP_KEY` maps to `EBK_SECURITY_SECRET_KEY`. The image runs as UID/GID 1000, so the service runs as root to keep the named volumes writable; the alternative is a one-time `chown 1000:1000` of `ezbookkeeping-storage` and `ezbookkeeping-logs`.
+- **ExpenseOwl** — `STORAGE_URL` is `SERVER/DB` (no scheme), not a URL. It ships **no authentication of its own**, so it must sit behind Caddy basic auth or an identity-aware proxy; never expose it unprotected.
 
 ## Backups
 
@@ -87,6 +93,9 @@ PostgreSQL apps are covered by the repository's `db-backup/` tooling:
 
 - Actual Budget: `actual_budget` database + `actual-budget-files` volume
 - Firefly III: `firefly` database + `firefly-upload` volume
+- Econumo: `econumo` database + `econumo-db` and `econumo-jwt` volumes
+- ezBookkeeping: `ezbookkeeping` database + `ezbookkeeping-storage` and `ezbookkeeping-logs` volumes
+- ExpenseOwl: `expenseowl` database + `expenseowl-data` volume (CSV exports and settings)
 
 Yuvomi keeps everything in `budget-data` (`/data/yuvomi.db`); a host-level file copy or `sqlite3 yuvomi.db ".backup"` is the backup, plus `budget-documents` if documents are stored locally.
 
