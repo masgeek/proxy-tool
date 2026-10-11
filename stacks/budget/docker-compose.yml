@@ -51,5 +51,5 @@ volumes:
 services:
   budget:
     extends:
-      file: ./services/actual-budget.yml
+      file: ./services/homebox.yml
       service: budget

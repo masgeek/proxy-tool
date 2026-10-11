@@ -82,7 +82,11 @@ All service files read the same names, so switching apps changes only `extends.f
   A `SQLITE_CANTOPEN` error on start means exactly this: the container could not write `/data/yuvomi.db`.
 - **Actual Budget** — set `ACTUAL_HTTPS=false` because Caddy terminates TLS. Import format: `DB_CONNECTION` is `postgres`, and the database name goes in `DB_NAME`.
 - **Firefly III** — `TRUSTED_PROXIES=**` is needed behind Caddy, otherwise generated links use the wrong scheme. `APP_KEY` must be a long random string.
-- **Homebox** — takes a single `DB_CONNECTION_STRING`; keep it in sync with the `DB_*` values when switching back and forth.
+- **Homebox** — takes a single `DB_CONNECTION_STRING`; keep it in sync with the `DB_*` values when switching back and forth. Format: `postgres://<user>:<password>@<host>:<port>/<database>?sslmode=disable`, for example `postgres://homebox:change_me@postgres:5432/homebox?sslmode=disable`. Percent-encode any password character that is special in a URL (`@` → `%40`, `:` → `%3A`, `/` → `%2F`, `#` → `%23`, `%` → `%25`). The database must exist first:
+
+  ```bash
+  docker exec postgres createdb --username "$POSTGRES_USER" --owner "$POSTGRES_USER" homebox
+  ```
 
 ## Backups
 
