@@ -4,11 +4,25 @@ services:
     image: ghcr.io/ulsklyc/yuvomi:${YUVOMI_TAG:-latest}
     hostname: budget
     restart: unless-stopped
+    # The image runs as a non-root user and cannot write to freshly created
+    # named volumes on every Docker/storage-driver combination. Running as
+    # root here is what keeps /data/yuvomi.db openable; see README for the
+    # ownership alternative.
+    user: "0:0"
     environment:
+      NODE_ENV: production
       PORT: "3000"
+      DB_PATH: ${DB_PATH:-/data/yuvomi.db}
+      BACKUP_DIR: /backups
+      MODULES_DIR: /app/modules
+      DOCUMENT_STORAGE_LOCAL_ENABLED: ${DOCUMENT_STORAGE_LOCAL_ENABLED:-false}
+      DOCUMENT_STORAGE_LOCAL_PATH: /documents
       SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET must be set}
       DB_ENCRYPTION_KEY: ${DB_ENCRYPTION_KEY:-}
-      APP_URL: ${APP_URL:-https://budget.munywele.co.ke}
+      SESSION_SECURE: ${SESSION_SECURE:-true}
+      TRUST_PROXY: ${TRUST_PROXY:-1}
+      BASE_URL: ${APP_URL:-https://budget.munywele.co.ke}
+      BACKUP_ENABLED: ${BACKUP_ENABLED:-true}
       TZ: ${TZ:-Africa/Nairobi}
       STACK_REVISION: ${STACK_REVISION:-1790584804}
     ports:
@@ -16,11 +30,17 @@ services:
     volumes:
       - budget_data:/data
       - budget_backups:/backups
-      - budget_modules:/modules
+      - budget_modules:/app/modules
       - budget_documents:/documents
     networks:
       - dokploy-network
       - internal
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', r => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     logging:
       driver: json-file
       options:

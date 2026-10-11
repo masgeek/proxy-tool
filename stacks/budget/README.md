@@ -72,7 +72,14 @@ All service files read the same names, so switching apps changes only `extends.f
 
 ### Per-app settings
 
-- **Yuvomi** — `SESSION_SECRET` is required; `DB_ENCRYPTION_KEY` enables SQLCipher with no recovery path if lost. State is one SQLite file at `/data/yuvomi.db`.
+- **Yuvomi** — `SESSION_SECRET` is required; `DB_ENCRYPTION_KEY` enables SQLCipher with no recovery path if lost. State is one SQLite file at `DB_PATH` (default `/data/yuvomi.db`). `SESSION_SECURE=true` and `TRUST_PROXY=1` are required behind Caddy, otherwise logins and reset links break. The service runs as `user: "0:0"` because the image's non-root user cannot write to a freshly created named volume; if you prefer to keep the image user, chown the volumes once and remove that line:
+
+  ```bash
+  docker run --rm -v budget-data:/data -v budget-backups:/backups -v budget-modules:/app/modules -v budget-documents:/documents \
+    busybox sh -c 'chown -R 1000:1000 /data /backups /app/modules /documents'
+  ```
+
+  A `SQLITE_CANTOPEN` error on start means exactly this: the container could not write `/data/yuvomi.db`.
 - **Actual Budget** — set `ACTUAL_HTTPS=false` because Caddy terminates TLS. Import format: `DB_CONNECTION` is `postgres`, and the database name goes in `DB_NAME`.
 - **Firefly III** — `TRUSTED_PROXIES=**` is needed behind Caddy, otherwise generated links use the wrong scheme. `APP_KEY` must be a long random string.
 - **Homebox** — takes a single `DB_CONNECTION_STRING`; keep it in sync with the `DB_*` values when switching back and forth.
