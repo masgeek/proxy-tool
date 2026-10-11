@@ -10,7 +10,6 @@ name: "budget"
 #   services/yuvomi.yml         — family planner, SQLite (no external DB)
 #   services/actual-budget.yml  — budgeting, PostgreSQL
 #   services/firefly-iii.yml    — expense tracking, PostgreSQL + shared Redis
-#   services/homebox.yml        — household inventory, PostgreSQL
 #
 # PostgreSQL apps reuse the shared `postgres` service; Firefly III also uses
 # the shared `cache` Redis. Databases must exist before first start:
@@ -44,12 +43,9 @@ volumes:
   firefly_upload:
     driver: local
     name: firefly-upload
-  homebox_data:
-    driver: local
-    name: homebox-data
 
 services:
   budget:
     extends:
-      file: ./services/homebox.yml
+      file: ./services/yuvomi.yml
       service: budget

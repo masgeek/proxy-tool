@@ -7,7 +7,6 @@ Household budgeting and planning stack. Exactly one application runs at a time o
 | Yuvomi (default) | `services/yuvomi.yml` | SQLite | REST + OpenAPI 3.1, MCP at `/mcp` |
 | Actual Budget | `services/actual-budget.yml` | PostgreSQL | REST (sync server) |
 | Firefly III | `services/firefly-iii.yml` | PostgreSQL + Redis | REST |
-| Homebox | `services/homebox.yml` | PostgreSQL | REST |
 
 The main `docker-compose.yml` declares shared networks and volumes, plus one `budget` service that pulls its definition from a single file with `extends`. Changing that one `extends.file` value swaps the application.
 
@@ -32,7 +31,7 @@ The main `docker-compose.yml` declares shared networks and volumes, plus one `bu
    docker compose --env-file stacks/budget/.env -f stacks/budget/docker-compose.yml up -d budget
    ```
 
-4. Open `https://budget.munywele.co.ke`. Yuvomi and Homebox walk through first-run setup; Actual Budget creates the first budget in the browser; Firefly III registers an admin user on first visit.
+4. Open `https://budget.munywele.co.ke`. Yuvomi walks through first-run setup; Actual Budget creates the first budget in the browser; Firefly III registers an admin user on first visit.
 
 ## Switching application
 
@@ -64,7 +63,6 @@ All service files read the same names, so switching apps changes only `extends.f
 | `APP_ENV`, `APP_DEBUG` | Environment mode |
 | `APP_KEY` | Application key (Firefly III `APP_KEY`, Actual Budget signing) |
 | `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | PostgreSQL connection |
-| `DB_CONNECTION_STRING` | Homebox connection string (derive it from the values above) |
 | `REDIS_*` | Firefly III cache/session Redis |
 | `SESSION_SECRET`, `DB_ENCRYPTION_KEY` | Yuvomi session and optional SQLCipher key |
 | `TZ` | Container timezone |
@@ -82,11 +80,6 @@ All service files read the same names, so switching apps changes only `extends.f
   A `SQLITE_CANTOPEN` error on start means exactly this: the container could not write `/data/yuvomi.db`.
 - **Actual Budget** — set `ACTUAL_HTTPS=false` because Caddy terminates TLS. Import format: `DB_CONNECTION` is `postgres`, and the database name goes in `DB_NAME`.
 - **Firefly III** — `TRUSTED_PROXIES=**` is needed behind Caddy, otherwise generated links use the wrong scheme. `APP_KEY` must be a long random string.
-- **Homebox** — takes a single `DB_CONNECTION_STRING`; keep it in sync with the `DB_*` values when switching back and forth. Format: `postgres://<user>:<password>@<host>:<port>/<database>?sslmode=disable`, for example `postgres://homebox:change_me@postgres:5432/homebox?sslmode=disable`. Percent-encode any password character that is special in a URL (`@` → `%40`, `:` → `%3A`, `/` → `%2F`, `#` → `%23`, `%` → `%25`). The database must exist first:
-
-  ```bash
-  docker exec postgres createdb --username "$POSTGRES_USER" --owner "$POSTGRES_USER" homebox
-  ```
 
 ## Backups
 
@@ -94,7 +87,6 @@ PostgreSQL apps are covered by the repository's `db-backup/` tooling:
 
 - Actual Budget: `actual_budget` database + `actual-budget-files` volume
 - Firefly III: `firefly` database + `firefly-upload` volume
-- Homebox: `homebox` database + `homebox-data` volume
 
 Yuvomi keeps everything in `budget-data` (`/data/yuvomi.db`); a host-level file copy or `sqlite3 yuvomi.db ".backup"` is the backup, plus `budget-documents` if documents are stored locally.
 
