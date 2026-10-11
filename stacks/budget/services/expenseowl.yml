@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
     environment:
       STORAGE_TYPE: ${STORAGE_TYPE:-postgres}
-      STORAGE_URL: ${STORAGE_URL:-postgres:5432/expenseowl}
+      STORAGE_URL: ${STORAGE_URL:-${DB_HOST}:${DB_PORT}/${EXPENSEOWL_DB_NAME}}
       STORAGE_SSL: ${STORAGE_SSL:-disable}
       STORAGE_USER: ${DB_USERNAME:-expenseowl}
       STORAGE_PASS: ${DB_PASSWORD:-}

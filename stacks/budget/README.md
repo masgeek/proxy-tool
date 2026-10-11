@@ -83,9 +83,9 @@ All service files read the same names, so switching apps changes only `extends.f
   A `SQLITE_CANTOPEN` error on start means exactly this: the container could not write `/data/yuvomi.db`.
 - **Actual Budget** — set `ACTUAL_HTTPS=false` because Caddy terminates TLS. Import format: `DB_CONNECTION` is `postgres`, and the database name goes in `DB_NAME`.
 - **Firefly III** — `TRUSTED_PROXIES=**` is needed behind Caddy, otherwise generated links use the wrong scheme. `APP_KEY` must be a long random string.
-- **Econumo** — takes a single `DATABASE_URL` (`postgres://user:pass@host:5432/db?sslmode=disable`), not `DB_*`. The `econumo-jwt` volume holds the JWT keypair and must be backed up with the database, otherwise every existing session token is invalidated after a restore.
+- **Econumo** — takes a single `DATABASE_URL` (`postgres://user:pass@host:5432/db?sslmode=disable`), not `DB_*`. The Compose file builds it by interpolation from `DB_USERNAME`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT` and `ECONUMO_DB_NAME`, so you only change those; set `DATABASE_URL` explicitly to override. The `econumo-jwt` volume holds the JWT keypair and must be backed up with the database, otherwise every existing session token is invalidated after a restore.
 - **ezBookkeeping** — configuration is `EBK_*`; `APP_KEY` maps to `EBK_SECURITY_SECRET_KEY`. The image runs as UID/GID 1000, so the service runs as root to keep the named volumes writable; the alternative is a one-time `chown 1000:1000` of `ezbookkeeping-storage` and `ezbookkeeping-logs`.
-- **ExpenseOwl** — `STORAGE_URL` is `SERVER/DB` (no scheme), not a URL. It ships **no authentication of its own**, so it must sit behind Caddy basic auth or an identity-aware proxy; never expose it unprotected.
+- **ExpenseOwl** — `STORAGE_URL` is `SERVER/DB` (no scheme), not a URL, and is interpolated from `DB_HOST`, `DB_PORT` and `EXPENSEOWL_DB_NAME`. It ships **no authentication of its own**, so it must sit behind Caddy basic auth or an identity-aware proxy; never expose it unprotected.
 
 ## Backups
 
