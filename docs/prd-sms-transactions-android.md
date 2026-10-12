@@ -99,7 +99,8 @@ Requirement IDs restart per subsection, so cite them as `F7.4-3` for example.
 | F7.3-9 | A reversal or a transfer leg that cannot be matched to a stored entry is parked for review, never posted as a new transaction. |
 | F7.3-10 | Correlation and merge: entries arriving within a correlation window with the same sender, direction and amount are **merged into one entry**, not duplicated. The richer value wins per field, and every contributing message is retained as provenance. |
 | F7.3-11 | Only a genuine duplicate is suppressed: two messages that agree on sender, direction, amount and timestamp with nothing new to contribute. A suppression is recorded and reversible. |
-| F7.3-12 | A merchant pre-approval and a payment confirmation for the same payment are one transaction. Neither message is complete alone: one carries the breakdown and the meter, the other carries the fee and the payee name. Discarding either loses information the other holds. |
+| F7.3-12 | A message naming a credit facility is classified as facility activity, never as spending: draws, repayments and statements are liability movements, and only interest is an expense. The facility limit is an observation and never a validation threshold, since the provider revises it. |
+| F7.3-13 | A merchant pre-approval and a payment confirmation for the same payment are one transaction. Neither message is complete alone: one carries the breakdown and the meter, the other carries the fee and the payee name. Discarding either loses information the other holds. |
 
 ### 7.4 Posting
 
@@ -367,6 +368,48 @@ Detection rules, applied in order:
 4. None of the above: the debit is treated as an expense. Being wrong in this
    direction is recoverable by tagging; being wrong in the other silently
    misreports spending.
+
+
+### 9.1b Fuliza: a credit facility, not spending
+
+M-Pesa Fuliza is an overdraft facility. Messages about it must never become
+expenses, and the corpus shows why this is the highest-value rule in the parser:
+**1,009 of 3,599 M-Pesa messages mention Fuliza**, and almost none of them are
+spending.
+
+| Variant | Count | Treatment |
+| --- | --- | --- |
+| Outstanding statement, with limit and due date | 508 | Suppressed. A repeating snapshot, not an event |
+| Statement carrying `Interest charged` | 186 | Recorded **once per period** as finance cost |
+| Full repayment from the wallet | 144 | Liability movement, not an expense |
+| Partial repayment from the wallet | 101 | Liability movement, not an expense |
+| Failure messages naming the facility | 70 | Nothing recorded |
+
+Three consequences:
+
+1. **A drawdown is not spending.** Fuliza pays for a purchase that the paired
+   PayBill message already reports as an expense. Recording the drawdown as well
+   double-counts it, and pairing the two under one reference is exactly how that
+   happens.
+2. **A repayment is not an expense either.** It moves value from the wallet to the
+   facility. It is a liability movement, so it posts against a liability account,
+   never an expense account.
+3. **Interest is the only genuine expense**, at roughly **1.001% of the drawn amount
+   per month**. It is a real cost of borrowing and belongs in finance costs, where
+   it is visible rather than buried.
+
+**Interest must be deduplicated per period.** The statements repeat: February 2025
+alone produced 46 messages carrying interest. Each is a fresh snapshot of a monthly
+accrual, so the key is facility plus period plus amount, and only the first is
+recorded. Without that rule the corpus alone would post KES 1,339.16 of interest
+several times over, against a genuine total of that same figure.
+
+**The limit is dynamic and must never be hardcoded.** The facility is capped at
+KES 3,000 today, but that figure is set by Safaricom and revised without notice. The
+parser therefore treats the reported limit as an observation attached to the
+facility, never as a validation threshold. A raised or lowered limit produces no
+transaction, and an outstanding balance above a previously seen limit is a signal
+worth surfacing rather than a reason to reject a message.
 
 ### 9.1a Matching rules for cross-sender transfers
 
