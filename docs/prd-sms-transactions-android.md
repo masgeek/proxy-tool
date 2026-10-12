@@ -261,8 +261,8 @@ per sender within a channel, because two banks never phrase a credit the same wa
 
 | Channel | Senders | Typical traffic | Identifiers available |
 | --- | --- | --- | --- |
-| Mobile money | M-Pesa, Airtel Money | PayBill and till payments, person-to-person transfers, airtime and data purchases, withdrawals | transaction code, confirmation code, agent or till number, masked MSISDN |
-| Bank | one per institution | salary and institutional RTGS credits, card payments, standing transfers, account charges | masked account suffix, sometimes a reference, usually none |
+| Mobile money | M-Pesa (sampled), Airtel Money (not yet sampled) | PayBill and till payments, person-to-person transfers, airtime and data purchases, withdrawals | transaction code, confirmation code, agent or till number, masked MSISDN |
+| Bank | Stanbic only so far; the salary account | salary and institutional RTGS credits, card payments, standing transfers, account charges | masked account suffix, sometimes a reference, usually none |
 | Utility and merchant confirmations | provider-specific | meter or token numbers, consumption quantities, charge breakdowns | meter, token, units |
 
 Consequences the design has to respect:
@@ -285,6 +285,11 @@ Consequences the design has to respect:
 - **Airtel Money's format has not been sampled yet.** Its parsers, its fee fields
   and its transfer wording are unknown, so nothing about that channel should be
   inferred from the M-Pesa examples.
+- **One bank today, so the bank surface is small.** Stanbic is the only institution
+  sampled, which keeps bank parser work to a single format. Adding an institution
+  later means a new sender entry and a new parser, never a change to existing ones.
+  It also means the masked-account mapping has exactly one destination for now, and
+  a new bank must not silently inherit it.
 
 ## 9. Backend mapping
 
