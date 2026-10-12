@@ -90,7 +90,26 @@ All service files read the same names, so switching apps changes only `extends.f
   A `SQLITE_CANTOPEN` error on start means exactly this: the container could not write `/data/yuvomi.db`.
 - **Actual Budget** — set `ACTUAL_HTTPS=false` because Caddy terminates TLS. Import format: `DB_CONNECTION` is `postgres`, and the database name goes in `DB_NAME`.
 - **Firefly III** — `TRUSTED_PROXIES=**` is needed behind Caddy, otherwise generated links use the wrong scheme. `APP_KEY` must be a long random string.
-- **Econumo** — takes a single `DATABASE_URL` (`postgres://user:pass@host:5432/db?sslmode=disable`), not `DB_*`. The Compose file builds it by interpolation from `DB_USERNAME`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT` and `ECONUMO_DB_NAME`, so you only change those; set `DATABASE_URL` explicitly to override. The `econumo-jwt` volume holds the JWT keypair and must be backed up with the database, otherwise every existing session token is invalidated after a restore. `APP_URL` maps to `ECONUMO_URL`, which is also what builds OAuth callback URLs and the link appended to transactional email. Registration is off by default here; create the first user with `docker compose ... exec budget /app/econumo user:create "Name" you@example.com <password>`. `ECONUMO_CURRENCY_BASE` is set to `KES` because the upstream default is `USD`, and `ECONUMO_CHECK_UPDATES` is disabled so a self-hosted instance makes no outbound call to econumo.com.
+- **Econumo** — takes a single `DATABASE_URL` (`postgres://user:pass@host:5432/db?sslmode=disable`), not `DB_*`. The Compose file builds it by interpolation from `DB_USERNAME`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT` and `ECONUMO_DB_NAME`, so you only change those; set `DATABASE_URL` explicitly to override. The `econumo-jwt` volume holds the JWT keypair and must be backed up with the database, otherwise every existing session token is invalidated after a restore. `APP_URL` maps to `ECONUMO_URL`, which is also what builds OAuth callback URLs and the link appended to transactional email. Registration is off by default here; create the first user with `docker compose ... exec budget /app/econumo user:create "Name" you@example.com <password>`. `ECONUMO_CHECK_UPDATES` is disabled so a self-hosted instance makes no outbound call to econumo.com.
+
+**Econumo base currency.** `ECONUMO_CURRENCY_BASE` must already exist in the global currency list. A fresh database only ships the built-in currencies, so starting with `KES` fails with `does not match any global currency; add it first with currency:add`. Bootstrap in this order:
+
+```bash
+# 1. first boot stays on USD
+docker compose --env-file stacks/budget/.env -f stacks/budget/docker-compose.yml up -d budget
+
+# 2. add KES to the global currency list
+docker compose --env-file stacks/budget/.env -f stacks/budget/docker-compose.yml   exec budget /app/econumo currency:add KES "Kenyan Shilling" 2
+
+# 3. set ECONUMO_CURRENCY_BASE=KES in .env, then recreate
+docker compose --env-file stacks/budget/.env -f stacks/budget/docker-compose.yml up -d budget
+
+# 4. optional: refresh exchange rates
+docker compose --env-file stacks/budget/.env -f stacks/budget/docker-compose.yml   exec budget /app/econumo currency:update-rates
+```
+
+Run the CLI through `exec` rather than as the container entrypoint, so no transient
+failure can leave the service down.
 - **ezBookkeeping** — configuration is `EBK_*`; `APP_KEY` maps to `EBK_SECURITY_SECRET_KEY`. The image runs as UID/GID 1000, so the service runs as root to keep the named volumes writable; the alternative is a one-time `chown 1000:1000` of `ezbookkeeping-storage` and `ezbookkeeping-logs`.
 
 ## Backups
