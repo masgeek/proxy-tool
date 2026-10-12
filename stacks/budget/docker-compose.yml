@@ -60,5 +60,5 @@ services:
   budget:
     container_name: budget
     extends:
-      file: ./services/econumo.yml
+      file: ./services/ezbookkeeping.yml
       service: budget
