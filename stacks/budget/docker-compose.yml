@@ -58,6 +58,7 @@ volumes:
 
 services:
   budget:
+    container_name: budget
     extends:
-      file: ./services/firefly-iii.yml
+      file: ./services/econumo.yml
       service: budget
