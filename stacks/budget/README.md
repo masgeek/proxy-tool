@@ -89,7 +89,7 @@ All service files read the same names, so switching apps changes only `extends.f
   A `SQLITE_CANTOPEN` error on start means exactly this: the container could not write `/data/yuvomi.db`.
 - **Actual Budget** — set `ACTUAL_HTTPS=false` because Caddy terminates TLS. Import format: `DB_CONNECTION` is `postgres`, and the database name goes in `DB_NAME`.
 - **Firefly III** — `TRUSTED_PROXIES=**` is needed behind Caddy, otherwise generated links use the wrong scheme. `APP_KEY` must be a long random string.
-- **ezBookkeeping** — configuration is `EBK_*` following the shipped `conf/ezbookkeeping.ini`, where the object storage section is `storage` (so the variable is `EBK_STORAGE_TYPE`, and `EBK_OBJECT_STORAGE_TYPE` would be silently ignored). Attachments and avatars are stored in Alarik (`stacks/s3`) rather than on local disk: see the Alarik setup below; `APP_KEY` maps to `EBK_SECURITY_SECRET_KEY`, and generate that with `openssl rand -base64 32`. The image resolves its config path from `EBK_CONF_PATH` and aborts with `open : no such file or directory` when that resolves to nothing, so `services/ezbookkeeping.ini` is mounted read-only into the container. That path is relative to the service file that declares the mount, not to the stack directory, so if you deploy from a different layout set `EZBOOKKEEPING_CONF` to an absolute path — Dokploy otherwise fails with `not a directory: Are you trying to mount a directory onto a file`; all operational values are overridden by environment variables, so no secret lives in that file. Two option names are easy to get wrong: `mode` belongs to the `global` section (omitting it aborts startup with `invalid server mode`) and the listen port is `http_port`, not `port`. `EBK_SERVER_ROOT_URL` is set explicitly so generated links carry no container port behind Caddy. The image runs as UID/GID 1000, so the service runs as root to keep the named volumes writable; the alternative is a one-time `chown 1000:1000` of `ezbookkeeping-storage`, `ezbookkeeping-logs` and `ezbookkeeping-data`. The `ezbookkeeping-data` volume is mounted even though this stack uses PostgreSQL, so falling back to sqlite3 by mistake cannot silently lose data.
+- **ezBookkeeping** — configuration is `EBK_*` following the shipped `conf/ezbookkeeping.ini`, where the object storage section is `storage` (so the variable is `EBK_STORAGE_TYPE`, and `EBK_OBJECT_STORAGE_TYPE` would be silently ignored). uploads and avatars go to the local `ezbookkeeping-storage` volume by default, with Alarik (`stacks/s3`) available as an opt-in: see the storage section below; `APP_KEY` maps to `EBK_SECURITY_SECRET_KEY`, and generate that with `openssl rand -base64 32`. The image resolves its config path from `EBK_CONF_PATH` and aborts with `open : no such file or directory` when that resolves to nothing, so `services/ezbookkeeping.ini` is mounted read-only into the container. That path is relative to the service file that declares the mount, not to the stack directory, so if you deploy from a different layout set `EZBOOKKEEPING_CONF` to an absolute path — Dokploy otherwise fails with `not a directory: Are you trying to mount a directory onto a file`; all operational values are overridden by environment variables, so no secret lives in that file. Two option names are easy to get wrong: `mode` belongs to the `global` section (omitting it aborts startup with `invalid server mode`) and the listen port is `http_port`, not `port`. `EBK_SERVER_ROOT_URL` is set explicitly so generated links carry no container port behind Caddy. The image runs as UID/GID 1000, so the service runs as root to keep the named volumes writable; the alternative is a one-time `chown 1000:1000` of `ezbookkeeping-storage`, `ezbookkeeping-logs` and `ezbookkeeping-data`. The `ezbookkeeping-data` volume is mounted even though this stack uses PostgreSQL, so falling back to sqlite3 by mistake cannot silently lose data.
 
 ## Backups
 
@@ -137,11 +137,18 @@ used from the public internet. Transaction import and export also matter for the
 SMS companion PRD: the CLI import path is the way historical data gets in, while
 the REST API is the way the ingestion service writes going forward.
 
-## ezBookkeeping object storage on Alarik
+## ezBookkeeping object storage
 
-Uploads, avatars and receipt pictures go to the S3-compatible Alarik service in
-`stacks/s3`, reachable in-network as `s3:8080` — not through the public host,
-which would add latency and a TLS round trip for every file.
+Uploads and avatars are stored on the `ezbookkeeping-storage` volume by default.
+One less service to run, and a backup of that volume is a file copy.
+
+Alarik in `stacks/s3` is the alternative for anyone who wants files off the app
+host. It is reachable in-network as `s3:8080` — not through the public host, which
+would add latency and a TLS round trip for every file. Switching is one variable,
+but it does **not** migrate files already stored, so treat it as a one-way move
+unless you copy objects across first.
+
+To switch:
 
 1. Create the bucket. Either add it to `DEFAULT_BUCKETS` in `stacks/s3/.env`
    before starting that stack:
@@ -157,12 +164,16 @@ which would add latency and a TLS round trip for every file.
    reuse. Prefer a per-app key: revoking one application then does not affect the
    others.
 
-3. Put the credentials in `stacks/budget/.env`:
+3. Put the storage settings in `stacks/budget/.env`:
 
    ```
+   EBK_STORAGE_TYPE=s3
    EBK_STORAGE_S3_ACCESS_KEY_ID=...
    EBK_STORAGE_S3_SECRET_ACCESS_KEY=...
    ```
+
+   The remaining `EBK_STORAGE_S3_*` values are already correct as commented
+   defaults in `.env.example`.
 
 4. Recreate the service and confirm files land in the bucket:
 
@@ -180,5 +191,5 @@ Two settings are load-bearing and easy to get wrong:
   only (`s3:8080`) — no scheme. TLS is the separate `EBK_STORAGE_S3_USE_SSL` flag,
   which stays false because this traffic never leaves the Docker network.
 
-The `ezbookkeeping-storage` volume stays mounted as a fallback: switching
-`EBK_STORAGE_TYPE` back to `local_filesystem` needs no other change.
+The `ezbookkeeping-storage` volume stays mounted either way, so reverting to
+`EBK_STORAGE_TYPE=local_filesystem` needs no other change.

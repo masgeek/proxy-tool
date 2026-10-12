@@ -32,11 +32,13 @@ services:
       # The object storage section is named `storage`, so the variable is
       # EBK_STORAGE_TYPE — EBK_OBJECT_STORAGE_TYPE is silently ignored.
       #
-      # Files go to Alarik in stacks/s3, reachable in-network as s3:8080. The
-      # credentials are those of an S3 access key scoped to the ezbookkeeping
-      # bucket; create the key in the console, or set DEFAULT_ACCESS_KEY and
-      # DEFAULT_SECRET_KEY there for apps to reuse.
-      EBK_STORAGE_TYPE: ${EBK_STORAGE_TYPE:-s3}
+      # Default is the local `ezbookkeeping-storage` volume. Set
+      # EBK_STORAGE_TYPE=s3 in .env to move uploads and avatars to Alarik in
+      # stacks/s3, reachable in-network as s3:8080. The credentials are those of
+      # an S3 access key scoped to the ezbookkeeping bucket; create the key in
+      # the console, or set DEFAULT_ACCESS_KEY and DEFAULT_SECRET_KEY there for
+      # apps to reuse. Switching the type does not migrate existing files.
+      EBK_STORAGE_TYPE: ${EBK_STORAGE_TYPE:-local_filesystem}
       EBK_STORAGE_S3_ENDPOINT: ${EBK_STORAGE_S3_ENDPOINT:-s3:8080}
       EBK_STORAGE_S3_REGION: ${EBK_STORAGE_S3_REGION:-us-east-1}
       EBK_STORAGE_S3_ACCESS_KEY_ID: ${EBK_STORAGE_S3_ACCESS_KEY_ID:-}
