@@ -37,8 +37,11 @@ fi
 compose_version="$(docker compose version --short 2>/dev/null || echo unknown)"
 
 # `extends` needs a fairly recent Compose, and include is newer still.
-major="${compose_version%%.*}"
-if [[ "$major" == "unknown" || "$major" -lt 2 ]]; then
+# `docker compose version --short` prints a leading "v", which must be stripped
+# before the comparison or bash evaluates "v2" as 0.
+major="${compose_version#v}"
+major="${major%%.*}"
+if [[ ! "$major" =~ ^[0-9]+$ || "$major" -lt 2 ]]; then
   echo "warning: docker compose ${compose_version} is older than 2.x; some stacks may not render" >&2
 fi
 

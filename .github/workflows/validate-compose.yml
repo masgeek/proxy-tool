@@ -1,7 +1,7 @@
 name: Validate Compose
 
-# Renders every Compose file so a broken interpolation, a bad YAML edit or a
-# missing required variable fails here instead of on a deploy.
+# Renders every stack's Compose file so a broken interpolation, a bad YAML edit or
+# a missing required variable fails here instead of on a deploy.
 #
 # No Docker daemon is required: `docker compose config` only parses and
 # interpolates.
@@ -11,6 +11,9 @@ on:
     branches: [main, develop]
   pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: validate-compose-${{ github.ref }}
@@ -28,15 +31,24 @@ jobs:
           docker --version
           docker compose version
 
-      # scripts/validate-compose.sh never reads real secrets: it uses a stack's
-      # .env when one exists locally and .env.example otherwise, and injects
-      # placeholders for required variables the renderer reports missing.
+      - name: Check the script parses
+        run: bash -n scripts/validate-compose.sh
+
+      # Invoked through bash explicitly so the job does not depend on the
+      # executable bit surviving a checkout on every platform.
+      #
+      # The script never reads real secrets: it uses a stack's .env when one is
+      # present locally and .env.example otherwise, and injects placeholders for
+      # required variables the renderer reports missing. CI has no .env files, so
+      # only examples are used here.
       - name: Validate all stacks
-        run: scripts/validate-compose.sh
+        run: bash scripts/validate-compose.sh
 
       - name: Narrow it down
         if: failure()
         run: |
-          echo "Re-run one stack at a time to narrow it down:" >&2
-          echo "  scripts/validate-compose.sh budget" >&2
-          echo "  scripts/validate-compose.sh invoice baserow" >&2
+          {
+            echo "Re-run one stack at a time to narrow it down:"
+            echo "  bash scripts/validate-compose.sh budget"
+            echo "  bash scripts/validate-compose.sh invoice baserow cache"
+          } >> "$GITHUB_STEP_SUMMARY"
