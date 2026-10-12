@@ -11,6 +11,7 @@ services:
       MAILER_DSN: ${MAILER_DSN:-}
       TZ: ${TZ:-Africa/Nairobi}
       STACK_REVISION: ${STACK_REVISION:-1791743363}
+      ECONUMO_ALLOW_REGISTRATION: ${ECONUMO_ALLOW_REGISTRATION:-true}
     ports:
       - "127.0.0.1:9720:80"
     volumes:
