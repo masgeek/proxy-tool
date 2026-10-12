@@ -1,19 +1,20 @@
 name: "budget"
 
-# Household budgeting stack — one application at a time on 127.0.0.1:9720,
-# served publicly at budget.munywele.co.ke.
+# Household budgeting stack — Firefly III.
 #
-# The active app is chosen by the single `extends.file` value in
-# services.budget. Only one may be referenced at a time; they all bind the
-# same host port, so they can never run simultaneously.
+#   budget.munywele.co.ke -> 127.0.0.1:9720
 #
-#   services/yuvomi.yml         — family planner, SQLite (no external DB)
-#   services/firefly-iii.yml    — expense tracking, PostgreSQL + dedicated Redis (default)
-#   services/actual-budget.yml  — budgeting, PostgreSQL
-#   services/ezbookkeeping.yml  — bookkeeping, PostgreSQL (EBK_* env)
+# The app was previously swappable between several bookkeeping applications via
+# a Compose `extends` indirection. Firefly III is settled on, so the service is
+# declared directly here and the indirection is gone.
 #
-# PostgreSQL apps reuse the shared `postgres` service. Firefly III (the default
-# app) uses this stack's dedicated Redis instead of the shared `cache` service.
+# PostgreSQL comes from the shared `databases` stack (hostname `postgres`). Redis
+# is this stack's dedicated `redis-budget` instance from the `cache` stack, so
+# Firefly's cache, session and queue data never mix with another application's.
+#
+# Create the database before first start:
+#   docker exec postgres createdb --username "$POSTGRES_USER" \
+#     --owner "$POSTGRES_USER" firefly
 
 networks:
   internal:
@@ -24,37 +25,54 @@ networks:
     external: true
 
 volumes:
-  budget_data:
-    driver: local
-    name: budget-data
-  budget_backups:
-    driver: local
-    name: budget-backups
-  budget_modules:
-    driver: local
-    name: budget-modules
-  budget_documents:
-    driver: local
-    name: budget-documents
-  actual_budget_files:
-    driver: local
-    name: actual-budget-files
   firefly_upload:
     driver: local
     name: firefly-upload
-  ezbookkeeping_storage:
-    driver: local
-    name: ezbookkeeping-storage
-  ezbookkeeping_logs:
-    driver: local
-    name: ezbookkeeping-logs
-  ezbookkeeping_data:
-    driver: local
-    name: ezbookkeeping-data
 
 services:
   budget:
     container_name: budget
-    extends:
-      file: ./services/firefly-iii.yml
-      service: budget
+    image: fireflyiii/core:${FIREFLY_TAG:-latest}
+    hostname: budget
+    restart: unless-stopped
+    environment:
+      APP_URL: ${APP_URL:-https://budget.munywele.co.ke}
+      APP_KEY: ${APP_KEY:?APP_KEY must be exactly 32 characters}
+      APP_ENV: ${APP_ENV:-production}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      DB_CONNECTION: ${DB_CONNECTION:-pgsql}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_DATABASE: ${DB_DATABASE:-firefly}
+      DB_USERNAME: ${DB_USERNAME:-firefly}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
+      REDIS_HOST: ${REDIS_HOST:-redis-budget}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_CACHE_DB: ${REDIS_CACHE_DB:-0}
+      # Without trusted proxies Firefly builds links with the wrong scheme
+      # behind Caddy, which breaks password-reset and OAuth URLs.
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-**}
+      ALLOW_WEBHOOKS: ${ALLOW_WEBHOOKS:-true}
+      TZ: ${TZ:-Africa/Nairobi}
+      STACK_REVISION: ${STACK_REVISION:-1791743363}
+    ports:
+      - "127.0.0.1:9720:8080"
+    volumes:
+      - firefly_upload:/var/www/html/storage/upload
+    networks:
+      - dokploy-network
+      - internal
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: "2.0"
+        reservations:
+          memory: 512m
+          cpus: "0.1"

@@ -1,4 +1,4 @@
-# Standalone snippet for the budget stack (Yuvomi).
+# Standalone snippet for the budget stack (Firefly III).
 # The host Caddyfile imports the shared copy from config/caddy/snippets/domains/budget.caddy
 budget.munywele.co.ke {
 	import snippets/security-headers.caddy

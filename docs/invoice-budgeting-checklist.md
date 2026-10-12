@@ -8,19 +8,18 @@ Context for every item below:
 - PostgreSQL is provided by `stacks/databases` and reachable on `dokploy-network` as hostname `postgres` (port 5432).
 - Redis is provided by `stacks/cache` as `cache` (port 6379).
 - Every app is published on `127.0.0.1:<port>` and exposed through Caddy only.
-- All apps in `stacks/budget` are mutually exclusive: one is active at a time on `127.0.0.1:9720`, selected by the single `extends.file` value in `stacks/budget/docker-compose.yml`.
+- `stacks/budget` runs Firefly III alone on `127.0.0.1:9720`.
 
 ## FrankenPHP applicability
 
-FrankenPHP is a PHP application server and is relevant only to PHP apps. Of the
-applications covered here. Two were evaluated and excluded: ExpenseOwl ships no
-authentication of its own and relies entirely on proxy auth, and Econumo does not
-cover the intended use case:
+FrankenPHP is a PHP application server and is relevant only to PHP apps. The
+single application covered here is Firefly III; two alternatives were evaluated and
+excluded — ExpenseOwl ships no authentication of its own and relies entirely on
+proxy auth, and Econumo does not cover the intended use case.
 
 | App | Runtime | FrankenPHP relevant |
 | --- | --- | --- |
 | Firefly III | PHP (Laravel) | Only if you build your own image; the official `fireflyiii/core` image already bundles nginx + PHP-FPM, so do not swap it |
-| ezBookkeeping | Go | No |
 
 If you later move Firefly III to FrankenPHP, use the `dunglas/frankenphp` base image,
 mount the application at `/app`, and keep the container port at 8080 with Caddy still
@@ -29,9 +28,8 @@ PostgreSQL connection is environment-driven either way.
 
 ---
 
-Scope: `stacks/budget` and `stacks/invoice` currently offer Firefly III, ezBookkeeping,
-Yuvomi and Actual Budget. Firefly III and ezBookkeeping are documented here because
-both run on PostgreSQL and are the two most likely choices for this deployment.
+Scope: Firefly III in `stacks/budget`, settled on as the single bookkeeping backend.
+
 
 ## 1. Firefly III
 
@@ -73,47 +71,6 @@ Stack file: `stacks/budget/services/firefly-iii.yml`
 - [ ] Configure a bank or import route: Firefly III has no bank sync of its own — either run the Data Importer against a CSV/OFX export or set up webhooks from your bank.
 - [ ] Create asset accounts first, then categories, then recurring transactions; transactions cannot reference accounts that do not exist.
 - [ ] If you use webhooks (`ALLOW_WEBHOOKS=true`), restrict the endpoints to the host Caddy or a LAN-only listener.
-
----
-
-## 2. ezBookkeeping
-
-Stack file: `stacks/budget/services/ezbookkeeping.yml`
-
-### Database provisioning and schema isolation
-
-- [ ] Create role and database:
-      `docker exec postgres psql -U "$POSTGRES_USER" -c "CREATE ROLE ezbookkeeping LOGIN PASSWORD '…';"`
-      `docker exec postgres psql -U "$POSTGRES_USER" -c "CREATE DATABASE ezbookkeeping OWNER ezbookkeeping;"`
-- [ ] Grant schema privileges: `GRANT ALL ON SCHEMA public TO ezbookkeeping;`
-- [ ] ezBookkeeping creates and migrates its own schema on first start; verify the tables land in `public` and not in a separate schema.
-- [ ] Do not run it on SQLite for production — upstream explicitly recommends PostgreSQL or MySQL.
-
-### Environment and application configuration
-
-- [ ] Set `EBK_DATABASE_TYPE=postgres`.
-- [ ] Set `EBK_DATABASE_HOST=postgres:5432` (host and port together, unlike Firefly III).
-- [ ] Set `EBK_DATABASE_NAME=ezbookkeeping`, `EBK_DATABASE_USER=ezbookkeeping`, `EBK_DATABASE_PASSWD=…`.
-- [ ] Set `EBK_SECURITY_SECRET_KEY` from `APP_KEY`; it protects tokens and must be stable across restarts, otherwise sessions break.
-- [ ] Set `EBK_SERVER_DOMAIN=budget.munywele.co.ke` and `EBK_SERVER_PROTOCOL=https` so links and CSRF origins match Caddy.
-- [ ] Set `EBK_LOG_MODE=file` (or `console` if you prefer Docker logs) and `TZ=Africa/Nairobi`.
-- [ ] Enable gzip at the proxy; `EBK_SERVER_ENABLE_GZIP=true` only applies when serving directly.
-
-### Persistence and volumes
-
-- [ ] Mount `ezbookkeeping-storage` at `/ezbookkeeping/storage` — this holds user-uploaded receipt images.
-- [ ] Mount `ezbookkeeping-logs` at `/ezbookkeeping/log`.
-- [ ] Fix ownership if you run the image as its own user (UID/GID 1000):
-      `chown -R 1000:1000` on both volumes.
-
-### Data ingestion and invoicing flow
-
-- [ ] Register the first user, then set the default currency and timezone under Settings.
-- [ ] Create two-level accounts (asset/liability) before importing any transactions.
-- [ ] Build the category tree you want before importing, so records map cleanly.
-- [ ] Import existing history with the built-in importer (CSV, OFX, QIF, Firefly III export, Camt.053/MT940) and verify totals against your bank statement.
-- [ ] Schedule recurring transactions for fixed bills and salaries.
-- [ ] Enable 2FA for each user; the app also supports a PIN/WebAuthn application lock.
 
 ---
 
