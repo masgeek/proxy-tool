@@ -253,6 +253,39 @@ cross-sender transfer matching has failed to pair it with an outgoing debit.
 A single global date regex would misread all four. The format is declared per
 sender, and an unparseable date goes to review rather than being guessed.
 
+### 8.2 Money channels
+
+Transactions arrive through three kinds of channel, each with its own message
+format, fee behaviour and identifiers. The parser is configured per channel and
+per sender within a channel, because two banks never phrase a credit the same way.
+
+| Channel | Senders | Typical traffic | Identifiers available |
+| --- | --- | --- | --- |
+| Mobile money | M-Pesa, Airtel Money | PayBill and till payments, person-to-person transfers, airtime and data purchases, withdrawals | transaction code, confirmation code, agent or till number, masked MSISDN |
+| Bank | one per institution | salary and institutional RTGS credits, card payments, standing transfers, account charges | masked account suffix, sometimes a reference, usually none |
+| Utility and merchant confirmations | provider-specific | meter or token numbers, consumption quantities, charge breakdowns | meter, token, units |
+
+Consequences the design has to respect:
+
+- **Transfer detection becomes a graph problem.** Money can move between any pair:
+  M-Pesa to Airtel, Airtel to bank, bank to bank, wallet to wallet. A single pair
+  comparison is not enough; the correlator needs to consider every channel an entry
+  could pair with, which is why sender rules run only after matching.
+- **Fee behaviour differs per channel.** A paybill through Airtel may charge a
+  different structure from M-Pesa, and a bank may present a charge only as a
+  balance delta with no message at all. The `charges[]` breakdown must be treated as
+  optional per channel rather than assumed present.
+- **Mobile wallets hold value.** A wallet-to-wallet transfer is an internal movement
+  only if the counterparty is the user's own wallet; a transfer to another person is
+  an expense, and the message wording distinguishes them. Getting this wrong is the
+  most likely cause of a materially wrong ledger, so ambiguous cases go to review.
+- **Non-financial purchases need a classification too.** Airtime, data bundles and
+  wallet fees are spending, and without a category they default to a generic one.
+  Per-sender classification rules cover them the same way salary is covered.
+- **Airtel Money's format has not been sampled yet.** Its parsers, its fee fields
+  and its transfer wording are unknown, so nothing about that channel should be
+  inferred from the M-Pesa examples.
+
 ## 9. Backend mapping
 
 | Field | Firefly III |
