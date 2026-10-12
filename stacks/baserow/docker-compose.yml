@@ -85,8 +85,6 @@ x-backend: &backend
   networks:
     - dokploy-network
     - internal
-  depends_on:
-    - baserow-backend
   logging:
     driver: json-file
     options:
@@ -123,6 +121,9 @@ services:
       STACK_REVISION: ${STACK_REVISION:-1791743363}
     ports:
       - "127.0.0.1:9730:80"
+    depends_on:
+      baserow-backend:
+        condition: service_healthy
     networks:
       - dokploy-network
       - internal
@@ -142,7 +143,9 @@ services:
     container_name: baserow-celery-worker
     hostname: baserow-celery-worker
     command: celery-worker
-    depends_on: []
+    depends_on:
+      baserow-backend:
+        condition: service_healthy
     deploy:
       resources:
         limits:
@@ -154,7 +157,9 @@ services:
     container_name: baserow-celery-exportworker
     hostname: baserow-celery-exportworker
     command: celery-exportworker
-    depends_on: []
+    depends_on:
+      baserow-backend:
+        condition: service_healthy
     deploy:
       resources:
         limits:
@@ -166,7 +171,9 @@ services:
     container_name: baserow-celery-beat-worker
     hostname: baserow-celery-beat-worker
     command: celery-beat
-    depends_on: []
+    depends_on:
+      baserow-backend:
+        condition: service_healthy
     deploy:
       resources:
         limits:
