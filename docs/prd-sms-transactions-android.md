@@ -57,81 +57,102 @@ permission review that a Play listing would trigger.
 
 ## 7. Functional requirements
 
+Requirement IDs restart per subsection, so cite them as `F7.4-3` for example.
+
 ### 7.1 Message capture
 
 | ID | Requirement |
 | --- | --- |
-| F1 | Capture through a notification listener as the primary path, so the app needs no SMS permission on stock Android. |
-| F2 | Fall back to an SMS broadcast receiver, used only when notification access is declined. |
-| F3 | Deduplicate messages delivered through more than one path, keyed on sender ID plus message timestamp. |
-| F4 | Discard any message from a non-allowlisted sender before it is parsed or stored. |
-| F5 | Onboarding walks through granting notification access and explains the fallback if it is refused. |
-| F6 | Ship parsers for M-Pesa and the primary bank; new parsers are added as data, not code changes. |
+| F7.1-1 | Capture through a notification listener as the primary path, so the app needs no SMS permission on stock Android. |
+| F7.1-2 | Fall back to an SMS broadcast receiver, used only when notification access is declined. |
+| F7.1-3 | Deduplicate messages delivered through more than one path, keyed on sender ID plus message timestamp. |
+| F7.1-4 | Discard any message from a non-allowlisted sender before it is parsed or stored. |
+| F7.1-5 | Onboarding walks through granting notification access and explains the fallback if it is refused. |
+| F7.1-6 | Ship parsers for M-Pesa and the primary bank; new parsers are added as data, not code changes. |
 
 ### 7.2 Sender allowlist
 
 | ID | Requirement |
 | --- | --- |
-| F7 | Add, remove and rename a sender by its displayed sender ID. |
-| F8 | Per sender, choose accepted directions: credits only, debits only, or both. |
-| F9 | Per sender, choose the target account in the connected backend. |
-| F10 | Per sender, choose the currency; the message never sets the currency, because a misread symbol is silent corruption. |
-| F11 | A blocklist is checked before the allowlist, so a sender on both lists is always blocked. |
-| F12 | The allowlist is device-local in v1, with JSON export and import as the backup and transfer mechanism. |
+| F7.2-1 | Add, remove and rename a sender by its displayed sender ID. |
+| F7.2-2 | Per sender, choose accepted directions: credits only, debits only, or both. |
+| F7.2-3 | Per sender, choose the target account in the connected backend. |
+| F7.2-4 | Per sender, choose the currency; the message never sets the currency, because a misread symbol is silent corruption. |
+| F7.2-5 | Per sender, declare which accounts are your own, so movements between them are recognised as internal transfers. |
+| F7.2-6 | Per sender, set auto-post limits: maximum single amount, maximum per day, and an always-confirm switch. |
+| F7.2-7 | A blocklist is checked before the allowlist, so a sender on both lists is always blocked. |
+| F7.2-8 | The allowlist is device-local in v1, with JSON export and import as the backup and transfer mechanism. |
 
 ### 7.3 Parsing
 
 | ID | Requirement |
 | --- | --- |
-| F13 | Extract amount, direction, timestamp, reference, balance-after and counterparty where present. |
-| F14 | Parsers return a confidence level. Anything below the configured threshold goes to review instead of posting. |
-| F15 | Store the raw message beside the parsed result while pending, and purge raw bodies after the retention period. |
-| F16 | Parsing is entirely on device; only extracted fields are sent to the backend. |
-| F17 | Timestamps are stored in UTC and rendered in the household time zone, so a timezone change never rewrites history. |
-| F18 | Locale is not trusted for number formatting. The sender's currency and a documented thousands-separator rule drive parsing, and anything ambiguous goes to review. |
+| F7.3-1 | Extract amount, direction, timestamp, reference, balance-after and counterparty where present. |
+| F7.3-2 | Parsers return a confidence level. Anything below the configured threshold goes to review instead of posting. |
+| F7.3-3 | Store the raw message beside the parsed result while pending, and purge raw bodies after the retention period. |
+| F7.3-4 | Parsing is entirely on device; only extracted fields are sent to the backend. |
+| F7.3-5 | Timestamps are stored in UTC and rendered in the household time zone, so a timezone change never rewrites history. |
+| F7.3-6 | Locale is not trusted for number formatting. The sender's currency and a documented thousands-separator rule drive parsing, and anything ambiguous goes to review. |
+| F7.3-7 | Detect reversal messages as their own type, carrying a reference back to the original transaction. |
+| F7.3-8 | Detect internal-transfer markers: explicit wording, a debit and credit from the same sender inside a matching window, or a destination in the sender's own-account list. |
+| F7.3-9 | A reversal or a transfer leg that cannot be matched to a stored entry is parked for review, never posted as a new transaction. |
+| F7.3-10 | Cross-sender suppression: entries with the same amount, currency, direction and timestamp window are collapsed into one, with the suppressed copy retained for audit. |
 
 ### 7.4 Posting
 
 | ID | Requirement |
 | --- | --- |
-| F19 | The app posts to the intermediate ingestion API only. It never talks to a bookkeeping backend directly. |
-| F20 | The app's contract is one endpoint shape and one canonical payload, versioned independently of any backend. |
-| F21 | Map direction explicitly per backend; see section 9. |
-| F22 | Apply a configurable tag or category prefix per sender, for example `sms:m-pesa`. |
-| F23 | Use the parsed reference as the transaction description or note. |
-| F24 | Retry transient failures with exponential backoff and jitter, capped at a total retry budget per entry, then dead-letter to needs_review. |
-| F25 | A `4xx` response is never retried blindly; it becomes needs_review with the response recorded. |
-| F26 | Send a stable idempotency key derived from sender, reference and timestamp. |
-| F27 | Dry-run mode parses and displays without ever posting. |
-| F28 | Rate-limit posting, for example 5 requests per 10 seconds, so a backlog does not trip backend limits. |
-| F29 | Record the backend's returned transaction id so a posted entry can be opened and audited. |
+| F7.4-1 | The app posts to the intermediate ingestion API only. It never talks to a bookkeeping backend directly. |
+| F7.4-2 | The app's contract is one endpoint shape and one canonical payload, versioned independently of any backend. |
+| F7.4-3 | Map direction explicitly per backend; see section 9. |
+| F7.4-4 | Apply a configurable tag or category prefix per sender, for example `sms:m-pesa`. |
+| F7.4-5 | Use the parsed reference as the transaction description or note. |
+| F7.4-6 | Retry transient failures with exponential backoff and jitter, capped at a total retry budget per entry, then dead-letter to needs_review. |
+| F7.4-7 | A `4xx` response is never retried blindly; it becomes needs_review with the response recorded. |
+| F7.4-8 | Send a stable idempotency key derived from sender, reference and timestamp. |
+| F7.4-9 | Dry-run mode parses and displays without ever posting. |
+| F7.4-10 | Rate-limit posting, for example 5 requests per 10 seconds, so a backlog does not trip backend limits. |
+| F7.4-11 | Record the provider's returned transaction id so a posted entry can be opened and audited. |
+| F7.4-12 | Enforce the per-sender auto-post limits. An entry above a limit, or beyond the daily total, is routed to review instead of posted. |
+| F7.4-13 | Resolve an `accountHint` against the provider's account list; an unresolvable hint parks the entry rather than defaulting to an account. |
+| F7.4-14 | Where the account currency differs from the transaction currency, supply a base amount from a configured rate source or park the entry. Never post an unconverted amount into a different-currency account. |
+| F7.4-15 | Internal transfers post as a balanced pair of legs, never as income and expense; see section 9.1. |
+| F7.4-16 | Honour a global pause: while paused, entries are accepted and queued but nothing is forwarded to the provider. |
 
 ### 7.5 Offline and recovery
 
 | ID | Requirement |
 | --- | --- |
-| F30 | Queue entries in a local Room database with state pending, posting, posted, failed or needs_review. |
-| F31 | A WorkManager job drains the queue on connectivity, with the backoff rules in F24. |
-| F32 | Nothing is dropped; the queue survives app restart and reboot. |
-| F33 | An inbox lists pending, failed and needs_review entries with retry, edit and discard. |
-| F34 | A posted entry can be voided in the app, which reverses it in the backend rather than only hiding it locally. |
+| F7.5-1 | Queue entries in a local Room database with state pending, posting, posted, failed or needs_review. |
+| F7.5-2 | A WorkManager job drains the queue on connectivity, with the backoff rules in F7.4-6. |
+| F7.5-3 | Nothing is dropped; the queue survives app restart and reboot. |
+| F7.5-4 | An inbox lists pending, failed and needs_review entries with retry, edit and discard. |
+| F7.5-5 | A posted entry can be voided in the app, which reverses it in the provider rather than only hiding it locally. |
+| F7.5-6 | Cap both queues: the app queue and the service entry store have a maximum size, and reaching it raises an alert rather than filling the disk. |
+| F7.5-7 | Retain posted and suppressed entries for a bounded period (default 90 days); retain needs_review entries until resolved. |
 
 ### 7.6 Connection and credentials
 
 | ID | Requirement |
 | --- | --- |
-| F35 | Store the ingestion API token in the Android keystore; never in preferences, logs or crash output. |
-| F35a | The app never holds a bookkeeping backend credential; provider tokens live only in the ingestion service. |
-| F36 | Validate connectivity, TLS and token on pairing, with a distinct error for each failure. |
-| F37 | Require HTTPS. Cleartext traffic is refused rather than downgraded. |
-| F38 | One ingestion endpoint at a time. Switching bookkeeping backend is a server-side operation and requires no app change. |
+| F7.6-1 | Store the ingestion API token in the Android keystore; never in preferences, logs or crash output. |
+| F7.6-2 | The app never holds a bookkeeping backend credential; provider credentials live only in the ingestion service. |
+| F7.6-3 | Validate connectivity, TLS and token on pairing, with a distinct error for each failure. |
+| F7.6-4 | Require HTTPS. Cleartext traffic is refused rather than downgraded. |
+| F7.6-5 | One ingestion endpoint at a time. Switching bookkeeping backend is a server-side operation and requires no app change. |
+| F7.6-6 | Requests carry a bearer token **and** a per-request HMAC signature over timestamp, nonce and body. The service rejects a timestamp outside a short window and replays of a seen nonce. |
+| F7.6-7 | The token is rotatable and revocable per device, without a service restart. |
 
-### 7.7 Reporting
+### 7.7 Reporting and alerting
 
 | ID | Requirement |
 | --- | --- |
-| F39 | A daily notification summarising posted, failed and needs-review counts. |
-| F40 | On-device statistics: entries per day, total in, total out, unposted count. All local. |
+| F7.7-1 | A daily notification summarising posted, failed and needs-review counts. |
+| F7.7-2 | On-device statistics: entries per day, total in, total out, unposted count. All local. |
+| F7.7-3 | The service exports metrics for queue depth, dead-letter count, posting error rate and posting latency. |
+| F7.7-4 | Alert when dead-lettered entries exist beyond a short window, or when queue depth exceeds its cap — wired into the existing Prometheus and Grafana stack. |
+| F7.7-5 | Notify once when an unlisted sender is observed, so a changed sender ID is noticed rather than silently dropping transactions. |
+| F7.7-6 | On-device settings expose the auto-post limits, the kill switch and the pending-queue depth. |
 
 ## 8. Parsing specification
 
@@ -163,6 +184,8 @@ You have received KSH 45,000.00 from JOHN DOE on 12/10/2026 09:15. Balance KSH 6
 | --- | --- | --- | --- | --- |
 | Amount | `amount`, string decimal | `amount`, negative for spend | `amount` | `amount` |
 | Direction | `type`: `withdrawal` / `deposit` | sign of `amount` | transaction type | transaction type |
+| Internal transfer | native `transfer` with source and destination, else two entries tagged with the shared `transferGroupId` | two entries, second negates the first | two entries linked by reference | two entries linked by reference |
+| Reversal | delete or reverse the original | delete the split | compensating entry | delete the entry |
 | Description | `description` | `notes` / `payee_name` | description | comment |
 | Date | `date`, ISO 8601 | `date` | date | date |
 | Tags | `tag_names` | category | categories | categories |
@@ -183,6 +206,104 @@ Firefly III request shape:
   "tag_names": ["sms:m-pesa"]
 }
 ```
+
+### 9.1 Internal transfers: the ledger approach
+
+A movement between two of your own accounts is not income and not an expense. It
+is a movement. Posting it as a debit and the matching credit as income would
+inflate both totals and quietly corrupt every budget that uses them.
+
+Internal transfers are therefore modelled as a **balanced pair of ledger legs**
+rather than a special transaction type:
+
+| Property | Observed leg | Counterpart leg |
+| --- | --- | --- |
+| Origin | The SMS that arrived | Synthesised by the ingestion service |
+| Direction | As parsed | Opposite of the observed leg |
+| Account | Source account | Destination account |
+| Amount | As parsed, identical | Identical |
+| `transferGroupId` | Shared | Shared |
+| `leg` | `source` | `destination` |
+| `synthetic` | `false` | `true` |
+| `classification` | `internal_transfer` | `internal_transfer` |
+
+Consequences of this model:
+
+- Income and expense totals exclude both legs, because neither is income or
+  expense. Cash flow is unaffected: the money moved, so total cash is unchanged.
+- Only the observed leg comes from a message. The counterpart is derived, so it
+  can never disagree with the original by a rounding or transcription error.
+- If the destination account is unknown, the counterpart leg is not created and
+  the observed leg is parked for review rather than posted as a lone expense.
+- Reconciliation stays simple: one group, two legs, equal and opposite.
+
+Where the provider has a native transfer representation, the adapter uses it and
+records the group id; otherwise it writes two entries linked by the shared
+`transferGroupId` in the tag, so a reader can still pair them.
+
+Detection rules, applied in order:
+
+1. Explicit wording in the message ("to your own account", "transfer to", "internal transfer").
+2. Destination present in the sender's own-account list (F7.2-5).
+3. A debit and a credit from the same sender, same amount and currency, within a
+   matching window (default 15 minutes), where the reference or counterparty links them.
+4. None of the above: the debit is treated as an expense. Being wrong in this
+   direction is recoverable by tagging; being wrong in the other silently
+   misreports spending.
+
+### 9.2 Reversals
+
+A reversal references the original transaction rather than describing a new one.
+The service voids the matched entry, or, if the provider has no void, posts the
+compensating entry and links both with a `reverses` reference. A reversal with no
+match is parked for review, because posting it as a fresh transaction would
+invent an amount that never happened.
+
+### 9.3 Cross-sender suppression
+
+The same movement is often announced twice, by the mobile money provider and by
+the bank. Entries are fingerprinted on amount, currency, direction and a short
+timestamp window; a second entry inside the window is suppressed and linked to the
+first, with both retained so the suppression is auditable and reversible. The
+window is a configuration value, because a wider window suppresses more and risks
+discarding two genuine identical payments in quick succession.
+
+## 9A. Why auto-post needs limits
+
+SMS sender IDs are not authenticated. Anyone able to deliver a message to the
+phone can choose the sender string, so a perfectly formatted fake transaction
+arriving from a familiar sender ID would be posted without question. This is the
+weakest point in an otherwise automated design, and it is why "fully automatic"
+is bounded rather than absolute.
+
+Controls, applied in order:
+
+1. **Sender must be allowlisted** — the message is discarded otherwise (F7.1-4).
+2. **Amount ceiling per transaction** — above it, the entry goes to review.
+3. **Daily total per sender** — crossing it pauses auto-post for that sender until
+   the user clears it, which catches a burst of spoofed messages that stay small.
+4. **Optional always-confirm sender** — for senders the user does not want
+   trusted fully, every entry is confirmed.
+5. **Reversibility** — every posted entry can be voided, so a bad batch costs
+   minutes rather than a manual cleanup.
+
+These limits are the reason auto-posting is safe to leave on. Without them the
+correct default would be confirm-everything, which defeats the purpose.
+
+## 9B. Authentication of ingestion requests
+
+The endpoint accepts writes to financial records from the public internet, so a
+bearer token alone is thin: a leaked token would let an attacker inject plausible
+transactions. Each request therefore carries, in addition to the token:
+
+- a timestamp, rejected outside a short window (default 5 minutes);
+- a single-use nonce, remembered briefly and rejected on replay;
+- an HMAC signature over timestamp, nonce and body, keyed per device.
+
+Credentials are stored server-side in a secret store, rotated per device, and the
+Caddy route adds rate limiting so the service is not the first line of defence
+against abuse.
+
 
 ## 10. Ingestion API (intermediate layer)
 
@@ -230,6 +351,7 @@ whether the caller should retry.
   "source": { "channel": "sms", "senderId": "MPESA", "label": "M-Pesa" },
   "accountHint": "cash",
   "tags": ["sms:m-pesa"],
+  "classification": "expense",
   "confidence": 0.98,
   "metadata": { "balanceAfter": "24300.00", "rawRetainedUntil": "2026-11-12T00:00:00Z" }
 }
@@ -244,6 +366,13 @@ Rules that keep the contract stable:
   already stored, and returns the original record instead of creating a second.
 - `confidence` below the configured threshold is stored as `needs_review` and not
   forwarded, which keeps the review decision server-side and auditable.
+- `classification` is one of `income`, `expense`, `internal_transfer` or
+  `reversal`. For an internal transfer both legs share `transferGroupId`, and the
+  counterpart leg carries `synthetic: true`. Income and expense reporting excludes
+  `internal_transfer` on both legs.
+- Auto-post limits are evaluated by the service, not trusted from the client: the
+  app may under-report an amount, so the service compares the canonical amount
+  against the sender's configured ceilings.
 - `metadata` is provider-agnostic; adapters ignore what they cannot use.
 
 ### 10.4 Provider adapter contract
@@ -309,7 +438,7 @@ Local Room entities, device-local only:
 | Entity | Key fields |
 | --- | --- |
 | `Sender` | senderId, label, enabled directions, accountId, currency, tagPrefix |
-| `Transaction` | localId, senderId, reference, amountMinor, currency, direction, occurredAtUtc, state, confidence, attempts, lastError, backendId |
+| `Transaction` | localId, senderId, reference, amountMinor, currency, direction, classification, transferGroupId, leg, occurredAtUtc, state, confidence, attempts, lastError, backendId |
 | `RawMessage` | transactionId, body, receivedAt, purgeAfter |
 | `Endpoint` | backendType, url, tokenRef |
 
@@ -353,6 +482,9 @@ used for money.
 | Ingestion API | Contract tests against the service, including idempotent replay, a `4xx` and a timeout path |
 | Provider adapters | One conformance suite every adapter must pass, so adding a backend cannot regress the ones already shipped |
 | Adapters | Fake-provider tests proving direction, sign and account resolution per backend |
+| Transfer pairing | Cases proving both legs are balanced, that an unmatched leg never posts, and that income and expense totals exclude the pair |
+| Auto-post limits | Boundary tests at, just under and just over each ceiling, including the daily total |
+| Auth | Replay, stale-timestamp and wrong-signature rejection |
 | Queue | State-machine tests covering retry, dead-letter and manual retry |
 | End to end | Instrumented test: inject a message, assert one entry posted and no duplicate on replay |
 
@@ -368,11 +500,16 @@ sender format that produces a needs_review entry.
 | Duplicate posts | zero, verified by idempotency key |
 | Median delay from SMS to posted entry | under 60 seconds |
 | Parser corpus growth | no growth without a named failing case |
+| Auto-post escapes | zero entries above a ceiling ever posted |
+| Reconciliation differences | under 0.5% of entries per month |
 
 ## 17. Delivery plan
 
 **Phase 1 — Capture and parse.** Notification listener, fallback receiver,
-allowlist, M-Pesa and bank parsers, local inbox, dry-run mode, no posting.
+allowlist with own-account and auto-post limit settings, M-Pesa and bank parsers
+including transfer and reversal detection, local inbox, dry-run mode, no posting.
+Auto-post ceilings and the transfer model are designed and specified here even
+though nothing is posted yet, because both change the parser output shape.
 
 **Phase 2 — Ingestion API and Firefly adapter.** The intermediate service with the
 canonical model, Firefly III adapter, idempotency, retry and dead-lettering. The
@@ -381,9 +518,9 @@ app pairs with the ingestion API and posts canonical transactions.
 **Phase 3 — Additional adapters.** Actual Budget, Econumo, ezBookkeeping. Each is a
 new adapter in the service only; no app release.
 
-**Phase 4 — Hardening.** Statistics, parser expansion driven by review inbox, APK
-update check, per-sender account mapping managed through the ingestion API, and a
-relay path for capture when the phone is off.
+**Phase 4 — Hardening.** Statement reconciliation, statistics, parser expansion
+driven by the review inbox, APK update check, per-sender account mapping managed
+through the ingestion API, and a relay path for capture when the phone is off.
 
 ## 18. Acceptance criteria for Phase 1 + 2
 
@@ -408,6 +545,23 @@ relay path for capture when the phone is off.
 - Given a Firefly III outage lasting several minutes, then queued entries drain
   afterwards in order with no gaps and no duplicates.
 - Given a second adapter is enabled, then no change to the app is required.
+- Given a debit and credit from the same sender for the same amount within the
+  matching window, then both post as a balanced transfer pair and neither counts as
+  income or expense.
+- Given an internal transfer whose destination account is unknown, then nothing is
+  posted and the entry appears in the inbox.
+- Given the same movement announced by two different senders, then one entry is
+  posted and the second is suppressed with a link to the first.
+- Given a transaction above the per-sender auto-post ceiling, then it is not posted
+  automatically and appears in the inbox.
+- Given a reversal message for a stored transaction, then the original is voided
+  rather than a new entry created.
+- Given a replayed request with a previously seen nonce, then the service rejects
+  it without writing anything.
+- Given the daily auto-post total for a sender is exceeded, then auto-posting for
+  that sender pauses until cleared.
+- Given dead-lettered entries persist beyond the alert window, then the monitoring
+  stack raises an alert.
 
 ## 19. Decisions taken
 
@@ -424,6 +578,10 @@ longer carries them as open items.
 | Raw message retention | 30 days, configurable | Enough to debug a bad parse, short enough to keep financial data lean |
 | Where does backend knowledge live | In the ingestion API, not the app | A new bookkeeping backend becomes a server-side change with no app release, and backend credentials stay off the handset |
 | Does the app keep provider accounts | No | Account names change; the app sends an `accountHint` and the service resolves it against the provider, so a renamed account is a config fix rather than a release |
+| How are internal transfers represented | As a balanced pair of ledger legs, both classified `internal_transfer` | A provider-native transfer is not guaranteed, and a leg pair is representable everywhere; either leg alone never posts, so income and expense cannot be misreported |
+| Is auto-posting safe with spoofable sender IDs | Only with per-sender amount and daily ceilings | Sender IDs are not authenticated, so unbounded auto-post is the weakest link; ceilings bound the damage to a reviewable inbox |
+| Ingestion authentication | Bearer token plus per-request HMAC with timestamp and nonce | The endpoint writes financial records from the public internet, so a stolen token alone must not be enough to inject entries |
+| Reconciliation | Periodic statement comparison, deferred to Phase 4 | Captured entries will drift; a diff report is how a systematic parse error is caught after the fact |
 
 ## 20. Repository context
 
