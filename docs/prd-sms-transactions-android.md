@@ -185,6 +185,74 @@ You have received KSH 45,000.00 from JOHN DOE on 12/10/2026 09:15. Balance KSH 6
 → amount 45000.00, direction credit, reference received from JOHN DOE, currency KES
 ```
 
+### 8.1 Worked examples
+
+Real messages captured during design, with the outcome each one produces. This is
+the seed of the parser corpus referenced in section 15, and every future sender
+format should arrive with an entry like these.
+
+| # | Sender | Format | Outcome |
+| - | ------ | ------ | ------- |
+| 1 | M-Pesa | prose | `paid to <payee> <paybill account>` + `Fee:` + `Bal:` |
+| 2 | M-Pesa | structured | `Mtr:` `Token:` `Units:` `Amt:` `TknAmt:` `OtherCharges:` |
+| 3 | M-Pesa | prose | `<code> Confirmed. Ksh <amount> successfully paid to <payee> on <date>` |
+| 4 | Stanbic | prose | `Acc. ending <4 digits> has been CREDITED with KES <amount> for Incoming RTGS` |
+
+**Example 1 — pharmacy payment, 2026-10-12 12:15**
+
+```
+Q3SBBLF9EM2. Ksh 2,138 paid to PHARMAPLUS PHARMACEUTICALS 38 account KAHAWA
+on 12/10/2026 12:15. Fee: Ksh 20. Bal: Ksh 5358.76. MPESA ID:UJCS0B9GNM
+```
+
+→ debit 2138.00 KES, fee 20.00, reference UJCS0B9GNM, balance 5358.76.
+Withdrawal 2158.00 from the M-Pesa wallet, split into the payee expense and bank
+fees. Paybill, so not a transfer despite the word "account". Confidence 0.97.
+
+**Examples 2 and 3 — one payment, two messages, 2026-10-01 21:47 and 21:48**
+
+```
+Mtr:46203045920  Token:1326-0989-4328-8487-4373  Date:20261001 21:48
+Units:108.5  Amt:3000  TknAmt:2013.49  OtherCharges:986.51
+
+H3RVQAUQ92W Confirmed. Ksh 3,000 successfully paid to Kenya Power and Lighting Co Ltd
+on 01/10/26 at 09:47 PM. Fee: Ksh 20. Bal: Ksh 1656.87.
+```
+
+→ **one** merged entry: debit 3000.00 with charges `token_value` 2013.49,
+`tax_and_levies` 986.51 and `fee` 20.00, total 3020.00. The arithmetic reconciles:
+2013.49 + 986.51 = 3000.00. Example 2 contributes the breakdown, meter and units;
+example 3 contributes the fee and the full payee name. Provenance lists both.
+
+The token number is **not** written to the ledger. It is a redeemable credential, so
+it stays inside the raw-message retention window while the description carries the
+meter and units instead.
+
+**Example 4 — salary credit, 2026-09-25 14:32**
+
+```
+Acc. ending 54189 has been CREDITED with KES 155,772.55 for Incoming RTGS Transfer
+on 2026/09/25 at 14:32. Your available balance is now KES 155,789.20.
+```
+
+→ credit 155772.55 KES, income, salary. The balance moved by 16.65 more than the
+credit, so an unexplained charge is recorded as an observation and never as a
+transaction. No reference is present, so the idempotency key falls back to sender,
+amount and timestamp. The sender rule "Stanbic credit = salary" applies only after
+cross-sender transfer matching has failed to pair it with an outgoing debit.
+
+**Date formats seen, one per sender**
+
+| Format | Example | Sender |
+| ------ | ------- | ------ |
+| `dd/mm/yyyy` | `12/10/2026 12:15` | M-Pesa prose |
+| `YYYYMMDD` | `20261001 21:48` | M-Pesa structured |
+| `dd/mm/yy` | `01/10/26 09:47 PM` | M-Pesa confirmation |
+| `YYYY/MM/DD` | `2026/09/25 14:32` | Stanbic |
+
+A single global date regex would misread all four. The format is declared per
+sender, and an unparseable date goes to review rather than being guessed.
+
 ## 9. Backend mapping
 
 | Field | Firefly III |
@@ -261,6 +329,32 @@ Detection rules, applied in order:
 4. None of the above: the debit is treated as an expense. Being wrong in this
    direction is recoverable by tagging; being wrong in the other silently
    misreports spending.
+
+### 9.1a Matching rules for cross-sender transfers
+
+A movement between own accounts may be announced by two different senders: an
+M-Pesa withdrawal and a bank credit. The pairing rules, strongest first:
+
+1. **Explicit beneficiary match.** The outgoing message names the destination bank
+   or its masked digits, and those digits match the mapped account of the incoming
+   message. This is decisive and needs no window.
+2. **Exact amount and currency, inside a window.** Amount equality must be exact,
+   not approximate. The window is longer for a cross-sender pair than for a single
+   sender — 60 minutes rather than 15 — because mobile money to bank transfers can
+   settle on a different cycle than the notifications that describe them.
+3. **Direction and account currency must agree.** A debit out of one own account and
+   a credit into another is the only shape that qualifies.
+
+Ambiguity is resolved towards review, not towards a decision. If two candidates
+match equally well, or a credit happens to equal an unrelated debit in the window,
+the entry goes to review with both candidates attached. The failure asymmetry
+decides this: a salary wrongly recorded as a transfer understates income and is
+hard to spot later, whereas a real transfer sent to review costs one tap.
+
+The same rules run **before** any sender-level classification, so a standing rule
+such as "credits from this account are salary" cannot misclassify a transfer into
+that account. This matters even when the behaviour is rare, because the standing
+rule is what makes the automation trustworthy in the common case.
 
 ### 9.2 Reversals
 
