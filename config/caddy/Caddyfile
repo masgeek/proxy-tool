@@ -35,4 +35,3 @@ import snippets/domains/tsobu.caddy
 import snippets/domains/personal.caddy
 import snippets/domains/agwise.caddy
 import snippets/domains/budget.caddy
-import snippets/domains/baserow.caddy
