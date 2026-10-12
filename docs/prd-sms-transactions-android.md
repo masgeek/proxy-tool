@@ -327,13 +327,21 @@ modem — without changing the mobile client.
 | --- | --- | --- |
 | `GET` | `/v1/health` | Liveness plus the active adapter name and version |
 | `GET` | `/v1/provider` | Active provider, its accounts and capabilities |
-| `POST` | `/v1/transactions` | Ingest one canonical transaction (idempotent) |
-| `POST` | `/v1/transactions/batch` | Ingest up to 100, for draining a backlog |
-| `GET` | `/v1/transactions/{id}` | Status: pending, posted, failed, needs_review |
-| `POST` | `/v1/transactions/{id}/retry` | Re-attempt a failed entry |
-| `POST` | `/v1/transactions/{id}/void` | Reverse a posted entry in the provider |
+| `POST` | `/v1/entries` | Ingest one canonical transaction; stored first, idempotent |
+| `POST` | `/v1/entries/batch` | Ingest up to 100, for draining a backlog |
+| `GET` | `/v1/entries` | Review queue; filter by state, sender, date, currency |
+| `GET` | `/v1/entries/{id}` | One entry with its provider result and edit history |
+| `POST` | `/v1/entries/{id}/approve` | Post a reviewed entry |
+| `POST` | `/v1/entries/{id}/reject` | Do not post; keep for the record |
+| `POST` | `/v1/entries/{id}/edit` | Correct amount, account, classification or tags |
+| `POST` | `/v1/entries/{id}/retry` | Re-attempt a failed entry |
+| `POST` | `/v1/entries/{id}/void` | Reverse a posted entry in the provider |
+| `POST` | `/v1/entries/approve-batch` | Bulk approve a filtered set |
+| `GET` | `/v1/entries/counts` | Counts by state, for the app summary |
 | `GET` | `/v1/senders` | Sender allowlist as the service sees it |
-| `PUT` | `/v1/senders/{senderId}` | Update direction, account and tag mapping |
+| `PUT` | `/v1/senders/{senderId}` | Update direction, account, tag and auto-post limits |
+| `POST` | `/v1/control/pause` | Kill switch: accept and store, forward nothing |
+| `POST` | `/v1/control/resume` | Resume forwarding |
 
 All responses are JSON. Errors carry a stable machine code, a human message, and
 whether the caller should retry.
@@ -400,7 +408,85 @@ Adapter obligations:
 - Never perform a second financial write for one canonical transaction; exactly one
   attempt produces at most one provider entry.
 
-### 10.5 Idempotency and delivery guarantees
+### 10.5 Store: review before posting
+
+The ingestion service owns a database of its own. Every transaction it receives
+is written there first and lives there as the system of record, independent of
+whether it is ever forwarded to a bookkeeping backend.
+
+That ordering is deliberate. Nothing reaches the budget app before it is stored,
+so:
+
+- a crash, a provider outage or a lost phone cannot lose a transaction;
+- the entry can be reviewed, corrected, split, rejected or voided before it becomes
+  a financial record;
+- the history survives an app reinstall, a phone change or a backend switch;
+- the audit trail is complete, including entries that were never posted.
+
+`transactions` is a dedicated database on the shared PostgreSQL service, so the
+existing `db-backup` tooling covers it. It is not created implicitly: the database
+and its role are provisioned like any other application database.
+
+#### Schema
+
+| Table | Purpose | Notable columns |
+| --- | --- | --- |
+| `entries` | one canonical transaction per row | `idempotency_key` unique, `direction`, `amount`, `currency`, `classification`, `transfer_group_id`, `leg`, `account_hint`, `resolved_account_id`, `confidence`, `state`, `attempts`, `last_error`, `provider_id`, `occurred_at`, `received_at` |
+| `senders` | allowlist mirrored server-side | `sender_id` unique, `label`, `directions`, `own_accounts`, `auto_post_max_amount`, `auto_post_max_per_day`, `always_confirm`, `tag_prefix` |
+| `review` | every human decision, kept separately | `entry_id`, `action`, `actor`, `reason`, `at` |
+| `nonces` | replay protection | `nonce` unique, `seen_at`, expires quickly |
+| `links` | pairing of transfer legs and suppressions | `group_id`, `entry_id`, `relation` |
+
+Indexes are required on `idempotency_key`, `(state, occurred_at)` for the review
+queue, `(sender_id, occurred_at)` for duplicate fingerprinting, and
+`transfer_group_id`.
+
+#### State machine
+
+```
+received ──▶ awaiting_review ──▶ approved ──▶ posting ──▶ posted ──▶ voided
+                  │                    │           │
+                  │                    │           └──▶ failed ──▶ posting
+                  ├──▶ rejected        └──▶ needs_review ──▶ posting
+                  └──▶ suppressed ──▶ (linked to the entry that won)
+```
+
+- `awaiting_review` is the default destination for anything that is not eligible
+  for automatic posting.
+- `suppressed` is used for a cross-sender duplicate; the entry is kept, linked to
+  the entry that was posted.
+- `voided` records a reversal; the original entry stays visible with its outcome.
+
+#### Posting policy
+
+Two modes, per sender:
+
+- **Review first** — everything lands in `awaiting_review` and is posted only when
+  approved, individually or in bulk. This is the default for a new sender.
+- **Auto-post** — entries that pass confidence, classification and the configured
+  ceilings move straight to `posting`; anything else still stops for review.
+
+Switching a sender between modes does not change entries already stored. Every
+transition is written to `review`, so "why was this posted" always has an answer.
+
+#### Review surface
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/v1/entries` | Filter by state, sender, date range, currency; paginated |
+| `GET` | `/v1/entries/{id}` | One entry with its provider result and edit history |
+| `POST` | `/v1/entries/{id}/approve` | Post now |
+| `POST` | `/v1/entries/{id}/reject` | Do not post; keep for the record |
+| `POST` | `/v1/entries/{id}/edit` | Correct amount, account, classification or tags |
+| `POST` | `/v1/entries/approve-batch` | Bulk approve a filtered set |
+| `POST` | `/v1/entries/{id}/void` | Reverse a posted entry |
+| `GET` | `/v1/entries/counts` | Counts by state, for the app summary |
+
+Corrections made during review are recorded, so an amount that was misparsed is
+visible as a correction rather than silently replaced.
+
+
+### 10.6 Idempotency and delivery guarantees
 
 - The service stores `idempotencyKey` with the entry and enforces uniqueness, so a
   retried batch cannot duplicate a transaction even if the app lost its response.
@@ -409,7 +495,7 @@ Adapter obligations:
   idempotency reference before retrying, so an ambiguous timeout does not double-post.
 - Per-entry retry budget, then dead-letter to `needs_review` with the recorded error.
 
-### 10.6 Operational requirements
+### 10.7 Operational requirements
 
 - API versioned in the path (`/v1`); the app pins a version and the service
   supports the previous one for at least one app release cycle.
@@ -433,14 +519,19 @@ Deliberate absence: no dashboard-first design. The success state is an empty inb
 
 ## 12. Data model
 
-Local Room entities, device-local only:
+The ingestion service's schema is in section 10.5. The app keeps its own local
+copy, device-local only:
 
 | Entity | Key fields |
 | --- | --- |
 | `Sender` | senderId, label, enabled directions, accountId, currency, tagPrefix |
 | `Transaction` | localId, senderId, reference, amountMinor, currency, direction, classification, transferGroupId, leg, occurredAtUtc, state, confidence, attempts, lastError, backendId |
 | `RawMessage` | transactionId, body, receivedAt, purgeAfter |
-| `Endpoint` | backendType, url, tokenRef |
+| `Endpoint` | ingestionUrl, tokenRef |
+
+The two are not redundant. The app's queue is a delivery buffer; the service's
+database is the system of record. Deleting the app clears the buffer but not the
+history.
 
 Amounts are stored as minor units in an integer column. Floating point is never
 used for money.
@@ -511,9 +602,11 @@ including transfer and reversal detection, local inbox, dry-run mode, no posting
 Auto-post ceilings and the transfer model are designed and specified here even
 though nothing is posted yet, because both change the parser output shape.
 
-**Phase 2 — Ingestion API and Firefly adapter.** The intermediate service with the
-canonical model, Firefly III adapter, idempotency, retry and dead-lettering. The
-app pairs with the ingestion API and posts canonical transactions.
+**Phase 2 — Ingestion API, store and Firefly adapter.** The intermediate service
+with the canonical model, its own `transactions` database and review queue, the
+Firefly III adapter, idempotency, retry and dead-lettering. The app pairs with the
+ingestion API and posts canonical transactions. Everything lands in review before
+anything is posted.
 
 **Phase 3 — Additional adapters.** Actual Budget, Econumo, ezBookkeeping. Each is a
 new adapter in the service only; no app release.
@@ -562,6 +655,12 @@ through the ingestion API, and a relay path for capture when the phone is off.
   that sender pauses until cleared.
 - Given dead-lettered entries persist beyond the alert window, then the monitoring
   stack raises an alert.
+- Given an entry is ingested while the provider is unreachable, then it is stored
+  and appears in the review queue, and nothing is lost when the provider returns.
+- Given an entry is edited during review, then the original values and the change
+  are both retrievable from the entry.
+- Given the app is uninstalled and reinstalled, then the previously stored entries
+  and their states are still present server-side.
 
 ## 19. Decisions taken
 
@@ -582,6 +681,8 @@ longer carries them as open items.
 | Is auto-posting safe with spoofable sender IDs | Only with per-sender amount and daily ceilings | Sender IDs are not authenticated, so unbounded auto-post is the weakest link; ceilings bound the damage to a reviewable inbox |
 | Ingestion authentication | Bearer token plus per-request HMAC with timestamp and nonce | The endpoint writes financial records from the public internet, so a stolen token alone must not be enough to inject entries |
 | Reconciliation | Periodic statement comparison, deferred to Phase 4 | Captured entries will drift; a diff report is how a systematic parse error is caught after the fact |
+| Where transactions live before posting | In the ingestion service's own database, as the system of record | Storing first means nothing is lost to a crash, an outage or a lost phone, and the entry can be corrected before it becomes a financial record; review-before-posting then becomes a policy per sender rather than a separate mode |
+| Is the app's queue the record | No | The app's Room queue is a delivery buffer; only the service database survives reinstall and phone change |
 
 ## 20. Repository context
 
@@ -593,10 +694,19 @@ longer carries them as open items.
   `ingest.munywele.co.ke`, networks `internal` plus `dokploy-network`, json-file
   logging, resource limits and a `STACK_REVISION` marker. Register the port in
   `docs/ports.md` and add a snippet under `config/caddy/snippets/domains/`.
-- Suggested name: `stacks/transactions`, engine unspecified at this point. It needs
-  a datastore for the idempotency store and the entry queue; PostgreSQL on the shared
-  service is the obvious fit, which also makes the entries backupable by the existing
-  `db-backup` tooling.
+- Suggested name: `stacks/transactions`, engine unspecified at this point.
+- It owns a dedicated `transactions` database on the shared PostgreSQL service,
+  created explicitly like every other application database:
+
+  ```bash
+  docker exec postgres createdb --username "$POSTGRES_USER" --owner "$POSTGRES_USER" transactions
+  ```
+
+  Add `transactions` to the `db-backup` database list. This database is the only
+  copy of the captured transactions before they are posted, so losing it loses
+  data that exists nowhere else.
+- It needs no Redis of its own; the five instances in `stacks/cache` are for
+  application stacks, and this service is a queue consumer, not a cache user.
 - The Android app itself is not stored in this repository.
 - Security note for the ingestion service: it is an unauthenticated-by-default
   endpoint on the public internet that writes financial records. It must require a
