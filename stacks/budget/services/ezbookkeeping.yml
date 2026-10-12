@@ -31,7 +31,22 @@ services:
       EBK_DATABASE_SSL_MODE: ${EBK_DATABASE_SSL_MODE:-disable}
       # The object storage section is named `storage`, so the variable is
       # EBK_STORAGE_TYPE — EBK_OBJECT_STORAGE_TYPE is silently ignored.
-      EBK_STORAGE_TYPE: ${EBK_STORAGE_TYPE:-local_filesystem}
+      #
+      # Files go to Alarik in stacks/s3, reachable in-network as s3:8080. The
+      # credentials are those of an S3 access key scoped to the ezbookkeeping
+      # bucket; create the key in the console, or set DEFAULT_ACCESS_KEY and
+      # DEFAULT_SECRET_KEY there for apps to reuse.
+      EBK_STORAGE_TYPE: ${EBK_STORAGE_TYPE:-s3}
+      EBK_STORAGE_S3_ENDPOINT: ${EBK_STORAGE_S3_ENDPOINT:-s3:8080}
+      EBK_STORAGE_S3_REGION: ${EBK_STORAGE_S3_REGION:-us-east-1}
+      EBK_STORAGE_S3_ACCESS_KEY_ID: ${EBK_STORAGE_S3_ACCESS_KEY_ID:-}
+      EBK_STORAGE_S3_SECRET_ACCESS_KEY: ${EBK_STORAGE_S3_SECRET_ACCESS_KEY:-}
+      EBK_STORAGE_S3_SESSION_TOKEN: ${EBK_STORAGE_S3_SESSION_TOKEN:-}
+      EBK_STORAGE_S3_USE_SSL: ${EBK_STORAGE_S3_USE_SSL:-false}
+      EBK_STORAGE_S3_SKIP_TLS_VERIFY: ${EBK_STORAGE_S3_SKIP_TLS_VERIFY:-false}
+      EBK_STORAGE_S3_USE_PATH_STYLE: ${EBK_STORAGE_S3_USE_PATH_STYLE:-true}
+      EBK_STORAGE_S3_BUCKET: ${EBK_STORAGE_S3_BUCKET:-ezbookkeeping}
+      EBK_STORAGE_S3_ROOT_PATH: ${EBK_STORAGE_S3_ROOT_PATH:-/}
       # Console is what the monitoring stack collects; file keeps a local copy.
       # The container speaks plain HTTP because Caddy terminates TLS, so
       # EBK_SERVER_PROTOCOL is deliberately not set: setting it to https would
