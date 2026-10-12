@@ -34,6 +34,14 @@ jobs:
       - name: Check the script parses
         run: bash -n scripts/validate-compose.sh
 
+      # The file is committed with the executable bit set, but re-assert it here
+      # so a checkout that drops file modes, or a contributor committing from an
+      # environment that does not preserve them, still produces a runnable script.
+      - name: Ensure the script is executable
+        run: |
+          chmod +x scripts/validate-compose.sh
+          ls -l scripts/validate-compose.sh
+
       # Invoked through bash explicitly so the job does not depend on the
       # executable bit surviving a checkout on every platform.
       #
