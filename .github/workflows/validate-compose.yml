@@ -58,5 +58,5 @@ jobs:
           {
             echo "Re-run one stack at a time to narrow it down:"
             echo "  bash scripts/validate-compose.sh budget"
-            echo "  bash scripts/validate-compose.sh invoice baserow cache"
+            echo "  bash scripts/validate-compose.sh invoice budget cache"
           } >> "$GITHUB_STEP_SUMMARY"
