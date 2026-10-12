@@ -99,7 +99,8 @@ Requirement IDs restart per subsection, so cite them as `F7.4-3` for example.
 | F7.3-9 | A reversal or a transfer leg that cannot be matched to a stored entry is parked for review, never posted as a new transaction. |
 | F7.3-10 | Correlation and merge: entries arriving within a correlation window with the same sender, direction and amount are **merged into one entry**, not duplicated. The richer value wins per field, and every contributing message is retained as provenance. |
 | F7.3-11 | Only a genuine duplicate is suppressed: two messages that agree on sender, direction, amount and timestamp with nothing new to contribute. A suppression is recorded and reversible. |
-| F7.3-12 | A message naming a credit facility is classified as facility activity, never as spending: draws, repayments and statements are liability movements, and only interest is an expense. The facility limit is an observation and never a validation threshold, since the provider revises it. |
+| F7.3-12 | A message from or to a configured credit facility is classified as facility activity, never as income or spending: disbursements are liability increases, repayments are liability movements, and only interest is an expense. Facilities are configured per counterparty, since a drawdown message is indistinguishable from a salary credit by wording alone. |
+| F7.3-14 | A facility's reported limit is an observation, never a validation threshold, since the provider revises it without notice. |
 | F7.3-13 | A merchant pre-approval and a payment confirmation for the same payment are one transaction. Neither message is complete alone: one carries the breakdown and the meter, the other carries the fee and the payee name. Discarding either loses information the other holds. |
 
 ### 7.4 Posting
@@ -371,12 +372,44 @@ Detection rules, applied in order:
    misreports spending.
 
 
-### 9.1b Fuliza: a credit facility, not spending
+### 9.1b Credit facilities are not income and not spending
 
-M-Pesa Fuliza is an overdraft facility. Messages about it must never become
-expenses, and the corpus shows why this is the highest-value rule in the parser:
-**1,009 of 3,599 M-Pesa messages mention Fuliza**, and almost none of them are
-spending.
+A facility is anything that lends to the household, or that the household repays.
+Two are present in the corpus, and they behave differently enough to be worth
+separating: an **overdraft** accessed through a wallet, and a **loan** drawn and
+repaid through wallet transfers.
+
+| Facility | Kind | In corpus | What a naive parser would do |
+| --- | --- | --- | --- |
+| Fuliza | Overdraft | 1,009 of 3,599 M-Pesa messages | Double-count purchases, multiply interest |
+| TIMIZA | Loan | 49 messages | Post **KES 1,066,875 as income** and **KES 668,855 as expense** |
+
+TIMIZA is the larger risk by value, and there is nothing in the message text that
+distinguishes a drawdown from a salary credit. Both arrive as `You have received
+KES <amount> from TIMIZA`. **Only the counterparty identity separates them**, so
+facility detection cannot be a keyword match and must be configured per
+counterparty.
+
+The treatment is the same in both directions, and it is the same principle:
+
+- A **disbursement** is cash in and debt up. Not income.
+- A **repayment** is cash out and debt down. Not an expense.
+- **Interest** is the only genuine expense, and it is recorded once per period.
+
+The TIMIZA pattern in the corpus is a revolving loan: a repayment of roughly 63,000
+to 66,000 followed two minutes later by a re-disbursement of 59,000 to 60,100, every
+month for nineteen months. Because those two legs sit inside any plausible
+correlation window, **amount-exactness is what keeps them from being matched as an
+internal transfer** — the rule in section 9.1a earns its strictness here.
+
+Facility messages carry no interest, terms or outstanding balance, so the cost of
+borrowing is not recoverable from the messages and is deliberately not inferred.
+
+### Fuliza in detail
+
+M-Pesa Fuliza is an overdraft. Messages about it must never become expenses, and
+the corpus shows why: **1,009 of 3,599 M-Pesa messages mention Fuliza**, and almost
+none are spending.
 
 | Variant | Count | Treatment |
 | --- | --- | --- |
