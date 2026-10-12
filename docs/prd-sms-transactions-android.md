@@ -95,7 +95,9 @@ Requirement IDs restart per subsection, so cite them as `F7.4-3` for example.
 | F7.3-7 | Detect reversal messages as their own type, carrying a reference back to the original transaction. |
 | F7.3-8 | Detect internal-transfer markers: explicit wording, a debit and credit from the same sender inside a matching window, or a destination in the sender's own-account list. |
 | F7.3-9 | A reversal or a transfer leg that cannot be matched to a stored entry is parked for review, never posted as a new transaction. |
-| F7.3-10 | Cross-sender suppression: entries with the same amount, currency, direction and timestamp window are collapsed into one, with the suppressed copy retained for audit. |
+| F7.3-10 | Correlation and merge: entries arriving within a correlation window with the same sender, direction and amount are **merged into one entry**, not duplicated. The richer value wins per field, and every contributing message is retained as provenance. |
+| F7.3-11 | Only a genuine duplicate is suppressed: two messages that agree on sender, direction, amount and timestamp with nothing new to contribute. A suppression is recorded and reversible. |
+| F7.3-12 | A merchant pre-approval and a payment confirmation for the same payment are one transaction. Neither message is complete alone: one carries the breakdown and the meter, the other carries the fee and the payee name. Discarding either loses information the other holds. |
 
 ### 7.4 Posting
 
@@ -116,7 +118,10 @@ Requirement IDs restart per subsection, so cite them as `F7.4-3` for example.
 | F7.4-13 | Resolve an `accountHint` against the provider's account list; an unresolvable hint parks the entry rather than defaulting to an account. |
 | F7.4-14 | Where the account currency differs from the transaction currency, supply a base amount from a configured rate source or park the entry. Never post an unconverted amount into a different-currency account. |
 | F7.4-15 | Internal transfers post as a balanced pair of legs, never as income and expense; see section 9.1. |
-| F7.4-16 | Honour a global pause: while paused, entries are accepted and queued but nothing is forwarded to the provider. |
+| F7.4-16 | A fee reported alongside an amount is posted as part of the same transaction, as a split or a linked pair, never as an independent entry and never dropped. |
+| F7.4-17 | A fee, tax or levy may arrive in a **later** message than the amount. An entry must not post until its settling window has closed, or an auto-posted entry would omit the fee permanently. |
+| F7.4-18 | The canonical model carries a labelled `charges[]` breakdown rather than a single fee, so `token_value`, `tax_and_levies` and `fee` are distinguishable and each can map to its own expense account. A message with no breakdown yields an empty array. |
+| F7.4-19 | Honour a global pause: while paused, entries are accepted and queued but nothing is forwarded to the provider. |
 
 ### 7.5 Offline and recovery
 
@@ -152,6 +157,7 @@ Requirement IDs restart per subsection, so cite them as `F7.4-3` for example.
 | F7.7-4 | Alert when dead-lettered entries exist beyond a short window, or when queue depth exceeds its cap — wired into the existing Prometheus and Grafana stack. |
 | F7.7-5 | Notify once when an unlisted sender is observed, so a changed sender ID is noticed rather than silently dropping transactions. |
 | F7.7-6 | On-device settings expose the auto-post limits, the kill switch and the pending-queue depth. |
+| F7.7-7 | The service dashboard shows queue depth by state, oldest awaiting review, dead-letter count and posting error rate, without exposing provider credentials. |
 
 ## 8. Parsing specification
 
@@ -354,13 +360,23 @@ whether the caller should retry.
   "direction": "debit",
   "amount": { "value": "1500.00", "currency": "KES" },
   "description": "M-Pesa send 07XX XXX XXX",
-  "reference": "OE6K2L8Q4M",
+  "reference": "UJCS0B9GNM",
+  "charges": [
+    { "label": "token_value", "value": "2013.49", "currency": "KES" },
+    { "label": "tax_and_levies", "value": "986.51", "currency": "KES" },
+    { "label": "fee", "value": "20.00", "currency": "KES" }
+  ],
   "source": { "channel": "sms", "senderId": "MPESA", "label": "M-Pesa" },
   "accountHint": "cash",
   "tags": ["sms:m-pesa"],
   "classification": "expense",
   "confidence": 0.98,
-  "metadata": { "balanceAfter": "24300.00", "rawRetainedUntil": "2026-11-12T00:00:00Z" }
+  "metadata": { "balanceAfter": "1656.87", "rawRetainedUntil": "2026-11-12T00:00:00Z" },
+  "provenance": [
+    { "receivedAt": "2026-10-01T21:47:00Z", "kind": "payment_confirmation", "reference": "H3RVQAUQ92W" },
+    { "receivedAt": "2026-10-01T21:48:00Z", "kind": "prepaid_token", "reference": "46203045920" }
+  ],
+  "settledAt": "2026-10-01T21:52:00Z",
 }
 ```
 
@@ -373,6 +389,18 @@ Rules that keep the contract stable:
   already stored, and returns the original record instead of creating a second.
 - `confidence` below the configured threshold is stored as `needs_review` and not
   forwarded, which keeps the review decision server-side and auditable.
+- `charges[]` is optional and labelled. A single fee is one entry with label
+  `fee`; a prepaid utility purchase may carry `token_value` and `tax_and_levies`.
+  The breakdown is a property of the **merged** entry, so information from either
+  message survives.
+- The provider adapter turns charges into one transaction with splits: total equal
+  to amount plus every charge, each charge attributed to its own expense account.
+  Merchant spend stays accurate, taxes are separated where that matters, and the
+  total is right in every report.
+- `provenance` lists every message that contributed. A merged entry is auditable
+  back to the exact messages it came from.
+- `settledAt` is when the settling window closed. Before that instant the entry may
+  still absorb another message, so it must not be forwarded.
 - `classification` is one of `income`, `expense`, `internal_transfer` or
   `reversal`. For an internal transfer both legs share `transferGroupId`, and the
   counterpart leg carries `synthetic: true`. Income and expense reporting excludes
@@ -392,7 +420,7 @@ backend is a new file plus a configuration entry.
 | `Name()` / `Version()` | Identity reported by `/v1/health` |
 | `HealthCheck(ctx)` | Reachability and credential validity |
 | `ListAccounts(ctx)` | Accounts available for sender mapping |
-| `CreateTransaction(ctx, txn)` | Convert canonical fields and post; return provider id |
+| `CreateTransaction(ctx, txn)` | Convert canonical fields and post; return provider id. A transaction carrying `fee` is posted as a split, or as two linked entries when the provider has no split support |
 | `VoidTransaction(ctx, providerId)` | Reverse a posted entry |
 | `Supports() []Capability` | Optional features such as `void`, `attachments`, `recurring` |
 | `TranslateDirection(direction)` | Direction to provider semantics |
@@ -443,12 +471,18 @@ queue, `(sender_id, occurred_at)` for duplicate fingerprinting, and
 #### State machine
 
 ```
-received ──▶ awaiting_review ──▶ approved ──▶ posting ──▶ posted ──▶ voided
-                  │                    │           │
-                  │                    │           └──▶ failed ──▶ posting
-                  ├──▶ rejected        └──▶ needs_review ──▶ posting
-                  └──▶ suppressed ──▶ (linked to the entry that won)
+received ──▶ correlating ──▶ awaiting_review ──▶ approved ──▶ posting ──▶ posted ──▶ voided
+                  │               │                  │           │
+                  │               │                  │           └──▶ failed ──▶ posting
+                  │               │                  └──▶ needs_review ──▶ posting
+                  │               ├──▶ rejected
+                  │               └──▶ suppressed ──▶ (linked to the entry that won)
+                  └──▶ merged ──▶ (absorbed into an existing entry, kept as provenance)
 ```
+
+`correlating` is the settling window. An entry stays there while another message
+could still merge into it, and only becomes `awaiting_review` — or eligible for
+auto-post — once the window closes.
 
 - `awaiting_review` is the default destination for anything that is not eligible
   for automatic posting.
@@ -505,16 +539,96 @@ visible as a correction rather than silently replaced.
   repository.
 
 
+### 10.8 Dashboard
+
+The service ships its own review dashboard rather than requiring a separate
+tooling stack. It reads the same `entries` table the API writes, so there is no
+second source of truth and nothing to synchronise.
+
+Why it lives here: the review queue is the service's own product, not an
+afterthought. An external grid database would mean a second deployment, a second
+database, and a dependency on its update API to detect an approval — all to
+render rows this service already stores.
+
+#### Scope
+
+| Area | Behaviour |
+| --- | --- |
+| Queue | Default view is `awaiting_review`, newest first, grouped by day |
+| Filters | State, sender, direction, currency, date range, tag, amount above a threshold, free text over description and reference |
+| Actions | Approve, reject, edit, retry, void, bulk approve a filtered set |
+| Editing | Amount, account, classification, tags, description — the same fields the canonical model carries |
+| Transfer pairs | Both legs shown together, with the counterpart leg's state, so a half-applied pair is obvious |
+| Suppressions | Shown as suppressed, linked to the entry that was posted, reversible |
+| Reversals | Linked to the original, showing whether the void succeeded |
+| Provider result | The provider's transaction id, so a posted entry can be opened in Firefly |
+| Health | Queue depth by state, oldest awaiting review, dead-letter count, posting error rate |
+| Kill switch | Pause and resume forwarding from the dashboard |
+
+#### Design constraints
+
+- **Mobile first.** The transaction arrives on a phone, so approval happens on a
+  phone. One-handed layout, large tap targets, swipe to approve, no hover-only
+  affordances, and it works without a mouse.
+- **Keyboard shortcuts** for approve, reject and navigation, because bulk clearing
+  a backlog is the common case and clicking repeatedly is not acceptable.
+- **Optimistic display.** The queue renders from the database on load; a pending
+  action updates immediately and reconciles when the API answers. A reviewer
+  should never wait on a network round trip to see that a tap registered.
+- **No client-side build step.** The dashboard is server-rendered, or ships as
+  plain modern ES modules. A bundler in the ingest path means a broken frontend
+  dependency can stop transactions being posted.
+- **It renders the same canonical fields the API returns.** No presentation-only
+  numbers, so what a reviewer approves is exactly what gets posted.
+
+#### Access control
+
+The dashboard is a human surface over financial data and needs its own
+authentication, separate from the device HMAC in F7.6-6 — a browser cannot
+conveniently sign a per-request HMAC, and a session cookie is the right shape for
+a person.
+
+- Session-based login with the service's own account, or SSO through the existing
+  identity provider if one is deployed.
+- The service binds `127.0.0.1` and is published through Caddy only.
+- The Caddy route requires authentication. This is not optional: an unauthenticated
+  dashboard would let anyone who finds the host approve transactions into a real
+  ledger.
+- Every approve, reject, edit and void is written to the `review` table with the
+  actor, so the dashboard and the API share one audit trail.
+
+#### Operational consequences
+
+- The dashboard is served by the same process as the API. It must not be able to
+  starve ingestion: request handling stays cheap, and long lists are paginated and
+  filtered in SQL rather than in memory.
+- `/v1/health` stays unauthenticated for monitoring, while every UI route and every
+  review action requires a session.
+
 ## 11. UX
 
-1. **Pair** — backend URL and token, with a live connection test.
-2. **Grant access** — notification access, with the SMS permission fallback.
-3. **Allowlist** — choose senders from those observed, set direction, account and
-   currency per sender.
-4. **Quiet operation** — no notification unless something needs attention.
-5. **Inbox** — review, edit, retry or discard anything not posted.
+### The app
 
-Deliberate absence: no dashboard-first design. The success state is an empty inbox.
+Deliberately thin. It captures, it parses, it queues, and it reports problems.
+No dashboard lives here: reviewing on the phone is a fallback for when the service
+dashboard is not to hand, not the primary surface.
+
+1. **Pair** — ingestion API URL and token, with a live connection test.
+2. **Grant access** — notification access, with the SMS permission fallback.
+3. **Allowlist** — choose senders from those observed, set direction, account,
+   currency and auto-post ceilings.
+4. **Quiet operation** — no notification unless something needs attention.
+5. **Inbox** — the entries this device captured that are not yet posted.
+
+### The dashboard
+
+The primary review surface, and the one that has to be fast: mobile-first, one
+hand, swipe or keyboard to approve, filters that narrow a backlog in a couple of
+taps. Approve, reject, edit, retry, void, and the kill switch, with the health
+indicators in section 10.8 alongside the queue rather than on a separate page.
+
+Deliberate absence: no charts, no dashboards-within-dashboards, no configuration
+beyond what a review action needs. The success state is an empty queue.
 
 ## 12. Data model
 
@@ -601,11 +715,11 @@ including transfer and reversal detection, local inbox, dry-run mode, no posting
 Auto-post ceilings and the transfer model are designed and specified here even
 though nothing is posted yet, because both change the parser output shape.
 
-**Phase 2 — Ingestion API, store and Firefly adapter.** The intermediate service
-with the canonical model, its own `transactions` database and review queue, the
-Firefly III adapter, idempotency, retry and dead-lettering. The app pairs with the
-ingestion API and posts canonical transactions. Everything lands in review before
-anything is posted.
+**Phase 2 — Ingestion API, store, dashboard and Firefly adapter.** The
+intermediate service with the canonical model, its own `transactions` database, the
+review dashboard, the Firefly III adapter including fee splits, idempotency, retry
+and dead-lettering. The app pairs with the ingestion API and posts canonical
+transactions. Everything lands in review before anything is posted.
 
 **Phase 3 — Additional adapters.** Only if another backend is ever wanted. Each is
 a new adapter in the service, with no app release.
@@ -641,8 +755,16 @@ through the ingestion API, and a relay path for capture when the phone is off.
   income or expense.
 - Given an internal transfer whose destination account is unknown, then nothing is
   posted and the entry appears in the inbox.
-- Given the same movement announced by two different senders, then one entry is
-  posted and the second is suppressed with a link to the first.
+- Given two messages describing the same payment with complementary detail, then
+  they merge into one entry carrying every field from both, with provenance listing
+  both messages.
+- Given a fee that arrives in a later message than the amount, then the entry is not
+  posted until the settling window closes and the posted total includes the fee.
+- Given a genuine duplicate with nothing new to contribute, then it is suppressed
+  with a link to the entry that won, and the suppression can be reversed.
+- Given a message reporting a labelled breakdown such as token value plus levies,
+  then each part is attributed to its own expense account and the total is the sum
+  of all parts.
 - Given a transaction above the per-sender auto-post ceiling, then it is not posted
   automatically and appears in the inbox.
 - Given a reversal message for a stored transaction, then the original is voided
@@ -681,6 +803,12 @@ longer carries them as open items.
 | Reconciliation | Periodic statement comparison, deferred to Phase 4 | Captured entries will drift; a diff report is how a systematic parse error is caught after the fact |
 | Where transactions live before posting | In the ingestion service's own database, as the system of record | Storing first means nothing is lost to a crash, an outage or a lost phone, and the entry can be corrected before it becomes a financial record; review-before-posting then becomes a policy per sender rather than a separate mode |
 | Is the app's queue the record | No | The app's Room queue is a delivery buffer; only the service database survives reinstall and phone change |
+| Where the review UI lives | In the ingestion service, not a separate grid database | The queue is the service's own product; an external tool adds a second deployment, a second database, and a dependency on its API just to detect an approval |
+| How is a reported fee recorded | As a split on the same transaction, or a linked pair where the provider has no splits | Merchant spend stays accurate and the total is correct, while the fee is still attributed to a fees account; a standalone fee entry loses the link, and dropping it under-reports spending |
+| Two messages describing one payment | Merged into a single entry with provenance, never suppressed | Real M-Pesa payments arrive as a pre-approval plus a confirmation; each carries fields the other lacks, so suppressing the second would discard the fee, the breakdown or the payee name |
+| How charges are modelled | A labelled `charges[]` array on the merged entry | One structure covers a bare fee, a prepaid token plus levies, and a split tax that matters for a business claim, without special-casing each sender |
+| When may an entry be posted | After a settling window closes | A fee can arrive in a message that lands after the amount; posting on the first message would permanently omit it |
+| How the dashboard is authenticated | Session login behind an authenticated Caddy route, separate from the device HMAC | A browser cannot sign per-request HMAC conveniently, and an unauthenticated dashboard would let anyone who finds the host approve transactions into a real ledger |
 
 ## 20. Repository context
 
