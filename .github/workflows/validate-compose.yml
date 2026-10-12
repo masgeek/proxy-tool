@@ -1,0 +1,42 @@
+name: Validate Compose
+
+# Renders every Compose file so a broken interpolation, a bad YAML edit or a
+# missing required variable fails here instead of on a deploy.
+#
+# No Docker daemon is required: `docker compose config` only parses and
+# interpolates.
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: validate-compose-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compose:
+    name: Compose files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show runner versions
+        run: |
+          docker --version
+          docker compose version
+
+      # scripts/validate-compose.sh never reads real secrets: it uses a stack's
+      # .env when one exists locally and .env.example otherwise, and injects
+      # placeholders for required variables the renderer reports missing.
+      - name: Validate all stacks
+        run: scripts/validate-compose.sh
+
+      - name: Narrow it down
+        if: failure()
+        run: |
+          echo "Re-run one stack at a time to narrow it down:" >&2
+          echo "  scripts/validate-compose.sh budget" >&2
+          echo "  scripts/validate-compose.sh invoice baserow" >&2
