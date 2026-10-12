@@ -100,7 +100,8 @@ Requirement IDs restart per subsection, so cite them as `F7.4-3` for example.
 | F7.3-10 | Correlation and merge: entries arriving within a correlation window with the same sender, direction and amount are **merged into one entry**, not duplicated. The richer value wins per field, and every contributing message is retained as provenance. |
 | F7.3-11 | Only a genuine duplicate is suppressed: two messages that agree on sender, direction, amount and timestamp with nothing new to contribute. A suppression is recorded and reversible. |
 | F7.3-12 | A message from or to a configured credit facility is classified as facility activity, never as income or spending: disbursements are liability increases, repayments are liability movements, and only interest is an expense. Facilities are configured per counterparty, since a drawdown message is indistinguishable from a salary credit by wording alone. |
-| F7.3-14 | A facility's reported limit is an observation, never a validation threshold, since the provider revises it without notice. |
+| F7.3-14 | A facility's reported limit or outstanding balance is an observation, never a validation threshold, since the provider revises it without notice. |
+| F7.3-15 | Facility reminders record nothing. A notice about a future charge is not a charge; only a confirmation that a fee was applied records the expense, and only once. Repeating an unchanged balance is not a movement. |
 | F7.3-13 | A merchant pre-approval and a payment confirmation for the same payment are one transaction. Neither message is complete alone: one carries the breakdown and the meter, the other carries the fee and the payee name. Discarding either loses information the other holds. |
 
 ### 7.4 Posting
@@ -403,7 +404,43 @@ correlation window, **amount-exactness is what keeps them from being matched as 
 internal transfer** — the rule in section 9.1a earns its strictness here.
 
 Facility messages carry no interest, terms or outstanding balance, so the cost of
-borrowing is not recoverable from the messages and is deliberately not inferred.
+borrowing is not recoverable from the wallet messages and is deliberately not
+inferred.
+#### Facility notices are not transactions
+
+A facility may also send its own messages, and those are usually **not** events at
+all. A loan sender produced eleven messages over a month and exactly one of them
+moved money:
+
+| Message | Event |
+| --- | --- |
+| "your loan of KES 68,621.25 is due on 25/09/2026" | Reminder. Nothing recorded |
+| "your loan … is due Tomorrow" | Reminder. Nothing recorded |
+| "we have debited your Timiza account with KES 0.07 to repay your overdue loan" | **Real debit**, KES 0.07 |
+| "A penalty fee of KES 6,310.00 will be applied tomorrow" | **Warning.** Nothing recorded |
+| "we have applied a rollover fee of KES 6,310.00 … balance is now KES 74,931.18" | **Real charge**, KES 6,310 |
+| "your loan is overdue … avoid being denied access" | Reminder. Nothing recorded |
+
+Three rules follow, and the second is the one that protects the ledger:
+
+1. **Reminders record nothing.** The same balance is restated in eight of the eleven
+   messages. A notice is an observation of state, not a movement, and repeating it
+   would post the same balance many times over.
+2. **A warned fee is not a charged fee.** "A penalty fee of KES 6,310.00 will be
+   applied tomorrow" is a future event. Recording it posts a charge that may never
+   land, and if the following day's "we have applied a rollover fee" is then
+   recorded as well, the fee is counted twice. Only the application notice creates
+   the expense, and only once.
+3. **Fees on a facility are the one real expense.** The applied rollover fee of
+   KES 6,310 is a genuine cost of borrowing and belongs in finance costs. The
+   arithmetic confirms it: 68,621.18 plus 6,310.00 is exactly the 74,931.18 balance
+   in the next message, which makes the fee independently verifiable.
+
+Facility notices also carry something the wallet messages cannot: **the balance and
+the due date**. That makes them a reconciliation source rather than just noise. A
+gap in wallet payments against a facility whose balance is unchanged is a missed
+repayment, and the due-date notices make it visible before the penalty lands rather
+than after.
 
 ### Fuliza in detail
 
