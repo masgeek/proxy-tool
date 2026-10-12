@@ -5,13 +5,24 @@ services:
     hostname: budget
     restart: unless-stopped
     environment:
+      PORT: "80"
       # Built from the shared DB_* values; override DATABASE_URL to override it.
-      DATABASE_URL: ${DATABASE_URL:-postgres://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/econumo?sslmode=disable}
-      BASE_URL: ${APP_URL:-https://budget.munywele.co.ke}
+      DATABASE_URL: ${DATABASE_URL:-postgres://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${ECONUMO_DB_NAME}?sslmode=disable}
+      # ECONUMO_URL is the only public-URL variable Econumo reads. It is also what
+      # builds OAuth callback URLs and the link appended to transactional email.
+      ECONUMO_URL: ${APP_URL:-https://budget.munywele.co.ke}
+      # Single-family instance: create the first user from the container CLI, then
+      # leave registration off so the instance is not self-service.
+      ECONUMO_ALLOW_REGISTRATION: ${ECONUMO_ALLOW_REGISTRATION:-false}
+      ECONUMO_EMAIL_VERIFICATION: ${ECONUMO_EMAIL_VERIFICATION:-false}
+      # Self-hosted: skip the daily release check to econumo.com.
+      ECONUMO_CHECK_UPDATES: "false"
+      # Base currency for multi-currency support; upstream default is USD.
+      ECONUMO_CURRENCY_BASE: ${ECONUMO_CURRENCY_BASE:-KES}
+      ECONUMO_LOG_LEVEL: ${ECONUMO_LOG_LEVEL:-info}
       MAILER_DSN: ${MAILER_DSN:-}
       TZ: ${TZ:-Africa/Nairobi}
       STACK_REVISION: ${STACK_REVISION:-1791743363}
-      ECONUMO_ALLOW_REGISTRATION: ${ECONUMO_ALLOW_REGISTRATION:-true}
     ports:
       - "127.0.0.1:9720:80"
     volumes:
@@ -21,6 +32,10 @@ services:
       - dokploy-network
       - internal
     healthcheck:
+      # The image is distroless, so there is no shell or curl to probe /health.
+      # This uses the binary's own subcommand; verify it with
+      #   docker compose exec budget /app/econumo health
+      # and drop this block if the subcommand is unavailable.
       test: ["CMD", "/app/econumo", "health"]
       interval: 30s
       timeout: 5s
