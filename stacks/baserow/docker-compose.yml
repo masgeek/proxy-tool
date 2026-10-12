@@ -4,29 +4,25 @@ name: "baserow"
 #
 #   baserow.munywele.co.ke -> 127.0.0.1:9730
 #
-# Runs the split images rather than the all-in-one bundle. The bundle embeds its
-# own Caddy and will try to obtain certificates for its own domain, which
-# conflicts with the host Caddy that already owns TLS for every domain here.
-# Splitting also lets the host proxy reach exactly one container.
+# One container. The all-in-one baserow/baserow image bundles the API, the web
+# frontend, the Celery workers, Redis and Caddy, which is enough for an internal
+# tool and avoids the four extra services the split deployment needs.
 #
-# Components:
-#   baserow-backend            Django REST + GraphQL API        (internal)
-#   baserow-web-frontend       Vue frontend                      host 9730
-#   baserow-celery-worker      async jobs                        (internal)
-#   baserow-celery-exportworker exports, imports, file processing (internal)
-#   baserow-celery-beat-worker scheduled jobs                    (internal)
+# PostgreSQL still comes from the shared `databases` stack, so the data is covered
+# by the existing db-backup tooling and readable with the tools already in place.
+# Redis does not: Baserow runs its own inside this container, holding only its
+# cache and locks. Nothing that matters lives there, so it needs no password, no
+# index on a shared instance, and no entry in docs/redis-instances.md.
 #
-# PostgreSQL comes from the shared `databases` stack; Redis is the shared
-# `redis-jobs` instance (database 3) because Celery is a queue, so noeviction is
-# the correct policy. User files go to the `baserow-media` volume by default;
-# Alarik in `stacks/s3` is configured below as an alternative.
+# The bundled Caddy is pinned to port 80 so the host Caddy keeps TLS for every
+# domain in this repository and there is only one automatic ACME client.
 #
 # Create the database before first start:
 #   docker exec postgres createdb --username "$POSTGRES_USER" \
 #     --owner "$POSTGRES_USER" baserow
 #
-# This stack is heavier than most here: budget roughly 2.5 GB across its five
-# containers plus the shared database.
+# Back up the `baserow-data` volume as well: it holds uploaded files and the
+# application secrets generated on first start.
 
 networks:
   internal:
@@ -37,93 +33,44 @@ networks:
     external: true
 
 volumes:
-  baserow_media:
+  baserow_data:
     driver: local
-    name: baserow-media
-
-x-backend: &backend
-  image: baserow/backend:${BASEROW_VERSION:-2.3.4}
-  restart: unless-stopped
-  environment: &backend-env
-    # Django signing key. Losing it invalidates sessions and password-reset
-    # links; changing it later is disruptive. Generate once and keep it.
-    SECRET_KEY: ${SECRET_KEY:?SECRET_KEY must be set}
-    # Separate from SECRET_KEY so key rotation does not force re-login.
-    BASEROW_JWT_SIGNING_KEY: ${BASEROW_JWT_SIGNING_KEY:-}
-    DATABASE_HOST: ${DB_HOST:-postgres}
-    DATABASE_PORT: ${DB_PORT:-5432}
-    DATABASE_NAME: ${DB_DATABASE:-baserow}
-    DATABASE_USER: ${DB_USERNAME:-baserow}
-    DATABASE_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
-    # Baserow takes the database index through the URL, not a REDIS_DB variable.
-    # Without it every instance lands on index 0, which is activepieces' slot on
-    # this shared instance. Set REDIS_URL in .env with the allocated index.
-    REDIS_URL: ${REDIS_URL:-}
-    REDIS_HOST: ${REDIS_HOST:-redis-jobs}
-    REDIS_PORT: ${REDIS_PORT:-6379}
-    REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-    # Web frontend reaches the API by service name inside the stack.
-    PUBLIC_WEB_FRONTEND_URL: http://baserow-web-frontend:3000
-    BASEROW_PUBLIC_URL: ${BASEROW_PUBLIC_URL:-https://baserow.munywele.co.ke}
-    CADDY_ADDRESS: ":80"
-    # The bundled Caddy is used as an internal plain-HTTP hop only; the host
-    # Caddy terminates TLS for this domain.
-    BASEROW_EXTRA_ALLOWED_HOSTS: "*"
-    # Uncomment to move user files to Alarik instead of the local volume.
-    # AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
-    # AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
-    # AWS_STORAGE_BUCKET_NAME: ${AWS_STORAGE_BUCKET_NAME:-baserow}
-    # AWS_S3_REGION_NAME: ${AWS_S3_REGION_NAME:-us-east-1}
-    # AWS_S3_ENDPOINT_URL: ${AWS_S3_ENDPOINT_URL:-http://s3:8080}
-    # AWS_S3_CUSTOM_DOMAIN: ${AWS_S3_CUSTOM_DOMAIN:-}
-    # Only used on the very first start, to create the first account.
-    BASEROW_INSTALL_JSON: ${BASEROW_INSTALL_JSON:-}
-    TZ: ${TZ:-Africa/Nairobi}
-    STACK_REVISION: ${STACK_REVISION:-1791743363}
-  volumes:
-    - baserow_media:/baserow/media
-  networks:
-    - dokploy-network
-    - internal
-  logging:
-    driver: json-file
-    options:
-      max-size: "10m"
-      max-file: "3"
+    name: baserow-data
 
 services:
-  baserow-backend:
-    <<: *backend
-    container_name: baserow-backend
-    hostname: baserow-backend
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 5
-      start_period: 60s
-    deploy:
-      resources:
-        limits:
-          memory: 1g
-          cpus: "2.0"
-
-  baserow-web-frontend:
-    image: baserow/web-frontend:${BASEROW_VERSION:-2.3.4}
-    container_name: baserow-web-frontend
-    hostname: baserow-web-frontend
+  baserow:
+    image: baserow/baserow:${BASEROW_VERSION:-2.3.4}
+    container_name: baserow
+    hostname: baserow
     restart: unless-stopped
     environment:
-      # How the frontend reaches the API. Inside the stack, by service name.
-      PRIVATE_BACKEND_URL: http://baserow-backend:8000
-      PUBLIC_BACKEND_URL: ${PUBLIC_BACKEND_URL:-}
+      # Django signing key. Losing it logs everyone out and invalidates
+      # outstanding password-reset links. Generate with: openssl rand -base64 48
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY must be set}
+      # Public URL; must match the Caddy route or shared links are wrong.
+      BASEROW_PUBLIC_URL: ${BASEROW_PUBLIC_URL:-https://baserow.munywele.co.ke}
+      # Plain HTTP only: the host Caddy terminates TLS.
+      CADDY_ADDRESS: ":80"
+      DATABASE_HOST: ${DB_HOST:-postgres}
+      DATABASE_PORT: ${DB_PORT:-5432}
+      DATABASE_NAME: ${DB_DATABASE:-baserow}
+      DATABASE_USER: ${DB_USERNAME:-baserow}
+      DATABASE_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
+      # Applied only on the very first start, when the database is empty.
+      BASEROW_INSTALL_JSON: ${BASEROW_INSTALL_JSON:-}
+      # Uncomment to move uploaded files to Alarik in stacks/s3 instead of the
+      # volume below. Switching does not migrate existing files.
+      # AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      # AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      # AWS_STORAGE_BUCKET_NAME: ${AWS_STORAGE_BUCKET_NAME:-baserow}
+      # AWS_S3_REGION_NAME: ${AWS_S3_REGION_NAME:-us-east-1}
+      # AWS_S3_ENDPOINT_URL: ${AWS_S3_ENDPOINT_URL:-http://s3:8080}
       TZ: ${TZ:-Africa/Nairobi}
       STACK_REVISION: ${STACK_REVISION:-1791743363}
     ports:
       - "127.0.0.1:9730:80"
-    depends_on:
-      baserow-backend:
-        condition: service_healthy
+    volumes:
+      - baserow_data:/baserow/data
     networks:
       - dokploy-network
       - internal
@@ -135,47 +82,8 @@ services:
     deploy:
       resources:
         limits:
+          memory: 2g
+          cpus: "2.0"
+        reservations:
           memory: 512m
-          cpus: "1.0"
-
-  baserow-celery-worker:
-    <<: *backend
-    container_name: baserow-celery-worker
-    hostname: baserow-celery-worker
-    command: celery-worker
-    depends_on:
-      baserow-backend:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 512m
-          cpus: "1.0"
-
-  baserow-celery-exportworker:
-    <<: *backend
-    container_name: baserow-celery-exportworker
-    hostname: baserow-celery-exportworker
-    command: celery-exportworker
-    depends_on:
-      baserow-backend:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 512m
-          cpus: "1.0"
-
-  baserow-celery-beat-worker:
-    <<: *backend
-    container_name: baserow-celery-beat-worker
-    hostname: baserow-celery-beat-worker
-    command: celery-beat
-    depends_on:
-      baserow-backend:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 512m
-          cpus: "1.0"
+          cpus: "0.1"

@@ -22,30 +22,24 @@ repository's Markdown.
    approve, reject and edit actions. Baserow could *be* that queue instead of a
    bespoke interface. Only worth doing if that work actually starts.
 
-## Components
+## One container
 
-Five containers, which is more than most stacks here:
+This uses the all-in-one `baserow/baserow` image, which bundles the API, the web
+frontend, the Celery workers, Redis and Caddy. The split `baserow/backend` and
+`baserow/web-frontend` deployment is available upstream and was used first, but it
+means five containers, a health condition and a Redis URL for an internal tool that
+is used occasionally.
 
-| Container | Role |
-| --- | --- |
-| `baserow-backend` | Django REST and GraphQL API |
-| `baserow-web-frontend` | Vue frontend, the only published port |
-| `baserow-celery-worker` | async jobs |
-| `baserow-celery-exportworker` | imports, exports, file processing |
-| `baserow-celery-beat-worker` | scheduled jobs |
+Two things stay external, and both for a reason:
 
-Budget roughly 2.5 GB across all five, plus the shared database. This is the
-heaviest stack in the repository — if memory is tight, run the SQLite-free
-PostgreSQL configuration and drop the beat worker's limits to 256m first.
+- **PostgreSQL**, from the shared `databases` stack. Records then sit somewhere
+  `pg_dump` and the existing `db-backup` tooling already cover.
+- **Nothing else.** Baserow runs its own Redis inside the container. It holds only
+  the application's cache and locks, nothing durable, so it needs no password, no
+  index on a shared instance and no entry in `docs/redis-instances.md`.
 
-## Why the split images
-
-`baserow/baserow` bundles its own Caddy and will attempt to obtain certificates
-for its own domain. The host Caddy already owns TLS for every domain in this
-repository, so a second automatic ACME client is a conflict waiting to happen.
-The split `baserow/backend` plus `baserow/web-frontend` images let the host proxy
-reach exactly one container, and the backend's internal Caddy is a plain-HTTP hop
-only.
+The bundled Caddy is pinned to port 80 with `CADDY_ADDRESS`, so the host Caddy keeps
+TLS for every domain here and there is only one automatic ACME client.
 
 ## Setup
 
@@ -59,22 +53,7 @@ only.
    docker exec postgres createdb --username "$POSTGRES_USER" --owner "$POSTGRES_USER" baserow
    ```
 
-3. Deploy the cache stack first, then point `REDIS_URL` at its `redis-jobs`
-   instance on database **3**. Baserow takes the database index from the URL
-   rather than a separate variable, so this line is the one that must be right:
-
-   ```
-   # no password on the instance
-   REDIS_URL=redis://redis-jobs:6379/3
-   # with a password
-   REDIS_URL=redis://:THE_PASSWORD@redis-jobs:6379/3
-   ```
-
-   `REDIS_PASSWORD` must match `REDIS_JOBS_PASSWORD` in `stacks/cache/.env`
-   exactly, including being empty. That instance is a Celery queue, so it runs
-   `noeviction` and must never be flushed. See `docs/redis-instances.md`.
-
-4. Optionally create the first account headlessly, by setting `BASEROW_INSTALL_JSON`
+3. Optionally create the first account headlessly, by setting `BASEROW_INSTALL_JSON`
    to a single-line JSON object before the first start:
 
    ```json
@@ -85,14 +64,14 @@ only.
    afterwards. Leaving it empty is fine too — the first visit walks through
    creating an account.
 
-5. Start and validate:
+4. Start and validate:
 
    ```bash
    docker compose --env-file stacks/baserow/.env -f stacks/baserow/docker-compose.yml config --quiet
    docker compose --env-file stacks/baserow/.env -f stacks/baserow/docker-compose.yml up -d
    ```
 
-6. Open `https://baserow.munywele.co.ke`.
+5. Open `https://baserow.munywele.co.ke`.
 
 ## Loading the inventory
 
@@ -107,7 +86,7 @@ deployment tooling reads. Baserow is the working view; the docs stay authoritati
 
 ## User files
 
-Uploads land on the `baserow-media` volume by default. Alarik in `stacks/s3` is
+Uploads land on the `baserow-data` volume by default. Alarik in `stacks/s3` is
 configured but commented out in `docker-compose.yml`: uncomment the `AWS_*` block
 and set the bucket, region and endpoint. Alarik is path-style and its region must
 match `S3_REGION` in `stacks/s3`, or signatures are rejected.
@@ -127,7 +106,9 @@ side experiment.
 
 - Database: the `baserow` database on the shared `postgres` service, covered by the
   repository's `db-backup` tooling
-- Attachments: the `baserow-media` volume, or the Alarik bucket if that is enabled
+- Attachments and secrets: the `baserow-data` volume, or the Alarik bucket for
+  attachments if that is enabled
 
-The application-generated secrets in `/baserow/media` include the JWT signing key.
-Back the volume up before a version upgrade, not only after.
+`baserow-data` holds uploads **and** the signing keys Baserow generated inside the
+container. Back it up before a version upgrade, not only after — a restore without
+those keys leaves the database readable but every session token invalid.

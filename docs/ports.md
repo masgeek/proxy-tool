@@ -67,7 +67,7 @@ standard ports for compatibility.
 | automation | n8n | 9700 | 5678 | `stacks/automation/Caddyfile` |
 | invoice | invoice | 9705 | 80 | `stacks/invoice/Caddyfile` |
 | budget | budget | 9720 | 8080 | `stacks/budget/Caddyfile` |
-| baserow | web-frontend | 9730 | 80 | `stacks/baserow/Caddyfile` |
+| baserow | baserow | 9730 | 80 | `stacks/baserow/Caddyfile` |
 | activepieces | app | 9710 | 80 | `stacks/activepieces/Caddyfile` |
 | activepieces | worker | — | — | — |
 
