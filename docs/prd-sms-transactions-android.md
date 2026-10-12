@@ -8,11 +8,28 @@
 
 ## 1. Summary
 
-An Android application that turns bank and mobile-money SMS alerts into
-bookkeeping entries. The user selects which senders to trust, the app parses each
-message into a debit or credit, and posts it to the REST API of whichever finance
-backend is running, which is Firefly III. The goal is that daily bookkeeping is a side effect of normal phone
-use, not a nightly chore.
+An Android application that captures bank and mobile-money SMS, forwards it to an
+**intermediate ingestion service**, and posts the result to whichever finance
+backend is running, which is Firefly III.
+
+The split is deliberate and it is the central design decision:
+
+- **The phone captures and forwards.** It reads the message, applies the sender
+  allowlist, discards anything untracked, collapses byte-identical duplicates,
+  queues while offline, and shows a provisional preview for immediate feedback.
+- **The service parses, classifies and posts.** Every parsing and correlation rule
+  lives there, against a corpus it also holds.
+
+The reason is correlation. Merging a two-message payment, pairing a transfer across
+two providers, recognising a credit as a loan rather than income, or suppressing a
+duplicate all require more than one message in view. A phone receives one SMS in
+isolation and cannot decide any of them. Server-side parsing also means one parser
+version for the whole household, fixes that need no app release, and raw text that
+survives long enough for a corrected parser to be re-run over history.
+
+The goal is that daily bookkeeping is a side effect of normal phone use, not a
+nightly chore, and that changing the bookkeeping backend is a server-side change
+rather than an app release.
 
 ## 2. Problem
 
@@ -30,6 +47,10 @@ every movement, so the manual burden scales with activity.
 - Make every automatic decision reviewable and reversible.
 - Keep the app coupled to exactly one API, so a new bookkeeping backend never
   requires a new Android release.
+- Keep parsing and classification on the service, so a parser fix benefits every
+  device at once and can be re-run over history.
+- Discard untracked senders on the device, so message content never leaves the
+  phone unless it was explicitly allowed.
 
 ## 4. Non-goals
 
@@ -39,6 +60,8 @@ every movement, so the manual burden scales with activity.
   transaction needs.
 - Out of scope for v1: SMS sending, USSD, card-present transactions, and syncing
   the sender allowlist between devices.
+- The app is not an accounting authority. Its parse is a preview for the person's
+  benefit, never the basis for what is written to the ledger.
 
 ## 5. Users
 
@@ -85,25 +108,21 @@ Requirement IDs restart per subsection, so cite them as `F7.4-3` for example.
 | F7.2-7 | A blocklist is checked before the allowlist, so a sender on both lists is always blocked. |
 | F7.2-8 | The allowlist is device-local in v1, with JSON export and import as the backup and transfer mechanism. |
 
-### 7.3 Parsing
+### 7.3 On-device processing
+
+The device does the minimum that cannot be done anywhere else, and no more. Every
+value it extracts is provisional.
 
 | ID | Requirement |
 | --- | --- |
-| F7.3-1 | Extract amount, direction, timestamp, reference, balance-after and counterparty where present. |
-| F7.3-2 | Parsers return a confidence level. Anything below the configured threshold goes to review instead of posting. |
-| F7.3-3 | Store the raw message beside the parsed result while pending, and purge raw bodies after the retention period. |
-| F7.3-4 | Parsing is entirely on device; only extracted fields are sent to the backend. |
-| F7.3-5 | Timestamps are stored in UTC and rendered in the household time zone, so a timezone change never rewrites history. |
-| F7.3-6 | Locale is not trusted for number formatting. The sender's currency and a documented thousands-separator rule drive parsing, and anything ambiguous goes to review. |
-| F7.3-7 | Detect reversal messages as their own type, carrying a reference back to the original transaction. |
-| F7.3-8 | Detect internal-transfer markers: explicit wording, a debit and credit from the same sender inside a matching window, or a destination in the sender's own-account list. |
-| F7.3-9 | A reversal or a transfer leg that cannot be matched to a stored entry is parked for review, never posted as a new transaction. |
-| F7.3-10 | Correlation and merge: entries arriving within a correlation window with the same sender, direction and amount are **merged into one entry**, not duplicated. The richer value wins per field, and every contributing message is retained as provenance. |
-| F7.3-11 | Only a genuine duplicate is suppressed: two messages that agree on sender, direction, amount and timestamp with nothing new to contribute. A suppression is recorded and reversible. |
-| F7.3-12 | A message from or to a configured credit facility is classified as facility activity, never as income or spending: disbursements are liability increases, repayments are liability movements, and only interest is an expense. Facilities are configured per counterparty, since a drawdown message is indistinguishable from a salary credit by wording alone. |
-| F7.3-14 | A facility's reported limit or outstanding balance is an observation, never a validation threshold, since the provider revises it without notice. |
-| F7.3-15 | Facility reminders record nothing. A notice about a future charge is not a charge; only a confirmation that a fee was applied records the expense, and only once. Repeating an unchanged balance is not a movement. |
-| F7.3-13 | A merchant pre-approval and a payment confirmation for the same payment are one transaction. Neither message is complete alone: one carries the breakdown and the meter, the other carries the fee and the payee name. Discarding either loses information the other holds. |
+| F7.3-1 | Apply the sender allowlist before anything else. A message from an untracked sender is discarded on the device and never transmitted. |
+| F7.3-2 | Collapse messages that are byte-identical and arrive twice through different capture paths. |
+| F7.3-3 | Assign the message an identity of sender, receipt time and a content hash, so the service can deduplicate independently. |
+| F7.3-4 | Transmit the raw content to the ingestion service, over TLS, signed per F7.6-6. Without the raw text a corrected parser cannot be re-run over history. |
+| F7.3-5 | Show a provisional parse for immediate feedback, clearly marked as not yet confirmed. It is never the basis for a ledger entry. |
+| F7.3-6 | Hold the message in a local queue until the service acknowledges it. |
+| F7.3-7 | Never classify. The device does not decide direction, category, account, facility status or pairing. |
+| F7.3-8 | Keep a short local copy of the raw message for offline review, purged once the service has confirmed receipt or the retention period passes. |
 
 ### 7.4 Posting
 
@@ -167,7 +186,26 @@ Requirement IDs restart per subsection, so cite them as `F7.4-3` for example.
 | F7.7-8 | The service dashboard shows each facility's outstanding balance, due date, days overdue and any penalty applied, and raises a missed repayment when the balance is unchanged across a due date. |
 | F7.7-7 | The service dashboard shows queue depth by state, oldest awaiting review, dead-letter count and posting error rate, without exposing provider credentials. |
 
-## 8. Parsing specification
+### 7.8 Server-side parsing and classification
+
+The authoritative work, performed by the ingestion service against the corpus it
+holds. See section 8 for the specification.
+
+| ID | Requirement |
+| --- | --- |
+| F7.8-1 | Parse every transmitted message into the canonical model. The service owns the parser set and its version. |
+| F7.8-2 | Classify: income, expense, internal transfer, facility activity or non-financial, using the rules in section 9. |
+| F7.8-3 | Correlate: merge complementary messages for one payment, suppress true duplicates, pair transfers across channels, and enforce the settling window. |
+| F7.8-4 | Enforce auto-post ceilings, reviewing an entry above a limit rather than trusting the client's assessment of it. |
+| F7.8-5 | Record provenance for every entry, listing the messages that contributed to it. |
+| F7.8-6 | Re-run parsing over retained raw messages when a parser changes, behind the opt-in action in section 10.9, so a fix applies retroactively without an app release. |
+| F7.8-7 | Emit a parser version with every entry, so a ledger assembled by different parser versions remains auditable. |
+
+## 8. Parsing specification (service-side)
+
+Parsers live in the ingestion service, not the app. That is what makes a parser
+fix a deployment rather than a release, and what lets the corpus in section 8.3 be
+replayed as a test against them.
 
 Parsers are named rules matching a sender ID pattern, stored as data so a new
 sender is a configuration change.
@@ -259,6 +297,44 @@ cross-sender transfer matching has failed to pair it with an outgoing debit.
 A single global date regex would misread all four. The format is declared per
 sender, and an unparseable date goes to review rather than being guessed.
 
+### 8.2 Money channels
+
+Transactions arrive through three kinds of channel, each with its own message
+format, fee behaviour and identifiers. The parser is configured per channel and
+per sender within a channel, because two banks never phrase a credit the same way.
+
+| Channel | Senders | Typical traffic | Identifiers available |
+| --- | --- | --- | --- |
+| Mobile money | M-Pesa (sampled), Airtel Money (not yet sampled) | PayBill and till payments, person-to-person transfers, airtime and data purchases, withdrawals | transaction code, confirmation code, agent or till number, masked MSISDN |
+| Bank | Stanbic only so far; the salary account | salary and institutional RTGS credits, card payments, standing transfers, account charges | masked account suffix, sometimes a reference, usually none |
+| Utility and merchant confirmations | provider-specific | meter or token numbers, consumption quantities, charge breakdowns | meter, token, units |
+
+Consequences the design has to respect:
+
+- **Transfer detection becomes a graph problem.** Money can move between any pair:
+  M-Pesa to Airtel, Airtel to bank, bank to bank, wallet to wallet. A single pair
+  comparison is not enough; the correlator needs to consider every channel an entry
+  could pair with, which is why sender rules run only after matching.
+- **Fee behaviour differs per channel.** A paybill through Airtel may charge a
+  different structure from M-Pesa, and a bank may present a charge only as a
+  balance delta with no message at all. The `charges[]` breakdown must be treated as
+  optional per channel rather than assumed present.
+- **Mobile wallets hold value.** A wallet-to-wallet transfer is an internal movement
+  only if the counterparty is the user's own wallet; a transfer to another person is
+  an expense, and the message wording distinguishes them. Getting this wrong is the
+  most likely cause of a materially wrong ledger, so ambiguous cases go to review.
+- **Non-financial purchases need a classification too.** Airtime, data bundles and
+  wallet fees are spending, and without a category they default to a generic one.
+  Per-sender classification rules cover them the same way salary is covered.
+- **Airtel Money's format has not been sampled yet.** Its parsers, its fee fields
+  and its transfer wording are unknown, so nothing about that channel should be
+  inferred from the M-Pesa examples.
+- **One bank today, so the bank surface is small.** Stanbic is the only institution
+  sampled, which keeps bank parser work to a single format. Adding an institution
+  later means a new sender entry and a new parser, never a change to existing ones.
+  It also means the masked-account mapping has exactly one destination for now, and
+  a new bank must not silently inherit it.
+
 ### 8.3 Corpus scope
 
 The corpus is analysed over **calendar year 2026**, the window the design is built
@@ -302,44 +378,6 @@ Everything before 2026 is out of scope for design and for backfill. The parsers
 still accept those formats, because a live message does not care which year it
 arrived in, and the pre-2026 data remains in the repository as a test fixture for
 the reversal and prepaid paths that2026 cannot supply.
-
-### 8.2 Money channels
-
-Transactions arrive through three kinds of channel, each with its own message
-format, fee behaviour and identifiers. The parser is configured per channel and
-per sender within a channel, because two banks never phrase a credit the same way.
-
-| Channel | Senders | Typical traffic | Identifiers available |
-| --- | --- | --- | --- |
-| Mobile money | M-Pesa (sampled), Airtel Money (not yet sampled) | PayBill and till payments, person-to-person transfers, airtime and data purchases, withdrawals | transaction code, confirmation code, agent or till number, masked MSISDN |
-| Bank | Stanbic only so far; the salary account | salary and institutional RTGS credits, card payments, standing transfers, account charges | masked account suffix, sometimes a reference, usually none |
-| Utility and merchant confirmations | provider-specific | meter or token numbers, consumption quantities, charge breakdowns | meter, token, units |
-
-Consequences the design has to respect:
-
-- **Transfer detection becomes a graph problem.** Money can move between any pair:
-  M-Pesa to Airtel, Airtel to bank, bank to bank, wallet to wallet. A single pair
-  comparison is not enough; the correlator needs to consider every channel an entry
-  could pair with, which is why sender rules run only after matching.
-- **Fee behaviour differs per channel.** A paybill through Airtel may charge a
-  different structure from M-Pesa, and a bank may present a charge only as a
-  balance delta with no message at all. The `charges[]` breakdown must be treated as
-  optional per channel rather than assumed present.
-- **Mobile wallets hold value.** A wallet-to-wallet transfer is an internal movement
-  only if the counterparty is the user's own wallet; a transfer to another person is
-  an expense, and the message wording distinguishes them. Getting this wrong is the
-  most likely cause of a materially wrong ledger, so ambiguous cases go to review.
-- **Non-financial purchases need a classification too.** Airtime, data bundles and
-  wallet fees are spending, and without a category they default to a generic one.
-  Per-sender classification rules cover them the same way salary is covered.
-- **Airtel Money's format has not been sampled yet.** Its parsers, its fee fields
-  and its transfer wording are unknown, so nothing about that channel should be
-  inferred from the M-Pesa examples.
-- **One bank today, so the bank surface is small.** Stanbic is the only institution
-  sampled, which keeps bank parser work to a single format. Adding an institution
-  later means a new sender entry and a new parser, never a change to existing ones.
-  It also means the masked-account mapping has exactly one destination for now, and
-  a new bank must not silently inherit it.
 
 ## 9. Backend mapping
 
@@ -419,7 +457,33 @@ Detection rules, applied in order:
    misreports spending.
 
 
-### 9.1b Credit facilities are not income and not spending
+### 9.2 Matching rules for cross-sender transfers
+
+A movement between own accounts may be announced by two different senders: an
+M-Pesa withdrawal and a bank credit. The pairing rules, strongest first:
+
+1. **Explicit beneficiary match.** The outgoing message names the destination bank
+   or its masked digits, and those digits match the mapped account of the incoming
+   message. This is decisive and needs no window.
+2. **Exact amount and currency, inside a window.** Amount equality must be exact,
+   not approximate. The window is longer for a cross-sender pair than for a single
+   sender — 60 minutes rather than 15 — because mobile money to bank transfers can
+   settle on a different cycle than the notifications that describe them.
+3. **Direction and account currency must agree.** A debit out of one own account and
+   a credit into another is the only shape that qualifies.
+
+Ambiguity is resolved towards review, not towards a decision. If two candidates
+match equally well, or a credit happens to equal an unrelated debit in the window,
+the entry goes to review with both candidates attached. The failure asymmetry
+decides this: a salary wrongly recorded as a transfer understates income and is
+hard to spot later, whereas a real transfer sent to review costs one tap.
+
+The same rules run **before** any sender-level classification, so a standing rule
+such as "credits from this account are salary" cannot misclassify a transfer into
+that account. This matters even when the behaviour is rare, because the standing
+rule is what makes the automation trustworthy in the common case.
+
+### 9.3 Credit facilities are not income and not spending
 
 A facility is anything that lends to the household, or that the household repays.
 Two are present in the corpus, and they behave differently enough to be worth
@@ -447,7 +511,7 @@ The TIMIZA pattern in the corpus is a revolving loan: a repayment of roughly 63,
 to 66,000 followed two minutes later by a re-disbursement of 59,000 to 60,100, every
 month for nineteen months. Because those two legs sit inside any plausible
 correlation window, **amount-exactness is what keeps them from being matched as an
-internal transfer** — the rule in section 9.1a earns its strictness here.
+internal transfer** — the rule in section 9.2 earns its strictness here.
 
 Facility messages carry no interest, terms or outstanding balance, so the cost of
 borrowing is not recoverable from the wallet messages and is deliberately not
@@ -515,7 +579,7 @@ gap in wallet payments against a facility whose balance is unchanged is a missed
 repayment, and the due-date notices make it visible before the penalty lands rather
 than after.
 
-### Fuliza in detail
+#### Fuliza in detail
 
 M-Pesa Fuliza is an overdraft. Messages about it must never become expenses, and
 the corpus shows why: **1,009 of 3,599 M-Pesa messages mention Fuliza**, and almost
@@ -555,33 +619,7 @@ facility, never as a validation threshold. A raised or lowered limit produces no
 transaction, and an outstanding balance above a previously seen limit is a signal
 worth surfacing rather than a reason to reject a message.
 
-### 9.1a Matching rules for cross-sender transfers
-
-A movement between own accounts may be announced by two different senders: an
-M-Pesa withdrawal and a bank credit. The pairing rules, strongest first:
-
-1. **Explicit beneficiary match.** The outgoing message names the destination bank
-   or its masked digits, and those digits match the mapped account of the incoming
-   message. This is decisive and needs no window.
-2. **Exact amount and currency, inside a window.** Amount equality must be exact,
-   not approximate. The window is longer for a cross-sender pair than for a single
-   sender — 60 minutes rather than 15 — because mobile money to bank transfers can
-   settle on a different cycle than the notifications that describe them.
-3. **Direction and account currency must agree.** A debit out of one own account and
-   a credit into another is the only shape that qualifies.
-
-Ambiguity is resolved towards review, not towards a decision. If two candidates
-match equally well, or a credit happens to equal an unrelated debit in the window,
-the entry goes to review with both candidates attached. The failure asymmetry
-decides this: a salary wrongly recorded as a transfer understates income and is
-hard to spot later, whereas a real transfer sent to review costs one tap.
-
-The same rules run **before** any sender-level classification, so a standing rule
-such as "credits from this account are salary" cannot misclassify a transfer into
-that account. This matters even when the behaviour is rare, because the standing
-rule is what makes the automation trustworthy in the common case.
-
-### 9.2 Reversals
+### 9.4 Reversals
 
 A reversal references the original transaction rather than describing a new one.
 The service voids the matched entry, or, if the provider has no void, posts the
@@ -589,7 +627,7 @@ compensating entry and links both with a `reverses` reference. A reversal with n
 match is parked for review, because posting it as a fresh transaction would
 invent an amount that never happened.
 
-### 9.3 Cross-sender suppression
+### 9.5 Duplicate handling: merge versus suppress
 
 The same movement is often announced twice, by the mobile money provider and by
 the bank. Entries are fingerprinted on amount, currency, direction and a short
@@ -598,7 +636,7 @@ first, with both retained so the suppression is auditable and reversible. The
 window is a configuration value, because a wider window suppresses more and risks
 discarding two genuine identical payments in quick succession.
 
-## 9A. Why auto-post needs limits
+### 9.6 Why auto-post needs limits
 
 SMS sender IDs are not authenticated. Anyone able to deliver a message to the
 phone can choose the sender string, so a perfectly formatted fake transaction
@@ -619,21 +657,6 @@ Controls, applied in order:
 
 These limits are the reason auto-posting is safe to leave on. Without them the
 correct default would be confirm-everything, which defeats the purpose.
-
-## 9B. Authentication of ingestion requests
-
-The endpoint accepts writes to financial records from the public internet, so a
-bearer token alone is thin: a leaked token would let an attacker inject plausible
-transactions. Each request therefore carries, in addition to the token:
-
-- a timestamp, rejected outside a short window (default 5 minutes);
-- a single-use nonce, remembered briefly and rejected on replay;
-- an HMAC signature over timestamp, nonce and body, keyed per device.
-
-Credentials are stored server-side in a secret store, rotated per device, and the
-Caddy route adds rate limiting so the service is not the first line of defence
-against abuse.
-
 
 ## 10. Ingestion API (intermediate layer)
 
@@ -657,8 +680,10 @@ modem — without changing the mobile client.
 | --- | --- | --- |
 | `GET` | `/v1/health` | Liveness plus the active adapter name and version |
 | `GET` | `/v1/provider` | Active provider, its accounts and capabilities |
-| `POST` | `/v1/entries` | Ingest one canonical transaction; stored first, idempotent |
-| `POST` | `/v1/entries/batch` | Ingest up to 100, for draining a backlog |
+| `POST` | `/v1/messages` | Ingest one raw message from the app; the service parses it |
+| `POST` | `/v1/messages/batch` | Ingest up to 100 raw messages, for draining the device queue |
+| `GET` | `/v1/messages/{id}` | Raw message and its parse result, with the parser version used |
+| `POST` | `/v1/entries/{id}` | Create an entry directly, for the backfill path and manual use |
 | `GET` | `/v1/entries` | Review queue; filter by state, sender, date, currency |
 | `GET` | `/v1/entries/{id}` | One entry with its provider result and edit history |
 | `POST` | `/v1/entries/{id}/approve` | Post a reviewed entry |
@@ -676,7 +701,32 @@ modem — without changing the mobile client.
 All responses are JSON. Errors carry a stable machine code, a human message, and
 whether the caller should retry.
 
-### 10.3 Canonical transaction
+### 10.3 What the app sends, and what the service produces
+
+The app transmits a **raw message envelope**. It contains no accounting judgement:
+the provisional parse is included only so the service can compare it against its
+own result and flag disagreement.
+
+```json
+{
+  "messageId": "sha256:9f2c…",
+  "senderId": "MPESA",
+  "receivedAt": "2026-10-12T12:15:07Z",
+  "rawContent": "Q3SBBLF9EM2. Ksh 2,138 paid to PHARMAPLUS PHARMACEUTICALS 38 account KAHAWA on 12/10/2026 12:15. Fee: Ksh 20. Bal:Ksh 5358.76. MPESA ID:UJCS0B9GNM",
+  "devicePreview": {
+    "amount": "2138.00",
+    "direction": "debit",
+    "observedAt": "2026-10-12T12:15:11Z"
+  }
+}
+```
+
+`rawContent` is what makes a corrected parser re-runnable over history, which is
+the main reason parsing moved to the service. `messageId` is the device's
+deduplication key; the entry's own idempotency key is derived after parsing.
+
+The service then produces the **canonical transaction**, which is the only shape
+the provider adapter ever sees:
 
 ```json
 {
@@ -783,6 +833,7 @@ and its role are provisioned like any other application database.
 
 | Table | Purpose | Notable columns |
 | --- | --- | --- |
+| `messages` | raw text and its parse result, retained so parsing can be re-run | `message_id` unique, `sender_id`, `received_at`, `raw_content`, `parse_version`, `entry_id` nullable, `purge_after` |
 | `entries` | one canonical transaction per row | `idempotency_key` unique, `direction`, `amount`, `currency`, `classification`, `transfer_group_id`, `leg`, `account_hint`, `resolved_account_id`, `confidence`, `state`, `attempts`, `last_error`, `provider_id`, `occurred_at`, `received_at` |
 | `senders` | allowlist mirrored server-side | `sender_id` unique, `label`, `directions`, `own_accounts`, `auto_post_max_amount`, `auto_post_max_per_day`, `always_confirm`, `tag_prefix` |
 | `review` | every human decision, kept separately | `entry_id`, `action`, `actor`, `reason`, `at` |
@@ -853,7 +904,21 @@ visible as a correction rather than silently replaced.
   idempotency reference before retrying, so an ambiguous timeout does not double-post.
 - Per-entry retry budget, then dead-letter to `needs_review` with the recorded error.
 
-### 10.7 Operational requirements
+### 10.7 Request authentication
+
+The endpoint accepts writes to financial records from the public internet, so a
+bearer token alone is thin: a leaked token would let an attacker inject plausible
+transactions. Each request therefore carries, in addition to the token:
+
+- a timestamp, rejected outside a short window (default 5 minutes);
+- a single-use nonce, remembered briefly and rejected on replay;
+- an HMAC signature over timestamp, nonce and body, keyed per device.
+
+Credentials are stored server-side in a secret store, rotated per device, and the
+Caddy route adds rate limiting so the service is not the first line of defence
+against abuse.
+
+### 10.8 Operational requirements
 
 - API versioned in the path (`/v1`); the app pins a version and the service
   supports the previous one for at least one app release cycle.
@@ -864,7 +929,7 @@ visible as a correction rather than silently replaced.
   repository.
 
 
-### 10.8 Dashboard
+### 10.9 Dashboard
 
 The service ships its own review dashboard rather than requiring a separate
 tooling stack. It reads the same `entries` table the API writes, so there is no
@@ -931,7 +996,7 @@ a person.
 - `/v1/health` stays unauthenticated for monitoring, while every UI route and every
   review action requires a session.
 
-### 10.9 Backfill as an opt-in action
+### 10.10 Backfill as an opt-in action
 
 Historical SMS exports are used for design and testing, not as the normal entry
 path. The service runs from its first message; nothing older is ingested unless
@@ -970,45 +1035,52 @@ without someone deciding to assemble it.
 
 ### The app
 
-Deliberately thin. It captures, it parses, it queues, and it reports problems.
-No dashboard lives here: reviewing on the phone is a fallback for when the service
-dashboard is not to hand, not the primary surface.
+Deliberately thin. It captures, filters, forwards and reports problems. It holds no
+accounting judgement and no review responsibility: reviewing happens in the service
+dashboard, which is the primary surface.
 
 1. **Pair** — ingestion API URL and token, with a live connection test.
 2. **Grant access** — notification access, with the SMS permission fallback.
-3. **Allowlist** — choose senders from those observed, set direction, account,
-   currency and auto-post ceilings.
-4. **Quiet operation** — no notification unless something needs attention.
-5. **Inbox** — the entries this device captured that are not yet posted.
+3. **Allowlist** — choose senders from those observed, set direction, currency and
+   auto-post ceilings. Mirrored to the service so both agree.
+4. **Quiet operation** — no notification unless something needs attention. An
+   untracked sender is discarded silently, since most SMS is not bookkeeping.
+5. **Provisional preview** — a best-effort amount and direction the moment the
+   message arrives, visibly marked as unconfirmed, so the phone is useful offline.
+6. **Queue** — unsent messages, visible in the app and retried automatically.
 
 ### The dashboard
 
 The primary review surface, and the one that has to be fast: mobile-first, one
 hand, swipe or keyboard to approve, filters that narrow a backlog in a couple of
 taps. Approve, reject, edit, retry, void, and the kill switch, with the health
-indicators in section 10.8 alongside the queue rather than on a separate page.
+indicators in section 10.9 alongside the queue rather than on a separate page.
 
 Deliberate absence: no charts, no dashboards-within-dashboards, no configuration
 beyond what a review action needs. The success state is an empty queue.
 
 ## 12. Data model
 
-The ingestion service's schema is in section 10.5. The app keeps its own local
-copy, device-local only:
+The ingestion service's schema is in section 10.5. It holds the raw messages and
+the entries derived from them, and it is the system of record.
 
-| Entity | Key fields |
+The app keeps a deliberately smaller local store, because it is a delivery buffer
+rather than an authority:
+
+| Entity | Purpose |
 | --- | --- |
-| `Sender` | senderId, label, enabled directions, accountId, currency, tagPrefix |
-| `Transaction` | localId, senderId, reference, amountMinor, currency, direction, classification, transferGroupId, leg, occurredAtUtc, state, confidence, attempts, lastError, backendId |
-| `RawMessage` | transactionId, body, receivedAt, purgeAfter |
-| `Endpoint` | ingestionUrl, tokenRef |
+| `Sender` | The allowlist, mirrored from the service so filtering works offline |
+| `CapturedMessage` | Raw content, sender, receipt time and hash — the queue item |
+| `SendState` | Whether the service has acknowledged the message, and its provisional preview |
 
-The two are not redundant. The app's queue is a delivery buffer; the service's
-database is the system of record. Deleting the app clears the buffer but not the
-history.
+There is no parsed transaction on the device, because there is no authoritative
+parse. `SendState` holds the provisional preview purely so the person sees
+something meaningful the moment the message arrives; it is replaced by the service
+result as soon as one exists, and nothing is ever posted from it.
 
-Amounts are stored as minor units in an integer column. Floating point is never
-used for money.
+Deleting the app clears this buffer and nothing else. The service retains both the
+raw message and the entry, which is what makes an uninstall or a phone change
+harmless.
 
 ## 13. Security and privacy
 
@@ -1042,7 +1114,9 @@ used for money.
 
 | Layer | Approach |
 | --- | --- |
-| Parsers | Unit tests over a committed corpus of real messages, expected outputs inline, one test per known sender format |
+| Parsers | Golden-file tests over the committed corpus in section 8.3, expected output inline per message. Run in CI, so a parser change is checked against real messages rather than samples |
+| Parser version | Every parse records the version that produced it, and re-running a corpus against a new version shows the diff before it is enabled |
+| Device capture | Instrumented tests for allowlist filtering, duplicate collapsing and offline queueing, with no parsing assertions |
 | Mapping | Unit tests asserting the direction and sign per backend |
 | Ingestion API | Contract tests against the service, including idempotent replay, a `4xx` and a timeout path |
 | Provider adapters | One conformance suite every adapter must pass, so adding a backend cannot regress the ones already shipped |
@@ -1070,24 +1144,19 @@ sender format that produces a needs_review entry.
 
 ## 17. Delivery plan
 
-**Phase 1 — Capture and parse.** Notification listener, fallback receiver,
-allowlist with own-account and auto-post limit settings, M-Pesa and bank parsers
-including transfer and reversal detection, local inbox, dry-run mode, no posting.
-Auto-post ceilings and the transfer model are designed and specified here even
-though nothing is posted yet, because both change the parser output shape.
+**Phase 1 — Capture, allowlist and the service's parser.** The ingestion service
+with its store, the parser set proven against the corpus in section 8.3, and the
+app capturing and forwarding. Everything lands in review; nothing is posted yet.
+This phase proves the parsers on real data before anything can be wrong in a real
+ledger.
 
-**Phase 2 — Ingestion API, store, dashboard and Firefly adapter.** The
-intermediate service with the canonical model, its own `transactions` database, the
-review dashboard, the Firefly III adapter including fee splits, idempotency, retry
-and dead-lettering. The app pairs with the ingestion API and posts canonical
-transactions. Everything lands in review before anything is posted.
+**Phase 2 — Posting, dashboard and the Firefly adapter.** The review dashboard, the
+Firefly adapter including fee splits and transfer legs, idempotency, the settling
+window, and the retry budget. Approval starts producing real entries.
 
-**Phase 3 — Additional adapters.** Only if another backend is ever wanted. Each is
-a new adapter in the service, with no app release.
-
-**Phase 4 — Hardening.** Statement reconciliation, statistics, parser expansion
-driven by the review inbox, APK update check, per-sender account mapping managed
-through the ingestion API, and a relay path for capture when the phone is off.
+**Phase 3 — Hardening.** Statistics, parser expansion driven by the review inbox,
+facility-state monitoring, an APK update check, and a relay path for capture when
+the phone is off.
 
 ## 18. Acceptance criteria for Phase 1 + 2
 
@@ -1095,8 +1164,12 @@ through the ingestion API, and a relay path for capture when the phone is off.
   the configured Firefly account exists within 60 seconds.
 - Given an allowlisted debit, when the SMS arrives, then a withdrawal entry exists
   with the parsed amount and reference.
-- Given a sender not on the allowlist, when an SMS arrives, then nothing is stored
-  and nothing is posted.
+- Given a sender not on the allowlist, when an SMS arrives, then the message is
+  discarded on the device, nothing is transmitted, and nothing is stored.
+- Given an allowlisted message, when the service parses it, then the entry records
+  the parser version that produced it.
+- Given a parser is corrected, when the retained messages are re-parsed through the
+  opt-in action, then entries change without any app release.
 - Given the same SMS delivered twice, then exactly one entry exists.
 - Given no connectivity, when the SMS arrives, then the entry is queued and posted
   on reconnect, exactly once.
@@ -1168,6 +1241,9 @@ longer carries them as open items.
 | Does the service start from history | No, from its first message; backfill is opt-in and dry-run first | An import on first run is indistinguishable from a bug, while a deliberate action with a report a human reads is auditable, and it keeps the corpus usable for testing without risking a corrupted history |
 | Where transactions live before posting | In the ingestion service's own database, as the system of record | Storing first means nothing is lost to a crash, an outage or a lost phone, and the entry can be corrected before it becomes a financial record; review-before-posting then becomes a policy per sender rather than a separate mode |
 | Is the app's queue the record | No | The app's Room queue is a delivery buffer; only the service database survives reinstall and phone change |
+| Where parsing happens | In the ingestion service, not the app | Correlation needs every message in view, a phone sees one; server-side parsing also means one parser version, fixes without an app release, and raw text that survives long enough for a corrected parser to be re-run over history |
+| What the app stores | Raw captured messages only, with a provisional preview | There is no authoritative parse on the device, so there is nothing to persist beyond the delivery buffer |
+| What the app transmits | Raw content, but only for allowlisted senders | Untracked senders are discarded on the device, so marketing, one-time codes and banking alerts you do not track never leave the phone |
 | Where the review UI lives | In the ingestion service, not a separate grid database | The queue is the service's own product; an external tool adds a second deployment, a second database, and a dependency on its API just to detect an approval |
 | How is a reported fee recorded | As a split on the same transaction, or a linked pair where the provider has no splits | Merchant spend stays accurate and the total is correct, while the fee is still attributed to a fees account; a standalone fee entry loses the link, and dropping it under-reports spending |
 | Two messages describing one payment | Merged into a single entry with provenance, never suppressed | Real M-Pesa payments arrive as a pre-approval plus a confirmation; each carries fields the other lacks, so suppressing the second would discard the fee, the breakdown or the payee name |
