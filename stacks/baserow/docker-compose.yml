@@ -39,7 +39,7 @@ volumes:
 
 services:
   baserow:
-    image: baserow/baserow:${BASEROW_VERSION:-2.3.4}
+    image: baserow/baserow:${BASEROW_VERSION:-2.4.0}
     container_name: baserow
     hostname: baserow
     restart: unless-stopped
