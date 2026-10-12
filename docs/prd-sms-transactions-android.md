@@ -79,6 +79,7 @@ Requirement IDs restart per subsection, so cite them as `F7.4-3` for example.
 | F7.2-4 | Per sender, choose the currency; the message never sets the currency, because a misread symbol is silent corruption. |
 | F7.2-5 | Per sender, declare which accounts are your own, so movements between them are recognised as internal transfers. |
 | F7.2-6 | Per sender, set auto-post limits: maximum single amount, maximum per day, and an always-confirm switch. |
+| F7.2-11 | Per counterparty, flag a facility, so a disbursement from a lender is never recorded as income. The service proposes a counterparty as a facility when its observed behaviour looks like lending, since new digital lenders appear regularly. |
 | F7.2-9 | Per sender, set the default classification for each direction, so a salary credit or a utility bill does not need a decision per message. A sender rule never overrides transfer detection: an incoming credit that pairs with an outgoing debit inside the window is a transfer regardless of the sender rule. |
 | F7.2-10 | Per sender, map a masked account reference, such as a bank message naming only the last four digits, to an account, and route a mismatch to review rather than posting to the wrong account. |
 | F7.2-7 | A blocklist is checked before the allowlist, so a sender on both lists is always blocked. |
@@ -163,6 +164,7 @@ Requirement IDs restart per subsection, so cite them as `F7.4-3` for example.
 | F7.7-4 | Alert when dead-lettered entries exist beyond a short window, or when queue depth exceeds its cap — wired into the existing Prometheus and Grafana stack. |
 | F7.7-5 | Notify once when an unlisted sender is observed, so a changed sender ID is noticed rather than silently dropping transactions. |
 | F7.7-6 | On-device settings expose the auto-post limits, the kill switch and the pending-queue depth. |
+| F7.7-8 | The service dashboard shows each facility's outstanding balance, due date, days overdue and any penalty applied, and raises a missed repayment when the balance is unchanged across a due date. |
 | F7.7-7 | The service dashboard shows queue depth by state, oldest awaiting review, dead-letter count and posting error rate, without exposing provider credentials. |
 
 ## 8. Parsing specification
@@ -256,6 +258,38 @@ cross-sender transfer matching has failed to pair it with an outgoing debit.
 
 A single global date regex would misread all four. The format is declared per
 sender, and an unparseable date goes to review rather than being guessed.
+
+### 8.3 Corpus scope
+
+The message corpus is analysed from **1 August 2026 onward**, which is the window
+the design is built against:
+
+| Source | Total in file | From 1 Aug 2026 |
+| --- | --- | --- |
+| M-Pesa | 3,599 | 386 |
+| Airtel Money | 164 | 164 |
+| Timiza (facility sender) | 11 | 11 |
+| **Total** | **3,774** | **561** |
+
+Within that window the behaviour is stable and well covered: Airtel PayBill
+pairing (40 pairs, all identical amounts), cross-provider Airtel-to-M-Pesa
+transfers (69 messages), own-name matches (36), Fuliza activity (183), and the full
+range of date formats still appear.
+
+Narrowing the scope costs two things, and both are honest limitations rather than
+reasons to widen it:
+
+- **No reversals.** The 13 reversal samples are all before August. The reversal rule
+  is therefore specified from pre-August evidence and is **untested against in-scope
+  data**. The pre-August corpus stays as a test fixture for it.
+- **Almost no prepaid utility messages.** One `YYYYMMDD` token message remains in
+  the window against 26 in the file, so the merge-and-charges path for utilities has
+  thin in-scope coverage.
+
+Everything before August is otherwise out of scope: it is not analysed for design,
+not backfilled, and not used to infer behaviour. The parsers still handle it, because
+a live message does not care which month it arrived in.
+
 
 ### 8.2 Money channels
 
@@ -406,6 +440,33 @@ internal transfer** — the rule in section 9.1a earns its strictness here.
 Facility messages carry no interest, terms or outstanding balance, so the cost of
 borrowing is not recoverable from the wallet messages and is deliberately not
 inferred.
+#### Lenders are facilities too, and there are many of them
+
+The in-scope window contains **six distinct digital credit providers**, each
+disbursing once:
+
+| Lender | Disbursed |
+| --- | --- |
+| CHAPEO CAPITAL LIMITED | 4,000.00 |
+| LOAN PLUS DIGITAL CREDIT PROVIDER LIMITED | 2,700.00 |
+| ZILLIONS CREDIT LIMITED | 1,300.00 |
+| ZAMARADI CAPITAL & CREDIT GROUP | 1,040.00 |
+| CHELETE CREDIT LIMITED | 1,000.00 |
+| CHOICE MICROFINANCE BANK | 629.00 |
+| **Total** | **10,669.00** |
+
+Each arrives as `You have received KES <amount> from <LENDER>`, which is exactly
+the shape of a salary credit and carries no wording that distinguishes it. Treating
+them as income would overstate earnings by KES 10,669 in the window and, more
+importantly, would establish an income baseline that quietly includes borrowed
+money.
+
+The count matters more than the total. One known facility is a configuration entry;
+a pattern of new lenders appearing monthly is a **category**. So the service needs
+both: a configured list of known facilities, and a way to propose a new counterparty
+as a facility when its observed behaviour looks like one — many small credits,
+credits with no merchant counterpart, recurring cycles against a stable balance.
+
 #### Facility notices are not transactions
 
 A facility may also send its own messages, and those are usually **not** events at
@@ -815,6 +876,7 @@ render rows this service already stores.
 | Reversals | Linked to the original, showing whether the void succeeded |
 | Provider result | The provider's transaction id, so a posted entry can be opened in Firefly |
 | Health | Queue depth by state, oldest awaiting review, dead-letter count, posting error rate |
+| Facility state | Outstanding balance, due date, days overdue, and any penalty applied, so a missed repayment is visible before it is charged |
 | Kill switch | Pause and resume forwarding from the dashboard |
 
 #### Design constraints
