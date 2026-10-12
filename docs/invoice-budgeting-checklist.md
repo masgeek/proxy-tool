@@ -13,13 +13,13 @@ Context for every item below:
 ## FrankenPHP applicability
 
 FrankenPHP is a PHP application server and is relevant only to PHP apps. Of the
-applications covered here (ExpenseOwl was evaluated and excluded because it ships
-no authentication of its own and relies entirely on proxy auth):
+applications covered here. Two were evaluated and excluded: ExpenseOwl ships no
+authentication of its own and relies entirely on proxy auth, and Econumo does not
+cover the intended use case:
 
 | App | Runtime | FrankenPHP relevant |
 | --- | --- | --- |
 | Firefly III | PHP (Laravel) | Only if you build your own image; the official `fireflyiii/core` image already bundles nginx + PHP-FPM, so do not swap it |
-| Econumo | Go (single distroless binary) | No |
 | ezBookkeeping | Go | No |
 
 If you later move Firefly III to FrankenPHP, use the `dunglas/frankenphp` base image,
@@ -28,6 +28,10 @@ terminating TLS in front. Everything else in this checklist is unchanged, becaus
 PostgreSQL connection is environment-driven either way.
 
 ---
+
+Scope: `stacks/budget` and `stacks/invoice` currently offer Firefly III, ezBookkeeping,
+Yuvomi and Actual Budget. Firefly III and ezBookkeeping are documented here because
+both run on PostgreSQL and are the two most likely choices for this deployment.
 
 ## 1. Firefly III
 
@@ -110,47 +114,6 @@ Stack file: `stacks/budget/services/ezbookkeeping.yml`
 - [ ] Import existing history with the built-in importer (CSV, OFX, QIF, Firefly III export, Camt.053/MT940) and verify totals against your bank statement.
 - [ ] Schedule recurring transactions for fixed bills and salaries.
 - [ ] Enable 2FA for each user; the app also supports a PIN/WebAuthn application lock.
-
----
-
-## 3. Econumo
-
-Stack file: `stacks/budget/services/econumo.yml`
-
-### Database provisioning and schema isolation
-
-- [ ] Create role and database:
-      `docker exec postgres psql -U "$POSTGRES_USER" -c "CREATE ROLE econumo LOGIN PASSWORD '…';"`
-      `docker exec postgres psql -U "$POSTGRES_USER" -c "CREATE DATABASE econumo OWNER econumo;"`
-- [ ] Grant schema privileges: `GRANT ALL ON SCHEMA public TO econumo;`
-- [ ] Econumo runs migrations automatically on boot; no manual schema step.
-- [ ] On PostgreSQL, use `pg_dump` for backups instead of the SQLite file-copy procedure.
-
-### Environment and application configuration
-
-- [ ] Set `DATABASE_URL=postgres://econumo:…@postgres:5432/econumo?sslmode=disable` — Econumo takes a single URL, not discrete `DB_*` parts.
-- [ ] Percent-encode any password character that is special in a URL (`@` → `%40`, `:` → `%3A`, `/` → `%2F`, `#` → `%23`, `%` → `%25`).
-- [ ] Set `BASE_URL=https://budget.munywele.co.ke` for correct links behind Caddy.
-- [ ] Set `MAILER_DSN` for password recovery, for example
-      `smtp://user:pass@smtp.example.com:587?encryption=tls&auth=true` (or use the shared Mailpit SMTP stack for testing).
-- [ ] Set `TZ=Africa/Nairobi`; the app also has a per-user timezone setting.
-- [ ] Register the first user, or run `user:create` from the container binary, and disable open registration afterwards if this is a single-family instance.
-
-### Persistence and volumes
-
-- [ ] Mount `econumo-jwt` at `/app/var/jwt` — it holds the JWT keypair. Losing it invalidates every issued token.
-- [ ] Mount `econumo-db` at `/app/var/db` only if you keep SQLite as a fallback; with PostgreSQL in use the directory holds little, but keep it mounted so switching back does not lose data.
-- [ ] Back up `econumo-jwt` together with the database — a database restore without the matching keypair still works, but all sessions are invalidated.
-
-### Data ingestion and invoicing flow
-
-- [ ] Create users, then invite a partner or family member with shared-account access.
-- [ ] Create accounts per currency and set the default/base currency before entering data.
-- [ ] Import the CSV export from your previous tool first, then reconcile opening balances.
-- [ ] Set up budgets with folders and envelopes; available amounts are derived from them.
-- [ ] Create classifications (categories) before recurring transactions reference them.
-- [ ] Update currency rates via the container CLI (`/app/econumo`) or the scheduled job rather than by hand.
-- [ ] Use the REST API or the MCP endpoint for automated tagging and transaction creation instead of scraping the UI.
 
 ---
 

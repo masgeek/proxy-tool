@@ -7,7 +7,6 @@ Household budgeting and planning stack. Exactly one application runs at a time o
 | Firefly III (default) | `services/firefly-iii.yml` | PostgreSQL + own Redis | REST |
 | Yuvomi | `services/yuvomi.yml` | SQLite | REST + OpenAPI 3.1, MCP at `/mcp` |
 | Actual Budget | `services/actual-budget.yml` | PostgreSQL | REST (sync server) |
-| Econumo | `services/econumo.yml` | PostgreSQL | REST + MCP |
 | ezBookkeeping | `services/ezbookkeeping.yml` | PostgreSQL | REST |
 
 The main `docker-compose.yml` declares shared networks and volumes, plus one `budget` service that pulls its definition from a single file with `extends`. Changing that one `extends.file` value swaps the application.
@@ -90,26 +89,6 @@ All service files read the same names, so switching apps changes only `extends.f
   A `SQLITE_CANTOPEN` error on start means exactly this: the container could not write `/data/yuvomi.db`.
 - **Actual Budget** — set `ACTUAL_HTTPS=false` because Caddy terminates TLS. Import format: `DB_CONNECTION` is `postgres`, and the database name goes in `DB_NAME`.
 - **Firefly III** — `TRUSTED_PROXIES=**` is needed behind Caddy, otherwise generated links use the wrong scheme. `APP_KEY` must be a long random string.
-- **Econumo** — takes a single `DATABASE_URL` (`postgres://user:pass@host:5432/db?sslmode=disable`), not `DB_*`. The Compose file builds it by interpolation from `DB_USERNAME`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT` and `ECONUMO_DB_NAME`, so you only change those; set `DATABASE_URL` explicitly to override. The `econumo-jwt` volume holds the JWT keypair and must be backed up with the database, otherwise every existing session token is invalidated after a restore. `APP_URL` maps to `ECONUMO_URL`, which is also what builds OAuth callback URLs and the link appended to transactional email. Registration is off by default here; create the first user with `docker compose ... exec budget /app/econumo user:create "Name" you@example.com <password>`. `ECONUMO_CHECK_UPDATES` is disabled so a self-hosted instance makes no outbound call to econumo.com.
-
-**Econumo base currency.** `ECONUMO_CURRENCY_BASE` must already exist in the global currency list. A fresh database only ships the built-in currencies, so starting with `KES` fails with `does not match any global currency; add it first with currency:add`. Bootstrap in this order:
-
-```bash
-# 1. first boot stays on USD
-docker compose --env-file stacks/budget/.env -f stacks/budget/docker-compose.yml up -d budget
-
-# 2. add KES to the global currency list
-docker compose --env-file stacks/budget/.env -f stacks/budget/docker-compose.yml   exec budget /app/econumo currency:add KES "Kenyan Shilling" 2
-
-# 3. set ECONUMO_CURRENCY_BASE=KES in .env, then recreate
-docker compose --env-file stacks/budget/.env -f stacks/budget/docker-compose.yml up -d budget
-
-# 4. optional: refresh exchange rates
-docker compose --env-file stacks/budget/.env -f stacks/budget/docker-compose.yml   exec budget /app/econumo currency:update-rates
-```
-
-Run the CLI through `exec` rather than as the container entrypoint, so no transient
-failure can leave the service down.
 - **ezBookkeeping** — configuration is `EBK_*` following the upstream reference, where the object storage section is `storage` (so the variable is `EBK_STORAGE_TYPE`, and `EBK_OBJECT_STORAGE_TYPE` would be silently ignored); `APP_KEY` maps to `EBK_SECURITY_SECRET_KEY`, and generate that with `openssl rand -base64 32`. The image resolves its config path from `EBK_CONF_PATH` and aborts with `open : no such file or directory` when that resolves to nothing, so `services/ezbookkeeping.ini` is mounted read-only into the container. That path is relative to the service file that declares the mount, not to the stack directory, so if you deploy from a different layout set `EZBOOKKEEPING_CONF` to an absolute path — Dokploy otherwise fails with `not a directory: Are you trying to mount a directory onto a file`; all operational values are overridden by environment variables, so no secret lives in that file. Two option names are easy to get wrong: `mode` belongs to the `global` section (omitting it aborts startup with `invalid server mode`) and the listen port is `http_port`, not `port`. `EBK_SERVER_ROOT_URL` is set explicitly so generated links carry no container port behind Caddy. The image runs as UID/GID 1000, so the service runs as root to keep the named volumes writable; the alternative is a one-time `chown 1000:1000` of `ezbookkeeping-storage`, `ezbookkeeping-logs` and `ezbookkeeping-data`. The `ezbookkeeping-data` volume is mounted even though this stack uses PostgreSQL, so falling back to sqlite3 by mistake cannot silently lose data.
 
 ## Backups
@@ -118,7 +97,6 @@ PostgreSQL apps are covered by the repository's `db-backup/` tooling:
 
 - Actual Budget: `actual_budget` database + `actual-budget-files` volume
 - Firefly III: `firefly` database + `firefly-upload` volume
-- Econumo: `econumo` database + `econumo-db` and `econumo-jwt` volumes
 - ezBookkeeping: `ezbookkeeping` database + `ezbookkeeping-storage`, `ezbookkeeping-logs` and `ezbookkeeping-data` volumes
 
 Yuvomi keeps everything in `budget-data` (`/data/yuvomi.db`); a host-level file copy or `sqlite3 yuvomi.db ".backup"` is the backup, plus `budget-documents` if documents are stored locally.

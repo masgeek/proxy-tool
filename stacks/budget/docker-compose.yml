@@ -10,7 +10,6 @@ name: "budget"
 #   services/yuvomi.yml         — family planner, SQLite (no external DB)
 #   services/firefly-iii.yml    — expense tracking, PostgreSQL + dedicated Redis (default)
 #   services/actual-budget.yml  — budgeting, PostgreSQL
-#   services/econumo.yml        — family budgeting, PostgreSQL (DATABASE_URL)
 #   services/ezbookkeeping.yml  — bookkeeping, PostgreSQL (EBK_* env)
 #
 # PostgreSQL apps reuse the shared `postgres` service. Firefly III (the default
@@ -43,12 +42,6 @@ volumes:
   firefly_upload:
     driver: local
     name: firefly-upload
-  econumo_db:
-    driver: local
-    name: econumo-db
-  econumo_jwt:
-    driver: local
-    name: econumo-jwt
   ezbookkeeping_storage:
     driver: local
     name: ezbookkeeping-storage

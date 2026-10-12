@@ -11,7 +11,7 @@
 An Android application that turns bank and mobile-money SMS alerts into
 bookkeeping entries. The user selects which senders to trust, the app parses each
 message into a debit or credit, and posts it to the REST API of whichever finance
-backend is running — Firefly III first, then Actual Budget, Econumo and
+backend is running — Firefly III first, then Actual Budget and
 ezBookkeeping. The goal is that daily bookkeeping is a side effect of normal phone
 use, not a nightly chore.
 
@@ -180,16 +180,16 @@ You have received KSH 45,000.00 from JOHN DOE on 12/10/2026 09:15. Balance KSH 6
 
 ## 9. Backend mapping
 
-| Field | Firefly III | Actual Budget | Econumo | ezBookkeeping |
+| Field | Firefly III | Actual Budget | ezBookkeeping |
 | --- | --- | --- | --- | --- |
-| Amount | `amount`, string decimal | `amount`, negative for spend | `amount` | `amount` |
-| Direction | `type`: `withdrawal` / `deposit` | sign of `amount` | transaction type | transaction type |
-| Internal transfer | native `transfer` with source and destination, else two entries tagged with the shared `transferGroupId` | two entries, second negates the first | two entries linked by reference | two entries linked by reference |
-| Reversal | delete or reverse the original | delete the split | compensating entry | delete the entry |
-| Description | `description` | `notes` / `payee_name` | description | comment |
-| Date | `date`, ISO 8601 | `date` | date | date |
-| Tags | `tag_names` | category | categories | categories |
-| Idempotency | `external_id` | external reference | reference | reference |
+| Amount | `amount`, string decimal | `amount`, negative for spend | `amount` |
+| Direction | `type`: `withdrawal` / `deposit` | sign of `amount` | transaction type |
+| Internal transfer | native `transfer` with source and destination, else two entries tagged with the shared `transferGroupId` | two entries, second negates the first | two entries linked by reference |
+| Reversal | delete or reverse the original | delete the split | delete the entry |
+| Description | `description` | `notes` / `payee_name` | comment |
+| Date | `date`, ISO 8601 | `date` | date |
+| Tags | `tag_names` | category | categories |
+| Idempotency | `external_id` | external reference | reference |
 
 Every entry posts to the asset account chosen per sender, so credits and debits
 land correctly without the app knowing the chart of accounts.
@@ -608,8 +608,8 @@ Firefly III adapter, idempotency, retry and dead-lettering. The app pairs with t
 ingestion API and posts canonical transactions. Everything lands in review before
 anything is posted.
 
-**Phase 3 — Additional adapters.** Actual Budget, Econumo, ezBookkeeping. Each is a
-new adapter in the service only; no app release.
+**Phase 3 — Additional adapters.** Actual Budget and ezBookkeeping. Each is a new
+adapter in the service only; no app release.
 
 **Phase 4 — Hardening.** Statement reconciliation, statistics, parser expansion
 driven by the review inbox, APK update check, per-sender account mapping managed

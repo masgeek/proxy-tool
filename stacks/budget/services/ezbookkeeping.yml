@@ -15,6 +15,9 @@ services:
       # `mode` is a global option; without it the app aborts with
       # "invalid server mode".
       EBK_GLOBAL_MODE: ${EBK_GLOBAL_MODE:-production}
+      # Without an explicit uuid generator the app aborts with "invalid uuid mode".
+      EBK_UUID_GENERATOR_TYPE: ${EBK_UUID_GENERATOR_TYPE:-internal}
+      EBK_UUID_SERVER_ID: ${EBK_UUID_SERVER_ID:-0}
       EBK_SERVER_DOMAIN: ${APP_DOMAIN:-budget.munywele.co.ke}
       # Without an explicit root_url the default appends the container port, which
       # would put :8080 in generated links behind Caddy.
