@@ -29,6 +29,8 @@ every movement, so the manual burden scales with activity.
 - Post correct income and expense entries to a REST API, idempotently.
 - Survive loss of connectivity without losing or duplicating a transaction.
 - Make every automatic decision reviewable and reversible.
+- Keep the app coupled to exactly one API, so a new bookkeeping backend never
+  requires a new Android release.
 
 ## 4. Non-goals
 
@@ -92,8 +94,8 @@ permission review that a Play listing would trigger.
 
 | ID | Requirement |
 | --- | --- |
-| F19 | Firefly III REST API v2 is the first target: `POST /api/v2/accounts/{id}/transactions`. |
-| F20 | Actual Budget, Econumo and ezBookkeeping follow as secondary targets. |
+| F19 | The app posts to the intermediate ingestion API only. It never talks to a bookkeeping backend directly. |
+| F20 | The app's contract is one endpoint shape and one canonical payload, versioned independently of any backend. |
 | F21 | Map direction explicitly per backend; see section 9. |
 | F22 | Apply a configurable tag or category prefix per sender, for example `sms:m-pesa`. |
 | F23 | Use the parsed reference as the transaction description or note. |
@@ -118,10 +120,11 @@ permission review that a Play listing would trigger.
 
 | ID | Requirement |
 | --- | --- |
-| F35 | Store backend URL and token in the Android keystore; never in preferences, logs or crash output. |
+| F35 | Store the ingestion API token in the Android keystore; never in preferences, logs or crash output. |
+| F35a | The app never holds a bookkeeping backend credential; provider tokens live only in the ingestion service. |
 | F36 | Validate connectivity, TLS and token on pairing, with a distinct error for each failure. |
 | F37 | Require HTTPS. Cleartext traffic is refused rather than downgraded. |
-| F38 | One active backend at a time; switching backends requires re-pairing and never mixes queues. |
+| F38 | One ingestion endpoint at a time. Switching bookkeeping backend is a server-side operation and requires no app change. |
 
 ### 7.7 Reporting
 
@@ -181,7 +184,114 @@ Firefly III request shape:
 }
 ```
 
-## 10. UX
+## 10. Ingestion API (intermediate layer)
+
+The app posts to one service, and that service owns every backend difference. The
+canonical model is the contract; a backend adapter is the only place a field
+differs.
+
+### 10.1 Why
+
+Without this layer, every new bookkeeping backend means: a new adapter in the app,
+a release, and every phone updated before the backend can be used. With it, a new
+backend is a server-side change, and the app keeps one code path, one payload and
+one set of tests. It also keeps backend credentials off the handset.
+
+The same entry point can later accept other sources — email, a bank webhook, a
+modem — without changing the mobile client.
+
+### 10.2 Endpoints
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/v1/health` | Liveness plus the active adapter name and version |
+| `GET` | `/v1/provider` | Active provider, its accounts and capabilities |
+| `POST` | `/v1/transactions` | Ingest one canonical transaction (idempotent) |
+| `POST` | `/v1/transactions/batch` | Ingest up to 100, for draining a backlog |
+| `GET` | `/v1/transactions/{id}` | Status: pending, posted, failed, needs_review |
+| `POST` | `/v1/transactions/{id}/retry` | Re-attempt a failed entry |
+| `POST` | `/v1/transactions/{id}/void` | Reverse a posted entry in the provider |
+| `GET` | `/v1/senders` | Sender allowlist as the service sees it |
+| `PUT` | `/v1/senders/{senderId}` | Update direction, account and tag mapping |
+
+All responses are JSON. Errors carry a stable machine code, a human message, and
+whether the caller should retry.
+
+### 10.3 Canonical transaction
+
+```json
+{
+  "idempotencyKey": "mpesa:OE6K2L8Q4M:2026-10-12T14:32:00Z",
+  "occurredAt": "2026-10-12T14:32:00Z",
+  "direction": "debit",
+  "amount": { "value": "1500.00", "currency": "KES" },
+  "description": "M-Pesa send 07XX XXX XXX",
+  "reference": "OE6K2L8Q4M",
+  "source": { "channel": "sms", "senderId": "MPESA", "label": "M-Pesa" },
+  "accountHint": "cash",
+  "tags": ["sms:m-pesa"],
+  "confidence": 0.98,
+  "metadata": { "balanceAfter": "24300.00", "rawRetainedUntil": "2026-11-12T00:00:00Z" }
+}
+```
+
+Rules that keep the contract stable:
+
+- `direction` is one of `debit` or `credit`. Adapters translate it.
+- `amount.value` is a string decimal, never a JSON number, so no float rounding
+  occurs in transit.
+- `idempotencyKey` is required. The service rejects a repeat of a key it has
+  already stored, and returns the original record instead of creating a second.
+- `confidence` below the configured threshold is stored as `needs_review` and not
+  forwarded, which keeps the review decision server-side and auditable.
+- `metadata` is provider-agnostic; adapters ignore what they cannot use.
+
+### 10.4 Provider adapter contract
+
+Each backend implements one interface. The service is written against it, so a new
+backend is a new file plus a configuration entry.
+
+| Member | Responsibility |
+| --- | --- |
+| `Name()` / `Version()` | Identity reported by `/v1/health` |
+| `HealthCheck(ctx)` | Reachability and credential validity |
+| `ListAccounts(ctx)` | Accounts available for sender mapping |
+| `CreateTransaction(ctx, txn)` | Convert canonical fields and post; return provider id |
+| `VoidTransaction(ctx, providerId)` | Reverse a posted entry |
+| `Supports() []Capability` | Optional features such as `void`, `attachments`, `recurring` |
+| `TranslateDirection(direction)` | Direction to provider semantics |
+
+Adapter obligations:
+
+- Translate, never reinterpret. The canonical amount, currency and direction are
+  already decided by the time an adapter sees them.
+- Map an unmapped capability explicitly rather than silently dropping data.
+- Surface provider errors as stable codes so the app can distinguish "retry later"
+  from "needs review" without parsing prose.
+- Never perform a second financial write for one canonical transaction; exactly one
+  attempt produces at most one provider entry.
+
+### 10.5 Idempotency and delivery guarantees
+
+- The service stores `idempotencyKey` with the entry and enforces uniqueness, so a
+  retried batch cannot duplicate a transaction even if the app lost its response.
+- Entries are at-least-once from the app and effectively-once at the provider.
+- A provider call that times out is resolved by querying the provider with the
+  idempotency reference before retrying, so an ambiguous timeout does not double-post.
+- Per-entry retry budget, then dead-letter to `needs_review` with the recorded error.
+
+### 10.6 Operational requirements
+
+- API versioned in the path (`/v1`); the app pins a version and the service
+  supports the previous one for at least one app release cycle.
+- Structured logs keyed by `idempotencyKey`, with no message bodies and no tokens.
+- Health endpoint suitable for the existing monitoring stack: it is the only
+  component of this feature that needs to be observable server-side.
+- The service holds one provider credential set at a time in v1, stored outside the
+  repository.
+
+
+## 11. UX
 
 1. **Pair** — backend URL and token, with a live connection test.
 2. **Grant access** — notification access, with the SMS permission fallback.
@@ -192,7 +302,7 @@ Firefly III request shape:
 
 Deliberate absence: no dashboard-first design. The success state is an empty inbox.
 
-## 11. Data model
+## 12. Data model
 
 Local Room entities, device-local only:
 
@@ -206,14 +316,18 @@ Local Room entities, device-local only:
 Amounts are stored as minor units in an integer column. Floating point is never
 used for money.
 
-## 12. Security and privacy
+## 13. Security and privacy
 
 - Messages are read on device; raw bodies never leave the phone, and only the
   fields needed to build a transaction are transmitted.
 - No analytics SDKs, no third-party crash reporting, no network destination other
   than the configured backend.
-- Tokens live in the keystore and are redacted from logs, screenshots and any
-  exported diagnostics.
+- The app's only secret is the ingestion API token, held in the keystore and
+  redacted from logs, screenshots and any exported diagnostics. Bookkeeping
+  backend credentials never reach the phone at all: they are held by the ingestion
+  service, so losing the handset does not expose the ledger.
+- Provider credentials are stored server-side in a secret store, never in an
+  environment file that could be committed.
 - Allowlist and blocklist are checked before parsing, so an unknown sender leaves
   no trace in storage.
 - Raw message retention is bounded and configurable, defaulting to 30 days, and is
@@ -221,7 +335,7 @@ used for money.
 - Uninstall removes the database and keystore entry; the backend keeps whatever it
   already stored, which is why voiding is an explicit operation (F34).
 
-## 13. Permissions and compliance
+## 14. Permissions and compliance
 
 - Notification listener access avoids `READ_SMS` in the common case, which is the
   recommended route and the one v1 ships.
@@ -230,20 +344,22 @@ used for money.
 - `POST_NOTIFICATIONS` for the summary and `INTERNET` for the backend call.
   Nothing else is requested.
 
-## 14. Testing strategy
+## 15. Testing strategy
 
 | Layer | Approach |
 | --- | --- |
 | Parsers | Unit tests over a committed corpus of real messages, expected outputs inline, one test per known sender format |
 | Mapping | Unit tests asserting the direction and sign per backend |
-| API client | Contract tests against a local Firefly III instance, including a `4xx` and a timeout path |
+| Ingestion API | Contract tests against the service, including idempotent replay, a `4xx` and a timeout path |
+| Provider adapters | One conformance suite every adapter must pass, so adding a backend cannot regress the ones already shipped |
+| Adapters | Fake-provider tests proving direction, sign and account resolution per backend |
 | Queue | State-machine tests covering retry, dead-letter and manual retry |
 | End to end | Instrumented test: inject a message, assert one entry posted and no duplicate on replay |
 
 The parser corpus is the highest-value asset here; it is reviewed with every new
 sender format that produces a needs_review entry.
 
-## 15. Success metrics
+## 16. Success metrics
 
 | Metric | Target |
 | --- | --- |
@@ -253,20 +369,23 @@ sender format that produces a needs_review entry.
 | Median delay from SMS to posted entry | under 60 seconds |
 | Parser corpus growth | no growth without a named failing case |
 
-## 16. Delivery plan
+## 17. Delivery plan
 
 **Phase 1 — Capture and parse.** Notification listener, fallback receiver,
 allowlist, M-Pesa and bank parsers, local inbox, dry-run mode, no posting.
 
-**Phase 2 — Firefly III.** Pairing, account mapping, posting with idempotency,
-retry budget, background worker, void.
+**Phase 2 — Ingestion API and Firefly adapter.** The intermediate service with the
+canonical model, Firefly III adapter, idempotency, retry and dead-lettering. The
+app pairs with the ingestion API and posts canonical transactions.
 
-**Phase 3 — Additional backends.** Actual Budget, Econumo, ezBookkeeping.
+**Phase 3 — Additional adapters.** Actual Budget, Econumo, ezBookkeeping. Each is a
+new adapter in the service only; no app release.
 
 **Phase 4 — Hardening.** Statistics, parser expansion driven by review inbox, APK
-update check, and a server-side relay only if measured coverage gaps justify one.
+update check, per-sender account mapping managed through the ingestion API, and a
+relay path for capture when the phone is off.
 
-## 17. Acceptance criteria for Phase 1 + 2
+## 18. Acceptance criteria for Phase 1 + 2
 
 - Given an allowlisted M-Pesa credit, when the SMS arrives, then a credit entry for
   the configured Firefly account exists within 60 seconds.
@@ -279,10 +398,18 @@ update check, and a server-side relay only if measured coverage gaps justify one
   on reconnect, exactly once.
 - Given an ambiguous message, then it appears in the inbox as needs_review and is
   not posted.
-- Given a `4xx` from the backend, then the entry is dead-lettered with the response
+- Given a `4xx` from the provider, then the entry is dead-lettered with the response
   recorded and is not retried automatically.
+- Given the same canonical transaction submitted twice, then the ingestion API
+  returns the original record and the provider holds exactly one entry.
+- Given a provider call that times out with an unknown outcome, then the service
+  queries the provider by idempotency reference before retrying, and still produces
+  one entry.
+- Given a Firefly III outage lasting several minutes, then queued entries drain
+  afterwards in order with no gaps and no duplicates.
+- Given a second adapter is enabled, then no change to the app is required.
 
-## 18. Decisions taken
+## 19. Decisions taken
 
 The questions raised during drafting are resolved as follows, and the document no
 longer carries them as open items.
@@ -295,12 +422,24 @@ longer carries them as open items.
 | Which senders beyond M-Pesa | The primary bank only | Parsers are data, so adding senders later is cheap; guessing formats now wastes effort |
 | Ambiguous amounts | Always needs_review | A wrong direction silently corrupts a budget; a review prompt costs seconds |
 | Raw message retention | 30 days, configurable | Enough to debug a bad parse, short enough to keep financial data lean |
+| Where does backend knowledge live | In the ingestion API, not the app | A new bookkeeping backend becomes a server-side change with no app release, and backend credentials stay off the handset |
+| Does the app keep provider accounts | No | Account names change; the app sends an `accountHint` and the service resolves it against the provider, so a renamed account is a config fix rather than a release |
 
-## 19. Repository context
+## 20. Repository context
 
 - Backend stacks: `stacks/budget` (Firefly III is the default app) and
   `stacks/invoice`.
-- This app is an external client of those stacks' REST APIs and adds no service to
-  the server. Only the optional Phase 4 relay would be a server-side addition.
-- The app lives outside this repository until Phase 2, when the Firefly contract
-  tests need the real stack to run against.
+- The ingestion API is the one server-side component of this feature. It belongs in
+  this repository as its own stack, following the same conventions as the others:
+  bind `127.0.0.1:<allocated port>`, route through Caddy under a host such as
+  `ingest.munywele.co.ke`, networks `internal` plus `dokploy-network`, json-file
+  logging, resource limits and a `STACK_REVISION` marker. Register the port in
+  `docs/ports.md` and add a snippet under `config/caddy/snippets/domains/`.
+- Suggested name: `stacks/transactions`, engine unspecified at this point. It needs
+  a datastore for the idempotency store and the entry queue; PostgreSQL on the shared
+  service is the obvious fit, which also makes the entries backupable by the existing
+  `db-backup` tooling.
+- The Android app itself is not stored in this repository.
+- Security note for the ingestion service: it is an unauthenticated-by-default
+  endpoint on the public internet that writes financial records. It must require a
+  token, and the Caddy route should additionally be rate limited.
