@@ -28,6 +28,9 @@ services:
     ports:
       - "127.0.0.1:9720:8080"
     volumes:
+      # Relative bind-mount paths in an extended service file resolve against that
+      # file's own directory, so the config file lives next to this one. Set
+      # EZBOOKKEEPING_CONF to an absolute path if you deploy from another layout.
       - ${EZBOOKKEEPING_CONF:-./ezbookkeeping.ini}:/ezbookkeeping/conf/ezbookkeeping.ini:ro
       - ezbookkeeping_storage:/ezbookkeeping/storage
       - ezbookkeeping_logs:/ezbookkeeping/log
