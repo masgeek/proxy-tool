@@ -261,35 +261,47 @@ sender, and an unparseable date goes to review rather than being guessed.
 
 ### 8.3 Corpus scope
 
-The message corpus is analysed from **1 August 2026 onward**, which is the window
-the design is built against:
+The corpus is analysed over **calendar year 2026**, the window the design is built
+against:
 
-| Source | Total in file | From 1 Aug 2026 |
+| Source | Total in file | 2026 |
 | --- | --- | --- |
-| M-Pesa | 3,599 | 386 |
+| M-Pesa | 3,599 | 1,511 |
 | Airtel Money | 164 | 164 |
 | Timiza (facility sender) | 11 | 11 |
-| **Total** | **3,774** | **561** |
+| **Total** | **3,774** | **1,686** |
 
-Within that window the behaviour is stable and well covered: Airtel PayBill
-pairing (40 pairs, all identical amounts), cross-provider Airtel-to-M-Pesa
-transfers (69 messages), own-name matches (36), Fuliza activity (183), and the full
-range of date formats still appear.
+M-Pesa covers all ten months, January to October. Airtel and the facility sender
+begin in September, so those two are covered for a shorter period and nothing
+earlier exists to compare against.
 
-Narrowing the scope costs two things, and both are honest limitations rather than
-reasons to widen it:
+Within 2026 the coverage is good on the paths that matter most:
 
-- **No reversals.** The 13 reversal samples are all before August. The reversal rule
-  is therefore specified from pre-August evidence and is **untested against in-scope
-  data**. The pre-August corpus stays as a test fixture for it.
-- **Almost no prepaid utility messages.** One `YYYYMMDD` token message remains in
-  the window against 26 in the file, so the merge-and-charges path for utilities has
-  thin in-scope coverage.
+| Behaviour | 2026 messages |
+| --- | --- |
+| Fuliza facility activity | 521 |
+| Failed or insufficient-funds messages | 75 |
+| Airtime purchases | 51 |
+| Airtel PayBill pairs (identical amounts) | 40 pairs |
+| PayBill payments | 291 |
+| Person-to-person and merchant sends | 441 |
+| Credits received | 151 |
+| Agent cash-outs | 11 |
 
-Everything before August is otherwise out of scope: it is not analysed for design,
-not backfilled, and not used to infer behaviour. The parsers still handle it, because
-a live message does not care which month it arrived in.
+Two paths have **no in-scope evidence**, and both are stated rather than assumed:
 
+- **Reversals: zero in 2026.** All 13 samples are from 2024 and 2025. The reversal
+  rule is specified from out-of-scope evidence and must be validated against a
+  synthetic reversal before it is trusted. It is a rule that prevents a wrong
+  ledger, and it is currently untested in scope.
+- **Prepaid utility confirmations: 4 in 2026**, against 22 before it. The
+  merge-and-charges path for token purchases is thinly covered and deserves a
+  deliberate test rather than an assumption.
+
+Everything before 2026 is out of scope for design and for backfill. The parsers
+still accept those formats, because a live message does not care which year it
+arrived in, and the pre-2026 data remains in the repository as a test fixture for
+the reversal and prepaid paths that2026 cannot supply.
 
 ### 8.2 Money channels
 
@@ -1111,6 +1123,9 @@ through the ingestion API, and a relay path for capture when the phone is off.
   posted until the settling window closes and the posted total includes the fee.
 - Given a genuine duplicate with nothing new to contribute, then it is suppressed
   with a link to the entry that won, and the suppression can be reversed.
+- Given a synthetic reversal for an entry that exists, then the entry is voided.
+  Reversals have no in-scope corpus sample, so this criterion is validated against
+  constructed input until a real reversal appears.
 - Given a message reporting a labelled breakdown such as token value plus levies,
   then each part is attributed to its own expense account and the total is the sum
   of all parts.
