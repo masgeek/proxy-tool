@@ -23,13 +23,16 @@ instances, grouped by role rather than one per application.
 | shortener | 1 |
 | akilimo | 2 |
 
-`redis-jobs` — queues and brokers, one logical database each:
+`redis-jobs` — queues and brokers, one logical database each. Baserow reaches
+this instance through `REDIS_URL`, because it takes the index from the URL rather
+than a separate variable.
 
 | Stack | Database |
 |-------|----------|
 | activepieces | 0 |
 | kvuno (Celery broker and result backend) | 1 |
 | fuelrod-api | 2 |
+| baserow | 3 |
 
 `redis-invoice` and `redis-budget` have a single application each, so database 0
 is the only one in use.
