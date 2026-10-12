@@ -6,11 +6,6 @@
 flow.munywele.co.ke {
         tls dev@munywele.co.ke
 
-        log {
-                output file /var/log/caddy/activepieces.log
-                format console
-                level debug
-        }
 
         encode zstd gzip
 

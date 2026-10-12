@@ -158,6 +158,9 @@ services:
       - ../../config/monitoring/agent:/etc/alloy:ro
       - agent-data:/var/lib/alloy
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Caddy runs on the host under systemd, so its access log is a host file
+      # rather than a container stream. Read-only.
+      - /var/log/caddy:/var/log/caddy:ro
     entrypoint:
       - /bin/alloy
       - run

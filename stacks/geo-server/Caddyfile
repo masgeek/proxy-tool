@@ -10,11 +10,6 @@
 geo.akilimo.org {
         tls akilimo@cgiar.org
 
-        log {
-                output file /var/log/caddy/geo-server.log
-                format console
-                level debug
-        }
 
         encode zstd gzip
 
@@ -43,11 +38,6 @@ geo.akilimo.org {
 stats.akilimo.org {
         tls akilimo@cgiar.org
 
-        log {
-                output file /var/log/caddy/stats-api.log
-                format console
-                level debug
-        }
 
         encode zstd gzip
 

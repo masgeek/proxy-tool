@@ -11,11 +11,6 @@ lnk.munywele.co.ke {
         tls dev@munywele.co.ke
         encode zstd gzip
 
-        log {
-                output file /var/log/caddy/lnk.log
-                format console
-                level debug
-        }
 
         handle {
                 reverse_proxy 127.0.0.1:9660 {
@@ -34,11 +29,6 @@ lnk-admin.munywele.co.ke {
         tls dev@munywele.co.ke
         encode zstd gzip
 
-        log {
-                output file /var/log/caddy/lnk-admin.log
-                format console
-                level debug
-        }
 
         handle {
                 redir https://lnk.munywele.co.ke{uri} 301
@@ -55,11 +45,6 @@ lnk.agwise.org {
         tls dev@munywele.co.ke
         encode zstd gzip
 
-        log {
-                output file /var/log/caddy/lnk-agwise.log
-                format console
-                level debug
-        }
 
         handle {
                 reverse_proxy 127.0.0.1:9660 {
@@ -72,11 +57,6 @@ lnk.akilimo.org {
         tls dev@munywele.co.ke
         encode zstd gzip
 
-        log {
-                output file /var/log/caddy/lnk-akilimo.log
-                format console
-                level debug
-        }
 
         handle {
                 reverse_proxy 127.0.0.1:9660 {

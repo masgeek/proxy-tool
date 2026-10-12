@@ -10,11 +10,6 @@
 api.farm.munywele.co.ke {
         tls dev@munywele.co.ke
 
-        log {
-                output file /var/log/caddy/farm-api.log
-                format console
-                level debug
-        }
 
         encode zstd gzip
 
@@ -36,11 +31,6 @@ api.farm.munywele.co.ke {
 farm.munywele.co.ke {
         tls dev@munywele.co.ke
 
-        log {
-                output file /var/log/caddy/farm-web.log
-                format console
-                level debug
-        }
 
         encode zstd gzip
 

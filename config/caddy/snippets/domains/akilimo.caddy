@@ -32,11 +32,6 @@ akilimo.org {
 	import ../wp-common.caddy
 	import ../headers/security-headers.caddy
 	import ../errors.caddy
-
-	log {
-		output file /var/log/caddy/akilimo.org.log
-		format console
-	}
 }
 
 
@@ -50,11 +45,6 @@ portal.akilimo.org {
 	import ../wp-common.caddy
 	import ../headers/security-headers.caddy
 	import ../errors.caddy
-
-	log {
-		output file /var/log/caddy/portal.akilimo.org.log
-		format console
-	}
 }
 
 # -----------------------------------------------------------------------------
@@ -69,12 +59,6 @@ new.akilimo.org {
 	import ../wp-common.caddy
 	import ../headers/security-headers.caddy
 	import ../errors.caddy
-
-	log {
-		output file /var/log/caddy/new-akilimo.log
-		format console
-		level debug
-	}
 }
 
 # -----------------------------------------------------------------------------
@@ -95,12 +79,6 @@ app.akilimo.org, dev.akilimo.org {
 			dial_timeout 1800s
 			response_header_timeout 1800s
 		}
-	}
-
-	log {
-		output file /var/log/caddy/akilimo-app.log
-		format console
-		level debug
 	}
 }
 
@@ -125,12 +103,6 @@ api.akilimo.org {
 			response_header_timeout 1800s
 		}
 	}
-
-	log {
-		output file /var/log/caddy/akilimo-api.log
-		format console
-		level debug
-	}
 }
 
 # -----------------------------------------------------------------------------
@@ -144,10 +116,6 @@ uptake.akilimo.org {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:9500 {
 		import ../headers/proxy-headers.caddy
-	}
-	log {
-		output file /var/log/caddy/use-uptake.log
-		format console
 	}
 }
 
@@ -169,10 +137,6 @@ geo.akilimo.org {
 	reverse_proxy 127.0.0.1:9510 {
 		import ../headers/proxy-headers.caddy
 	}
-	log {
-		output file /var/log/caddy/geo-server.log
-		format console
-	}
 }
 
 stats.akilimo.org {
@@ -189,9 +153,5 @@ stats.akilimo.org {
 	}
 	reverse_proxy 127.0.0.1:9511 {
 		import ../headers/proxy-headers.caddy
-	}
-	log {
-		output file /var/log/caddy/stats-api.log
-		format console
 	}
 }

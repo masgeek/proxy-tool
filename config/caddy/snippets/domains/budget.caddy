@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# budget.munywele.co.ke — Yuvomi household planner
+# budget.munywele.co.ke — Firefly III
 # Host upstream: 127.0.0.1:9720 (stacks/budget)
 # -----------------------------------------------------------------------------
 budget.munywele.co.ke {
@@ -9,10 +9,5 @@ budget.munywele.co.ke {
 	reverse_proxy 127.0.0.1:9720 {
 		header_up X-Real-IP {remote_host}
 		header_up X-Forwarded-Proto {scheme}
-	}
-
-	log {
-		output file /var/log/caddy/budget.munywele.co.ke.log
-		format console
 	}
 }

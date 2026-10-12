@@ -17,12 +17,6 @@ munywele.co.ke {
 		import ../headers/proxy-headers.caddy
 		#header_up X-Forwarded-Port {server_port}
 	}
-
-	log {
-		output file /var/log/caddy/munywele.log
-		format console
-		level debug
-	}
 }
 
 # -----------------------------------------------------------------------------
@@ -40,12 +34,6 @@ api.munywele.co.ke {
 
 	reverse_proxy 127.0.0.1:9200 {
 		import ../headers/proxy-headers.caddy
-	}
-
-	log {
-		output file /var/log/caddy/fuelrod.log
-		format console
-		level debug
 	}
 }
 
@@ -84,12 +72,6 @@ http://api.munywele.co.ke {
 	handle {
 		redir https://{host}{uri} 308
 	}
-
-	log {
-		output file /var/log/caddy/fuelrod-http.log
-		format console
-		level debug
-	}
 }
 
 # -----------------------------------------------------------------------------
@@ -105,12 +87,6 @@ sms.munywele.co.ke {
 
 	reverse_proxy 127.0.0.1:9201 {
 		import ../headers/proxy-headers.caddy
-	}
-
-	log {
-		output file /var/log/caddy/fuelrod-portal.log
-		format console
-		level debug
 	}
 }
 
@@ -133,12 +109,6 @@ portal.munywele.co.ke {
 		header Content-Type "application/json"
 		respond `{"status":"blocked","error":"suspicious_traffic","message":"Suspicious traffic has been detected from your IP address. Access has been temporarily blocked. If you believe this is an error, please contact support."}` 403
 	}
-
-	log {
-		output file /var/log/caddy/fuelrod-portal.log
-		format console
-		level debug
-	}
 }
 
 # -----------------------------------------------------------------------------
@@ -155,12 +125,6 @@ n8n.munywele.co.ke {
 	reverse_proxy 127.0.0.1:9700 {
 		import ../headers/proxy-headers.caddy
 	}
-
-	log {
-		output file /var/log/caddy/n8n.log
-		format console
-		level debug
-	}
 }
 
 # Fees service.
@@ -173,12 +137,6 @@ fees.munywele.co.ke {
 
 	reverse_proxy 127.0.0.1:9400 {
 		import ../headers/proxy-headers.caddy
-	}
-
-	log {
-		output file /var/log/caddy/fee.log
-		format console
-		level debug
 	}
 }
 
@@ -193,12 +151,6 @@ fees-dev.munywele.co.ke {
 	reverse_proxy 127.0.0.1:9401 {
 		import ../headers/proxy-headers.caddy
 	}
-
-	log {
-		output file /var/log/caddy/fee-dev.log
-		format console
-		level debug
-	}
 }
 
 # Cross-domain log and infrastructure dashboards.
@@ -210,10 +162,6 @@ logs.munywele.co.ke, logs.akilimo.org {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:9600 {
 		import ../headers/proxy-headers.caddy
-	}
-	log {
-		output file /var/log/caddy/grafana.log
-		format console
 	}
 }
 
@@ -247,10 +195,6 @@ sonar.munywele.co.ke {
 	reverse_proxy 127.0.0.1:9900 {
 		import ../headers/proxy-headers.caddy
 	}
-	log {
-		output file /var/log/caddy/sonar.log
-		format console
-	}
 }
 
 # Dolibarr invoicing.
@@ -262,10 +206,6 @@ invoice.munywele.co.ke {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:9705 {
 		import ../headers/proxy-headers.caddy
-	}
-	log {
-		output file /var/log/caddy/invoice.log
-		format console
 	}
 }
 
@@ -279,10 +219,6 @@ api.farm.munywele.co.ke {
 	reverse_proxy 127.0.0.1:9300 {
 		import ../headers/proxy-headers.caddy
 	}
-	log {
-		output file /var/log/caddy/farm-api.log
-		format console
-	}
 }
 
 # Farm web application.
@@ -294,10 +230,6 @@ farm.munywele.co.ke {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:9301 {
 		import ../headers/proxy-headers.caddy
-	}
-	log {
-		output file /var/log/caddy/farm-web.log
-		format console
 	}
 }
 
@@ -319,10 +251,6 @@ s3.munywele.co.ke {
 	reverse_proxy 127.0.0.1:9612 {
 		import ../headers/proxy-headers.caddy
 	}
-	log {
-		output file /var/log/caddy/s3.log
-		format console
-	}
 }
 
 # Object storage console.
@@ -334,10 +262,6 @@ s3-console.munywele.co.ke {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:9614 {
 		import ../headers/proxy-headers.caddy
-	}
-	log {
-		output file /var/log/caddy/s3-console.log
-		format console
 	}
 }
 
@@ -351,10 +275,6 @@ monitor.munywele.co.ke {
 	reverse_proxy 127.0.0.1:19999 {
 		import ../headers/proxy-headers.caddy
 	}
-	log {
-		output file /var/log/caddy/netdata.log
-		format console
-	}
 }
 
 # Application automation.
@@ -366,10 +286,6 @@ flow.munywele.co.ke {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:9710 {
 		import ../headers/proxy-headers.caddy
-	}
-	log {
-		output file /var/log/caddy/activepieces.log
-		format console
 	}
 }
 
@@ -383,10 +299,6 @@ caddy.munywele.co.ke {
 	reverse_proxy 127.0.0.1:9621 {
 		import ../headers/proxy-headers.caddy
 	}
-	log {
-		output file /var/log/caddy/caddy-manager.log
-		format console
-	}
 }
 
 # Beszel.
@@ -399,10 +311,6 @@ beszel.munywele.co.ke {
 	reverse_proxy 127.0.0.1:9625 {
 		import ../headers/proxy-headers.caddy
 	}
-	log {
-		output file /var/log/caddy/beszel.log
-		format console
-	}
 }
 
 # Cross-domain shortener alias.
@@ -414,9 +322,5 @@ lnk.munywele.co.ke, lnk.agwise.org, lnk.akilimo.org {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:9660 {
 		import ../headers/proxy-headers.caddy
-	}
-	log {
-		output file /var/log/caddy/shortener.log
-		format console
 	}
 }

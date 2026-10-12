@@ -51,6 +51,9 @@ rm -f "$target_dir/Caddyfile"
 rm -rf "$target_dir/snippets"
 rm -rf /var/www/caddy-errors
 install -d -m 0755 /var/www/caddy-errors
+# The access log lives outside /etc/caddy so a config deploy never touches it.
+# Caddy rotates the file itself, so only the directory needs to exist.
+install -d -m 0755 /var/log/caddy
 install -m 0644 "$source_dir"/errors/*.html /var/www/caddy-errors/
 cp -a "$stage_dir"/. "$target_dir"/
 

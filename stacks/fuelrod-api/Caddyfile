@@ -10,11 +10,6 @@
 api.munywele.co.ke, api.tsobu.co.ke {
         tls dev@munywele.co.ke
 
-        log {
-                output file /var/log/caddy/fuelrod.log
-                format console
-                level debug
-        }
 
         encode zstd gzip
 
@@ -38,11 +33,6 @@ api.munywele.co.ke, api.tsobu.co.ke {
 sms.munywele.co.ke {
         tls dev@munywele.co.ke
 
-        log {
-                output file /var/log/caddy/fuelrod-portal.log
-                format console
-                level debug
-        }
 
         encode zstd gzip
 

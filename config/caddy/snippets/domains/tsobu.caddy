@@ -12,11 +12,6 @@ api.tsobu.co.ke {
 	reverse_proxy 127.0.0.1:9200 {
 		import ../headers/proxy-headers.caddy
 	}
-
-	log {
-		output file /var/log/caddy/tsobu-api.log
-		format console
-	}
 }
 
 sms.tsobu.co.ke {
@@ -28,10 +23,5 @@ sms.tsobu.co.ke {
 
 	reverse_proxy 127.0.0.1:9201 {
 		import ../headers/proxy-headers.caddy
-	}
-
-	log {
-		output file /var/log/caddy/tsobu-portal.log
-		format console
 	}
 }

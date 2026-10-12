@@ -10,11 +10,6 @@
 logs.munywele.co.ke, logs.akilimo.org {
         tls dev@munywele.co.ke
 
-        log {
-                output file /var/log/caddy/grafana.log
-                format console
-                level debug
-        }
 
         encode zstd gzip
 

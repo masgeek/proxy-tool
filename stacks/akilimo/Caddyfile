@@ -10,11 +10,6 @@
 akilimo.org {
         tls akilimo@cgiar.org
 
-        log {
-                output file /var/log/caddy/akilimo.log
-                format console
-                level debug
-        }
 
         root * /data/extra_storage/services/akilimo
         encode zstd gzip
@@ -59,11 +54,6 @@ akilimo.org {
 portal.akilimo.org {
         tls akilimo@cgiar.org
 
-        log {
-                output file /var/log/caddy/akilimo-portal.log
-                format console
-                level debug
-        }
 
         root * /data/extra_storage/services/portal
         encode zstd gzip
@@ -105,11 +95,6 @@ portal.akilimo.org {
 new.akilimo.org {
         tls akilimo@cgiar.org
 
-        log {
-                output file /var/log/caddy/new-akilimo.log
-                format console
-                level debug
-        }
 
         root * /data/extra_storage/services/new_akilimo
         encode zstd gzip
@@ -151,11 +136,6 @@ new.akilimo.org {
 dev.akilimo.org {
         tls akilimo@cgiar.org
 
-        log {
-                output file /var/log/caddy/akilimo-dev.log
-                format console
-                level debug
-        }
 
         encode zstd gzip
 
@@ -184,11 +164,6 @@ dev.akilimo.org {
 api.akilimo.org {
         tls akilimo@cgiar.org
 
-        log {
-                output file /var/log/caddy/akilimo-api.log
-                format console
-                level debug
-        }
 
         encode zstd gzip
 

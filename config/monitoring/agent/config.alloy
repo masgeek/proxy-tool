@@ -92,6 +92,68 @@ loki.process "applications" {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Caddy access log
+//
+// Caddy runs on the host under systemd, not as a container, so the container
+// discovery above never sees its access log. This reads the single global file
+// written by the `log` block in config/caddy/Caddyfile and turns the JSON lines
+// into labelled Loki streams, which makes "which host 502'd at 14:32" a query
+// instead of a grep across fifty files.
+// ---------------------------------------------------------------------------
+loki.source.file "caddy" {
+  targets    = [{"__path__" = "/var/log/caddy/access.json"}]
+  forward_to = [loki.process.caddy.receiver]
+}
+
+loki.process "caddy" {
+  forward_to = [loki.write.default.receiver]
+
+  // Caddy writes one JSON object per line. Only low-cardinality fields become
+  // labels: every distinct uri, user agent or client address would create a new
+  // Loki stream, which is the fastest way to make Loki expensive and slow. Those
+  // fields stay extracted in the line body, where they are still searchable with
+  // a log query.
+  stage.json {
+    expressions = {
+      host       = "request.host",
+      method     = "request.method",
+      status     = "status",
+      uri        = "request.uri",
+      remote_ip  = "remote_ip",
+      user_agent = "request.headers.User-Agent",
+      duration   = "duration",
+    }
+  }
+
+  stage.labels {
+    values = {
+      host   = "",
+      method = "",
+      status = "",
+    }
+  }
+
+  // Keep the full request record in the line body for the fields worth keeping,
+  // and drop the rest so an access log cannot become a data store.
+  stage.static_labels {
+    values = {
+      service_name = "caddy",
+      log_type     = "access",
+    }
+  }
+
+  stage.drop {
+    expression        = "(?i)\"uri\":\"/(health|healthz|ready|readiness|live|livez)([/?\"]|$)"
+    drop_counter_reason = "health_check"
+  }
+
+  stage.drop {
+    expression        = "(?i)favicon\.ico"
+    drop_counter_reason = "favicon"
+  }
+}
+
 loki.write "default" {
   endpoint {
     url = sys.env("LOKI_URL") + "/loki/api/v1/push"

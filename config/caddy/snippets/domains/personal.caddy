@@ -9,10 +9,6 @@ track.munywele.co.ke {
 	reverse_proxy 127.0.0.1:8800 {
 		import ../headers/proxy-headers.caddy
 	}
-	log {
-		output file /var/log/caddy/track.log
-		format console
-	}
 }
 
 scrob.munywele.co.ke {
@@ -23,10 +19,6 @@ scrob.munywele.co.ke {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:8900 {
 		import ../headers/proxy-headers.caddy
-	}
-	log {
-		output file /var/log/caddy/scrob.log
-		format console
 	}
 }
 
@@ -39,10 +31,6 @@ mealie.munywele.co.ke {
 	reverse_proxy 127.0.0.1:8925 {
 		import ../headers/proxy-headers.caddy
 	}
-	log {
-		output file /var/log/caddy/mealie.log
-		format console
-	}
 }
 
 ryot.munywele.co.ke {
@@ -53,10 +41,6 @@ ryot.munywele.co.ke {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:8950 {
 		import ../headers/proxy-headers.caddy
-	}
-	log {
-		output file /var/log/caddy/ryot.log
-		format console
 	}
 }
 
@@ -72,10 +56,6 @@ paperless.munywele.co.ke {
 	reverse_proxy 127.0.0.1:8890 {
 		import ../headers/proxy-headers.caddy
 	}
-	log {
-		output file /var/log/caddy/paperless.log
-		format console
-	}
 }
 
 
@@ -88,9 +68,5 @@ jelly.munywele.co.ke {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:8930 {
 		import ../headers/proxy-headers.caddy
-	}
-	log {
-		output file /var/log/caddy/jellystat.log
-		format console
 	}
 }

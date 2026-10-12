@@ -16,11 +16,6 @@
 s3.munywele.co.ke {
         tls dev@munywele.co.ke
 
-        log {
-                output file /var/log/caddy/s3.log
-                format console
-                level debug
-        }
 
         @disallowed {
                 path /.git/*
@@ -44,11 +39,6 @@ s3.munywele.co.ke {
 s3-console.munywele.co.ke {
         tls dev@munywele.co.ke
 
-        log {
-                output file /var/log/caddy/s3-console.log
-                format console
-                level debug
-        }
 
         handle {
                 reverse_proxy 127.0.0.1:9614 {

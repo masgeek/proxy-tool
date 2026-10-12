@@ -10,11 +10,6 @@
 n8n.munywele.co.ke {
         tls dev@munywele.co.ke
 
-        log {
-                output file /var/log/caddy/n8n.log
-                format console
-                level debug
-        }
 
         encode zstd gzip
 

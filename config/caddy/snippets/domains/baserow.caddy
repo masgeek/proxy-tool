@@ -11,9 +11,4 @@ baserow.munywele.co.ke {
 		header_up X-Real-IP {remote_host}
 		header_up X-Forwarded-Proto {scheme}
 	}
-
-	log {
-		output file /var/log/caddy/baserow.munywele.co.ke.log
-		format console
-	}
 }

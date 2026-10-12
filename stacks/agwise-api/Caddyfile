@@ -13,11 +13,6 @@ api.agwise.org {
         tls dev@munywele.co.ke
         encode zstd gzip
 
-        log {
-                output file /var/log/caddy/agwise-api.log
-                format console
-                level debug
-        }
 
         handle {
                 reverse_proxy 127.0.0.1:8000 {
@@ -34,11 +29,6 @@ dashboard.agwise.org {
         tls dev@munywele.co.ke
         encode zstd gzip
 
-        log {
-                output file /var/log/caddy/agwise-dashboard.log
-                format console
-                level debug
-        }
 
         handle {
                 reverse_proxy 127.0.0.1:8300 {

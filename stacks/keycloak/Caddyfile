@@ -10,11 +10,6 @@
 keycloak.example.com {
         tls dev@munywele.co.ke
 
-        log {
-                output file /var/log/caddy/keycloak.log
-                format console
-                level debug
-        }
 
         encode zstd gzip
 

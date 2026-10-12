@@ -10,11 +10,6 @@
 kvuno.agwise.org {
         tls dev@munywele.co.ke
 
-        log {
-                output file /var/log/caddy/kvuno.log
-                format console
-                level debug
-        }
 
         encode zstd gzip
 

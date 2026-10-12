@@ -6,11 +6,6 @@
 fees-dev.munywele.co.ke {
         tls dev@munywele.co.ke
 
-        log {
-                output file /var/log/caddy/fees-dev.log
-                format console
-                level debug
-        }
 
         encode zstd gzip
         reverse_proxy 127.0.0.1:9401

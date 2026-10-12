@@ -10,11 +10,6 @@
 uptake.akilimo.org {
         tls akilimo@cgiar.org
 
-        log {
-                output file /var/log/caddy/use-uptake.log
-                format console
-                level debug
-        }
 
         encode zstd gzip
 
