@@ -18,7 +18,7 @@ services:
       # Self-hosted: skip the daily release check to econumo.com.
       ECONUMO_CHECK_UPDATES: "false"
       # Base currency for multi-currency support; upstream default is USD.
-      ECONUMO_CURRENCY_BASE: ${ECONUMO_CURRENCY_BASE:-KES}
+      ECONUMO_CURRENCY_BASE: ${ECONUMO_CURRENCY_BASE:-USD}
       ECONUMO_LOG_LEVEL: ${ECONUMO_LOG_LEVEL:-info}
       MAILER_DSN: ${MAILER_DSN:-}
       TZ: ${TZ:-Africa/Nairobi}
