@@ -125,6 +125,7 @@ Requirement IDs restart per subsection, so cite them as `F7.4-3` for example.
 | F7.4-17 | A fee, tax or levy may arrive in a **later** message than the amount. An entry must not post until its settling window has closed, or an auto-posted entry would omit the fee permanently. |
 | F7.4-18 | The canonical model carries a labelled `charges[]` breakdown rather than a single fee, so `token_value`, `tax_and_levies` and `fee` are distinguishable and each can map to its own expense account. A message with no breakdown yields an empty array. |
 | F7.4-19 | Honour a global pause: while paused, entries are accepted and queued but nothing is forwarded to the provider. |
+| F7.4-20 | Backfill of historical exports is an explicit opt-in administrative action. It defaults to a dry run, requires an explicit sender list and date range, is refused for senders whose parser is unverified, and routes results through the ordinary store and review queue. |
 
 ### 7.5 Offline and recovery
 
@@ -786,6 +787,41 @@ a person.
 - `/v1/health` stays unauthenticated for monitoring, while every UI route and every
   review action requires a session.
 
+### 10.9 Backfill as an opt-in action
+
+Historical SMS exports are used for design and testing, not as the normal entry
+path. The service runs from its first message; nothing older is ingested unless
+someone deliberately asks for it.
+
+Backfill therefore exists as an explicit, opt-in administrative action, not a
+feature that runs automatically or a one-off script kept outside the repository.
+
+| Aspect | Rule |
+| --- | --- |
+| Trigger | An admin action in the dashboard, or the equivalent CLI command. Never scheduled, never automatic. |
+| Input | An SMS export file, in the layout produced by common exporters: timestamp, direction, sender, phone, content |
+| Dry run | The default for every invocation. It parses, classifies and reports, and writes nothing. |
+| Confirmation | The dry-run report shows entries by category and month, totals in and out, and every entry that would need review. Posting happens only after a human confirms. |
+| Scope | An explicit sender list and date range. An unbounded range is refused. |
+| Reuse | The same parsers, exclusions and correlation rules as live traffic, including the facility exclusion. No separate code path. |
+| Idempotency | The same idempotency key as live traffic, so a repeated backfill cannot duplicate entries that already exist. |
+| Routing | Entries enter the same store and the same review queue, so a backfilled transaction is reviewed and posted exactly like a live one. |
+
+Two safeguards follow from backfill being rare and large:
+
+- **A cap per run.** An export of several thousand messages must be processed in
+  bounded batches, so a mistaken range cannot post an entire year in one action.
+- **Parser maturity gate.** Backfill is refused for a sender whose parser is still
+  marked unverified. Backfilling with a parser that has not been tested against
+  live traffic risks a large volume of incorrect entries, which is far harder to
+  unpick than a handful.
+
+The reason this is opt-in rather than a startup import: an import on first run is
+indistinguishable from a bug. A deliberate action, dry-run first, with a report a
+human reads, is auditable — and it means the ledger's history is never assembled
+without someone deciding to assemble it.
+
+
 ## 11. UX
 
 ### The app
@@ -982,6 +1018,7 @@ longer carries them as open items.
 | Is auto-posting safe with spoofable sender IDs | Only with per-sender amount and daily ceilings | Sender IDs are not authenticated, so unbounded auto-post is the weakest link; ceilings bound the damage to a reviewable inbox |
 | Ingestion authentication | Bearer token plus per-request HMAC with timestamp and nonce | The endpoint writes financial records from the public internet, so a stolen token alone must not be enough to inject entries |
 | Reconciliation | Periodic statement comparison, deferred to Phase 4 | Captured entries will drift; a diff report is how a systematic parse error is caught after the fact |
+| Does the service start from history | No, from its first message; backfill is opt-in and dry-run first | An import on first run is indistinguishable from a bug, while a deliberate action with a report a human reads is auditable, and it keeps the corpus usable for testing without risking a corrupted history |
 | Where transactions live before posting | In the ingestion service's own database, as the system of record | Storing first means nothing is lost to a crash, an outage or a lost phone, and the entry can be corrected before it becomes a financial record; review-before-posting then becomes a policy per sender rather than a separate mode |
 | Is the app's queue the record | No | The app's Room queue is a delivery buffer; only the service database survives reinstall and phone change |
 | Where the review UI lives | In the ingestion service, not a separate grid database | The queue is the service's own product; an external tool adds a second deployment, a second database, and a dependency on its API just to detect an approval |
