@@ -110,7 +110,7 @@ docker compose --env-file stacks/budget/.env -f stacks/budget/docker-compose.yml
 
 Run the CLI through `exec` rather than as the container entrypoint, so no transient
 failure can leave the service down.
-- **ezBookkeeping** — configuration is `EBK_*`; `APP_KEY` maps to `EBK_SECURITY_SECRET_KEY`, and generate that with `openssl rand -base64 32`. The image resolves its config path from `EBK_CONF_PATH` and aborts with `open : no such file or directory` when that resolves to nothing, so `services/ezbookkeeping.ini` is mounted read-only into the container. That path is relative to the service file that declares the mount, not to the stack directory, so if you deploy from a different layout set `EZBOOKKEEPING_CONF` to an absolute path — Dokploy otherwise fails with `not a directory: Are you trying to mount a directory onto a file`; all operational values are overridden by environment variables, so no secret lives in that file. Two option names are easy to get wrong: `mode` belongs to the `global` section (omitting it aborts startup with `invalid server mode`) and the listen port is `http_port`, not `port`. `EBK_SERVER_ROOT_URL` is set explicitly so generated links carry no container port behind Caddy. The image runs as UID/GID 1000, so the service runs as root to keep the named volumes writable; the alternative is a one-time `chown 1000:1000` of `ezbookkeeping-storage`, `ezbookkeeping-logs` and `ezbookkeeping-data`. The `ezbookkeeping-data` volume is mounted even though this stack uses PostgreSQL, so falling back to sqlite3 by mistake cannot silently lose data.
+- **ezBookkeeping** — configuration is `EBK_*` following the upstream reference, where the object storage section is `storage` (so the variable is `EBK_STORAGE_TYPE`, and `EBK_OBJECT_STORAGE_TYPE` would be silently ignored); `APP_KEY` maps to `EBK_SECURITY_SECRET_KEY`, and generate that with `openssl rand -base64 32`. The image resolves its config path from `EBK_CONF_PATH` and aborts with `open : no such file or directory` when that resolves to nothing, so `services/ezbookkeeping.ini` is mounted read-only into the container. That path is relative to the service file that declares the mount, not to the stack directory, so if you deploy from a different layout set `EZBOOKKEEPING_CONF` to an absolute path — Dokploy otherwise fails with `not a directory: Are you trying to mount a directory onto a file`; all operational values are overridden by environment variables, so no secret lives in that file. Two option names are easy to get wrong: `mode` belongs to the `global` section (omitting it aborts startup with `invalid server mode`) and the listen port is `http_port`, not `port`. `EBK_SERVER_ROOT_URL` is set explicitly so generated links carry no container port behind Caddy. The image runs as UID/GID 1000, so the service runs as root to keep the named volumes writable; the alternative is a one-time `chown 1000:1000` of `ezbookkeeping-storage`, `ezbookkeeping-logs` and `ezbookkeeping-data`. The `ezbookkeeping-data` volume is mounted even though this stack uses PostgreSQL, so falling back to sqlite3 by mistake cannot silently lose data.
 
 ## Backups
 
@@ -126,3 +126,35 @@ Yuvomi keeps everything in `budget-data` (`/data/yuvomi.db`); a host-level file 
 ## Routing
 
 Caddy configuration lives in `config/caddy/snippets/domains/budget.caddy` and proxies `budget.munywele.co.ke` to `127.0.0.1:9720`.
+
+## ezBookkeeping first user and API token
+
+Create the first user without opening the browser, so the instance never needs
+open registration:
+
+```bash
+# generate the encryption secret
+docker compose --env-file stacks/budget/.env -f stacks/budget/docker-compose.yml   exec budget /ezbookkeeping/ezbookkeeping security gen-secret-key
+
+# create the admin user
+docker compose --env-file stacks/budget/.env -f stacks/budget/docker-compose.yml   exec budget /ezbookkeeping/ezbookkeeping userdata user-add   -n username -m you@example.com -i "Your Name" -p 'a-strong-password' -c KES
+```
+
+Afterwards set `EBK_USER_ENABLE_REGISTER=false` in `.env` and recreate.
+
+Useful later, when the ingestion service exists:
+
+```bash
+# API token for the ingestion service
+docker compose --env-file stacks/budget/.env -f stacks/budget/docker-compose.yml   exec budget /ezbookkeeping/ezbookkeeping userdata user-session-new   -n username --type api -e 0
+
+# import and export from the CLI
+... exec budget /ezbookkeeping/ezbookkeeping userdata transaction-import   -n username -f /ezbookkeeping/data/transactions.csv --type ezbookkeeping_csv
+... exec budget /ezbookkeeping/ezbookkeeping userdata transaction-export   -n username -f /ezbookkeeping/data/export.csv --type csv
+```
+
+Enable `EBK_ENABLE_API_TOKEN=true` before minting a token, and set
+`EBK_API_TOKEN_ALLOWED_REMOTE_IPS` to the Docker subnets so the token cannot be
+used from the public internet. Transaction import and export also matter for the
+SMS companion PRD: the CLI import path is the way historical data gets in, while
+the REST API is the way the ingestion service writes going forward.

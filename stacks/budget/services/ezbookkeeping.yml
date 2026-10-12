@@ -26,9 +26,22 @@ services:
       EBK_DATABASE_NAME: ${DB_DATABASE:-ezbookkeeping}
       EBK_DATABASE_USER: ${DB_USERNAME:-ezbookkeeping}
       EBK_DATABASE_PASSWD: ${DB_PASSWORD:-}
-      EBK_OBJECT_STORAGE_TYPE: ${EBK_OBJECT_STORAGE_TYPE:-local_filesystem}
+      EBK_DATABASE_SSL_MODE: ${EBK_DATABASE_SSL_MODE:-disable}
+      # The object storage section is named `storage`, so the variable is
+      # EBK_STORAGE_TYPE — EBK_OBJECT_STORAGE_TYPE is silently ignored.
+      EBK_STORAGE_TYPE: ${EBK_STORAGE_TYPE:-local_filesystem}
       EBK_LOG_MODE: ${EBK_LOG_MODE:-file}
       EBK_SECURITY_SECRET_KEY: ${APP_KEY:-}
+      # Two-factor auth stays on; the API token is only needed once the ingestion
+      # service exists, and enabling it early widens the surface for no benefit.
+      EBK_AUTH_ENABLE_TWO_FACTOR: "true"
+      EBK_SECURITY_ENABLE_API_TOKEN: ${EBK_ENABLE_API_TOKEN:-false}
+      # Blank allows any source address. Restrict to the Docker subnets once the
+      # ingestion service exists.
+      EBK_SECURITY_API_TOKEN_ALLOWED_REMOTE_IPS: ${EBK_API_TOKEN_ALLOWED_REMOTE_IPS:-}
+      # Open registration is needed once to create the first user, or use
+      # `userdata user-add`. Set this to false afterwards.
+      EBK_USER_ENABLE_REGISTER: ${EBK_USER_ENABLE_REGISTER:-true}
       TZ: ${TZ:-Africa/Nairobi}
       STACK_REVISION: ${STACK_REVISION:-1791743363}
     ports:
