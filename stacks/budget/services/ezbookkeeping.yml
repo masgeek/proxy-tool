@@ -8,6 +8,10 @@ services:
     # named volume; see README for the chown alternative.
     user: "0:0"
     environment:
+      # The image resolves its configuration path from this variable and fails at
+      # startup with `open : no such file or directory` when it is empty, so the
+      # file below must always be mounted.
+      EBK_CONF_PATH: /ezbookkeeping/conf/ezbookkeeping.ini
       EBK_SERVER_DOMAIN: ${APP_DOMAIN:-budget.munywele.co.ke}
       EBK_SERVER_PROTOCOL: ${APP_PROTOCOL:-https}
       EBK_SERVER_ENABLE_GZIP: "true"
@@ -24,8 +28,10 @@ services:
     ports:
       - "127.0.0.1:9720:8080"
     volumes:
+      - ${EZBOOKKEEPING_CONF:-./ezbookkeeping.ini}:/ezbookkeeping/conf/ezbookkeeping.ini:ro
       - ezbookkeeping_storage:/ezbookkeeping/storage
       - ezbookkeeping_logs:/ezbookkeeping/log
+      - ezbookkeeping_data:/ezbookkeeping/data
     networks:
       - dokploy-network
       - internal

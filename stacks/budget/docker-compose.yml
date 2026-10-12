@@ -55,6 +55,9 @@ volumes:
   ezbookkeeping_logs:
     driver: local
     name: ezbookkeeping-logs
+  ezbookkeeping_data:
+    driver: local
+    name: ezbookkeeping-data
 
 services:
   budget:

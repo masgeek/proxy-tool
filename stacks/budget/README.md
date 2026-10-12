@@ -110,7 +110,7 @@ docker compose --env-file stacks/budget/.env -f stacks/budget/docker-compose.yml
 
 Run the CLI through `exec` rather than as the container entrypoint, so no transient
 failure can leave the service down.
-- **ezBookkeeping** — configuration is `EBK_*`; `APP_KEY` maps to `EBK_SECURITY_SECRET_KEY`. The image runs as UID/GID 1000, so the service runs as root to keep the named volumes writable; the alternative is a one-time `chown 1000:1000` of `ezbookkeeping-storage` and `ezbookkeeping-logs`.
+- **ezBookkeeping** — configuration is `EBK_*`; `APP_KEY` maps to `EBK_SECURITY_SECRET_KEY`, and generate that with `openssl rand -base64 32`. The image resolves its config path from `EBK_CONF_PATH` and aborts with `open : no such file or directory` when that resolves to nothing, so `ezbookkeeping.ini` is mounted read-only into the container; all operational values are overridden by environment variables, so no secret lives in that file. The image runs as UID/GID 1000, so the service runs as root to keep the named volumes writable; the alternative is a one-time `chown 1000:1000` of `ezbookkeeping-storage`, `ezbookkeeping-logs` and `ezbookkeeping-data`. The `ezbookkeeping-data` volume is mounted even though this stack uses PostgreSQL, so falling back to sqlite3 by mistake cannot silently lose data.
 
 ## Backups
 
@@ -119,7 +119,7 @@ PostgreSQL apps are covered by the repository's `db-backup/` tooling:
 - Actual Budget: `actual_budget` database + `actual-budget-files` volume
 - Firefly III: `firefly` database + `firefly-upload` volume
 - Econumo: `econumo` database + `econumo-db` and `econumo-jwt` volumes
-- ezBookkeeping: `ezbookkeeping` database + `ezbookkeeping-storage` and `ezbookkeeping-logs` volumes
+- ezBookkeeping: `ezbookkeeping` database + `ezbookkeeping-storage`, `ezbookkeeping-logs` and `ezbookkeeping-data` volumes
 
 Yuvomi keeps everything in `budget-data` (`/data/yuvomi.db`); a host-level file copy or `sqlite3 yuvomi.db ".backup"` is the backup, plus `budget-documents` if documents are stored locally.
 
