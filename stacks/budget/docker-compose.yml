@@ -56,5 +56,5 @@ services:
   budget:
     container_name: budget
     extends:
-      file: ./services/actual-budget.yml
+      file: ./services/firefly-iii.yml
       service: budget
