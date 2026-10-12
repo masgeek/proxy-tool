@@ -59,10 +59,20 @@ only.
    docker exec postgres createdb --username "$POSTGRES_USER" --owner "$POSTGRES_USER" baserow
    ```
 
-3. Deploy the cache stack first, and set `REDIS_PASSWORD` here to match
-   `REDIS_JOBS_PASSWORD` there. Baserow uses the `redis-jobs` instance on database
-   3 — it is a Celery queue, so that instance runs `noeviction` and must never be
-   flushed. See `docs/redis-instances.md`.
+3. Deploy the cache stack first, then point `REDIS_URL` at its `redis-jobs`
+   instance on database **3**. Baserow takes the database index from the URL
+   rather than a separate variable, so this line is the one that must be right:
+
+   ```
+   # no password on the instance
+   REDIS_URL=redis://redis-jobs:6379/3
+   # with a password
+   REDIS_URL=redis://:THE_PASSWORD@redis-jobs:6379/3
+   ```
+
+   `REDIS_PASSWORD` must match `REDIS_JOBS_PASSWORD` in `stacks/cache/.env`
+   exactly, including being empty. That instance is a Celery queue, so it runs
+   `noeviction` and must never be flushed. See `docs/redis-instances.md`.
 
 4. Optionally create the first account headlessly, by setting `BASEROW_INSTALL_JSON`
    to a single-line JSON object before the first start:

@@ -61,7 +61,10 @@ is the only one in use.
 - Keep the container memory limit comfortably above `maxmemory` so Redis can free
   memory instead of being killed.
 - Passwords are per instance, not global, so a compromised application cannot
-  authenticate to an instance holding another application's queue.
+  authenticate to an instance holding another application's queue. An instance
+  running without a password is reachable by anything on `dokploy-network`,
+  which means an unauthenticated compromise of any container is also a
+  compromise of every cache on that instance — set the passwords.
 - All instances run with `--appendonly yes`; queue and broker state must survive a
   restart.
 - Deploy the cache stack before any application stack that points at it.
