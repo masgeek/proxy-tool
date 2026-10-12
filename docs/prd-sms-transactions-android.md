@@ -79,6 +79,8 @@ Requirement IDs restart per subsection, so cite them as `F7.4-3` for example.
 | F7.2-4 | Per sender, choose the currency; the message never sets the currency, because a misread symbol is silent corruption. |
 | F7.2-5 | Per sender, declare which accounts are your own, so movements between them are recognised as internal transfers. |
 | F7.2-6 | Per sender, set auto-post limits: maximum single amount, maximum per day, and an always-confirm switch. |
+| F7.2-9 | Per sender, set the default classification for each direction, so a salary credit or a utility bill does not need a decision per message. A sender rule never overrides transfer detection: an incoming credit that pairs with an outgoing debit inside the window is a transfer regardless of the sender rule. |
+| F7.2-10 | Per sender, map a masked account reference, such as a bank message naming only the last four digits, to an account, and route a mismatch to review rather than posting to the wrong account. |
 | F7.2-7 | A blocklist is checked before the allowlist, so a sender on both lists is always blocked. |
 | F7.2-8 | The allowlist is device-local in v1, with JSON export and import as the backup and transfer mechanism. |
 
@@ -250,8 +252,12 @@ Detection rules, applied in order:
 
 1. Explicit wording in the message ("to your own account", "transfer to", "internal transfer").
 2. Destination present in the sender's own-account list (F7.2-5).
-3. A debit and a credit from the same sender, same amount and currency, within a
-   matching window (default 15 minutes), where the reference or counterparty links them.
+3. A debit and a credit, **from any sender pair**, with the same amount and
+   currency inside a matching window (default 15 minutes), where the reference or
+   counterparty links them. Cross-sender matching is essential: a bank credit from
+   a salary sender is indistinguishable from an incoming own-account transfer unless
+   the outgoing debit arrives from a different sender, which is the normal case for
+   M-Pesa to bank and for bank to bank.
 4. None of the above: the debit is treated as an expense. Being wrong in this
    direction is recoverable by tagging; being wrong in the other silently
    misreports spending.
