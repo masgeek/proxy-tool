@@ -48,6 +48,30 @@ standard ports for compatibility.
 > container port; free on the host — 8001 is the shared R compute backend,
 > 8080 is the on-demand adminer, 8800 is yamtrack).
 
+## Personal services
+
+Not stacks in this repository; the Caddy snippet is the only tracked artifact.
+
+| Service | Domain | Host port | Container port | Caddyfile |
+|---------|--------|-----------|----------------|-----------|
+| yamtrack | `track.munywele.co.ke` | 8800 | 3000 | `config/caddy/snippets/domains/personal.caddy` |
+| paperless | `paperless.munywele.co.ke` | 8890 | 8000 | `config/caddy/snippets/domains/personal.caddy` |
+| scrobble | `scrob.munywele.co.ke` | 8900 | 5000 | `config/caddy/snippets/domains/personal.caddy` |
+| mealie | `mealie.munywele.co.ke` | 8925 | 80 | `config/caddy/snippets/domains/personal.caddy` |
+| tracearr | `stat.munywele.co.ke` | 8930 | 3000 | `config/caddy/snippets/domains/personal.caddy` |
+| ryot | `ryot.munywele.co.ke` | 8950 | 3000 | `config/caddy/snippets/domains/personal.caddy` |
+
+> **Note:** `tracearr` replaced Jellystat on 8930, and the domain moved from
+> `jelly` to `stat`. Tracearr (https://github.com/connorgallopo/tracearr) monitors
+> Plex, Jellyfin and Emby. It is a Node/Fastify app and **requires TimescaleDB**,
+> which the shared `postgres` does not provide, so it needs its own
+> `timescale/timescaledb-ha` container rather than a `transactions`-style database
+> on the shared service. It also needs a Redis instance for BullMQ, which belongs
+> in `stacks/cache` per the allocation policy.
+>
+> The route sets `flush_interval -1` because Tracearr pushes live sessions over SSE
+> and Socket.IO; Caddy's default response buffering would delay events.
+
 ## Monitoring stack
 
 | Service | Host port | Container port | Caddyfile |

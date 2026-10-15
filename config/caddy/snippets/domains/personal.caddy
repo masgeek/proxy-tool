@@ -60,7 +60,7 @@ paperless.munywele.co.ke {
 
 
 
-jelly.munywele.co.ke {
+stat.munywele.co.ke {
 	tls dev@munywele.co.ke
 	encode gzip zstd
 	import ../disallowed-basic.caddy
@@ -68,5 +68,8 @@ jelly.munywele.co.ke {
 	import ../errors.caddy
 	reverse_proxy 127.0.0.1:8930 {
 		import ../headers/proxy-headers.caddy
+		# Tracearr streams live sessions over SSE and Socket.IO; buffering would
+		# hold events back until the response completed.
+		flush_interval -1
 	}
 }
