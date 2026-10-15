@@ -1,0 +1,90 @@
+name: "tracearr"
+
+# Media-server monitoring — Tracearr.
+#
+#   stat.munywele.co.ke -> 127.0.0.1:8930
+#
+# Replaces Jellystat, which only covered Jellyfin and Emby. Tracearr covers Plex,
+# Jellyfin and Emby from one dashboard and adds trust scoring and account-sharing
+# detection. The upstream port stays 8930; only the domain changed.
+#
+# This uses the `supervised` image, which bundles the app, TimescaleDB and Redis
+# into one container via supervisord. The reason is TimescaleDB: Tracearr needs
+# it, and the shared `postgres` stack runs postgis/postgis:17-3.5, which has no
+# timescaledb extension. Installing it there would mean adding
+# timescaledb to shared_preload_libraries on the instance serving akilimo,
+# shirakalu, sonar, metabase, yamtrack and keycloak, plus retuning
+# max_locks_per_transaction and nofile for one consumer's benefit.
+#
+# The trade is real and is recorded in the README: the supervised image needs 3GB
+# RAM minimum, runs PostgreSQL 15 rather than 18, and upstream documents it as
+# unsupported on VMs and nested container environments. Its volume layout is not
+# compatible with the standard multi-container install, so switching later means
+# a pg_dump and restore.
+#
+# Secrets are generated on first boot and persisted in the data volume. There is
+# no .env requirement, unlike every other stack here.
+
+networks:
+  internal:
+    name: internal
+    external: false
+  dokploy-network:
+    name: dokploy-network
+    external: true
+
+volumes:
+  tracearr_postgres:
+    driver: local
+    name: tracearr-postgres
+  tracearr_redis:
+    driver: local
+    name: tracearr-redis
+  tracearr_data:
+    driver: local
+    name: tracearr-data
+
+services:
+  tracearr:
+    container_name: tracearr
+    image: ghcr.io/connorgallopo/tracearr:${TRACEARR_TAG:-supervised}
+    hostname: tracearr
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-Africa/Nairobi}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      # Tracearr decides whether to trust X-Forwarded-* by hop count. One hop
+      # here: this container behind host Caddy.
+      TRUST_PROXY: ${TRUST_PROXY:-true}
+      STACK_REVISION: ${STACK_REVISION:-1792065600}
+    ports:
+      # The container always listens on 3000 internally.
+      - "127.0.0.1:8930:3000"
+    volumes:
+      - tracearr_postgres:/var/lib/postgresql/data
+      - tracearr_redis:/var/lib/redis
+      - tracearr_data:/data
+    networks:
+      - dokploy-network
+      - internal
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          # Below 3GB the OOM killer takes the container (exit 137). PostgreSQL,
+          # Redis and Node.js all run inside it.
+          memory: 3g
+          cpus: "2.0"
+        reservations:
+          memory: 1g
+          cpus: "0.1"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
