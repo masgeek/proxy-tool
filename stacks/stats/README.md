@@ -1,7 +1,7 @@
-# Tracearr
+# Tracearr stack — media-server monitoring
 
-Media-server monitoring for Plex, Jellyfin and Emby. Replaces Jellystat, which
-covered only Jellyfin and Emby.
+The stack directory is named `stats` for what it does, following the `budget`
+convention for Firefly III. The application is Tracearr.
 
 | | |
 | --- | --- |
@@ -48,15 +48,15 @@ on-disk format differs between PostgreSQL 15 and 18, and PostgreSQL will refuse 
 start against the old volume. Take a `pg_dump` first:
 
 ```bash
-docker exec tracearr node apps/server/scripts/backup.ts
-docker cp tracearr:/data/backup ./tracearr-backups
+docker exec stats node apps/server/scripts/backup.ts
+docker cp stats:/data/backup ./tracearr-backups
 ```
 
 ## Deploy
 
 ```bash
-docker compose --env-file stacks/tracearr/.env -f stacks/tracearr/docker-compose.yml up -d tracearr
-docker compose --env-file stacks/tracearr/.env -f stacks/tracearr/docker-compose.yml logs -f tracearr
+docker compose --env-file stacks/stats/.env -f stacks/stats/docker-compose.yml up -d stats
+docker compose --env-file stacks/stats/.env -f stacks/stats/docker-compose.yml logs -f stats
 ```
 
 Secrets are generated on first boot. The first start initialises PostgreSQL, so
@@ -74,29 +74,23 @@ until the upstream response completed, making the real-time view lag.
 `X-Forwarded-*` by hop count, and there is exactly one hop: this container behind
 host Caddy.
 
-## DNS
-
-`jelly.munywele.co.ke` must be **removed** from DNS. It now resolves to a
-hostname that serves Tracearr, so it is misleading even though it will not
-resolve once the record is gone.
-
 ## Volumes and backup
 
 | Volume | Contents |
 | --- | --- |
-| `tracearr-postgres` | The database. The only copy of session history. |
-| `tracearr-redis` | BullMQ job state. |
-| `tracearr-data` | Poster image cache, application data and `/data/backup`. |
+| `stats-postgres` | The database. The only copy of session history. |
+| `stats-redis` | BullMQ job state. |
+| `stats-data` | Poster image cache, application data and `/data/backup`. |
 
 These are **not** covered by `db-backup`: that tooling is built against the shared
-`databases` stack, and this database is deliberately not in it. Use Tracearr's
-own backup, or add an explicit `pg_dump` job.
+`databases` stack, and this database is deliberately not in it. Use Tracearr's own
+backup, or add an explicit `pg_dump` job.
 
 ## Upgrading
 
 ```bash
-docker compose --env-file stacks/tracearr/.env -f stacks/tracearr/docker-compose.yml pull
-docker compose --env-file stacks/tracearr/.env -f stacks/tracearr/docker-compose.yml up -d tracearr
+docker compose --env-file stacks/stats/.env -f stacks/stats/docker-compose.yml pull
+docker compose --env-file stacks/stats/.env -f stacks/stats/docker-compose.yml up -d stats
 ```
 
 Back up first. The PostgreSQL major version in the supervised image has changed

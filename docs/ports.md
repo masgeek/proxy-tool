@@ -56,19 +56,19 @@ standard ports for compatibility.
 | — | paperless | `paperless.munywele.co.ke` | 8890 | 8000 | `config/caddy/snippets/domains/personal.caddy` |
 | — | scrobble | `scrob.munywele.co.ke` | 8900 | 5000 | `config/caddy/snippets/domains/personal.caddy` |
 | — | mealie | `mealie.munywele.co.ke` | 8925 | 80 | `config/caddy/snippets/domains/personal.caddy` |
-| tracearr | tracearr | `stat.munywele.co.ke` | 8930 | 3000 | `config/caddy/snippets/domains/personal.caddy` |
+| stats | stats | `stat.munywele.co.ke` | 8930 | 3000 | `config/caddy/snippets/domains/personal.caddy` |
 | — | ryot | `ryot.munywele.co.ke` | 8950 | 3000 | `config/caddy/snippets/domains/personal.caddy` |
 
 > **Note:** rows with no stack are deployed outside this repository, so the Caddy
-> snippet is the only tracked artifact for them. `tracearr` replaced Jellystat on
-> 8930 and the domain moved from `jelly` to `stat`.
+> snippet is the only tracked artifact for them. The `stats` stack is named for
+> what it does, following the `budget` convention, and runs Tracearr.
 >
-> `tracearr` (https://github.com/connorgallopo/tracearr) monitors Plex, Jellyfin
-> and Emby. It runs the `supervised` image, which bundles the app, TimescaleDB and
-> Redis in one container, because Tracearr requires TimescaleDB and the shared
-> `postgres` does not provide it. Consequences: **3GB RAM minimum**, PostgreSQL 15
-> rather than 18, and no `.env` secrets since it self-generates. Its database is
-> not in `db-backup`. See `stacks/tracearr/README.md`.
+> `stats` monitors Plex, Jellyfin and Emby
+> (https://github.com/connorgallopo/tracearr). It runs the `supervised` image,
+> which bundles the app, TimescaleDB and Redis in one container, because Tracearr
+> requires TimescaleDB and the shared `postgres` does not provide it. Consequences:
+> **3GB RAM minimum**, PostgreSQL 15 rather than 18, and no `.env` secrets since it
+> self-generates. Its database is not in `db-backup`. See `stacks/stats/README.md`.
 >
 > The route sets `flush_interval -1` because Tracearr pushes live sessions over
 > SSE and Socket.IO; Caddy's default response buffering would delay events.
