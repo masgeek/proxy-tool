@@ -66,10 +66,7 @@ stat.munywele.co.ke {
 	import ../disallowed-basic.caddy
 	import ../headers/security-headers.caddy
 	import ../errors.caddy
-	reverse_proxy 127.0.0.1:8930 {
+	reverse_proxy 127.0.0.1:8950 {
 		import ../headers/proxy-headers.caddy
-		# Tracearr streams live sessions over SSE and Socket.IO; buffering would
-		# hold events back until the response completed.
-		flush_interval -1
 	}
 }
