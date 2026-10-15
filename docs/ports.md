@@ -60,7 +60,6 @@ media repo — so the Caddy snippet is the only artifact tracked here.
 | scrobble | `scrob.munywele.co.ke` | 8900 | 5000 | personal |
 | mealie | `mealie.munywele.co.ke` | 8925 | 80 | personal |
 | stats | `stat.munywele.co.ke` | 8930 | 3000 | personal |
-| ryot | `ryot.munywele.co.ke` | 8950 | 3000 | personal |
 
 > **Note:** Caddy routes these, so the host ports above are what the reverse proxy
 > targets. The stacks themselves are not validated by `scripts/validate-compose.sh`

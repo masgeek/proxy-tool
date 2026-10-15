@@ -33,16 +33,7 @@ mealie.munywele.co.ke {
 	}
 }
 
-ryot.munywele.co.ke {
-	tls dev@munywele.co.ke
-	encode gzip zstd
-	import ../disallowed-basic.caddy
-	import ../headers/security-headers.caddy
-	import ../errors.caddy
-	reverse_proxy 127.0.0.1:8950 {
-		import ../headers/proxy-headers.caddy
-	}
-}
+
 
 paperless.munywele.co.ke {
 	tls dev@munywele.co.ke

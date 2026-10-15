@@ -102,7 +102,7 @@ scrape_configs:
           - https://track.munywele.co.ke/
           - https://scrob.munywele.co.ke/
           - https://mealie.munywele.co.ke/
-          - https://ryot.munywele.co.ke/
+          - https://stat.munywele.co.ke/
           - https://paperless.munywele.co.ke/
           # agwise.caddy
           - https://agwise.org/
