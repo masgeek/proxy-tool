@@ -48,27 +48,31 @@ standard ports for compatibility.
 > container port; free on the host — 8001 is the shared R compute backend,
 > 8080 is the on-demand adminer, 8800 is yamtrack).
 
-## Personal and media stacks
+## Personal and media services (hosted elsewhere)
 
-| Stack | Service | Domain | Host port | Container port | Caddyfile |
-|-------|---------|--------|-----------|----------------|-----------|
-| — | yamtrack | `track.munywele.co.ke` | 8800 | 3000 | `config/caddy/snippets/domains/personal.caddy` |
-| — | paperless | `paperless.munywele.co.ke` | 8890 | 8000 | `config/caddy/snippets/domains/personal.caddy` |
-| — | scrobble | `scrob.munywele.co.ke` | 8900 | 5000 | `config/caddy/snippets/domains/personal.caddy` |
-| — | mealie | `mealie.munywele.co.ke` | 8925 | 80 | `config/caddy/snippets/domains/personal.caddy` |
-| stats | stats | `stat.munywele.co.ke` | 8930 | 3000 | `config/caddy/snippets/domains/personal.caddy` |
-| — | ryot | `ryot.munywele.co.ke` | 8950 | 3000 | `config/caddy/snippets/domains/personal.caddy` |
+These upstreams are deployed outside this repository — mostly in the **personal**
+media repo — so the Caddy snippet is the only artifact tracked here.
 
-> **Note:** rows with no stack are deployed outside this repository, so the Caddy
-> snippet is the only tracked artifact for them. The `stats` stack is named for
-> what it does, following the `budget` convention, and runs Tracearr.
+| Service | Domain | Host port | Container port | Deployed in |
+|---------|--------|-----------|----------------|-------------|
+| yamtrack | `track.munywele.co.ke` | 8800 | 3000 | personal |
+| paperless | `paperless.munywele.co.ke` | 8890 | 8000 | personal |
+| scrobble | `scrob.munywele.co.ke` | 8900 | 5000 | personal |
+| mealie | `mealie.munywele.co.ke` | 8925 | 80 | personal |
+| stats | `stat.munywele.co.ke` | 8930 | 3000 | personal |
+| ryot | `ryot.munywele.co.ke` | 8950 | 3000 | personal |
+
+> **Note:** Caddy routes these, so the host ports above are what the reverse proxy
+> targets. The stacks themselves are not validated by `scripts/validate-compose.sh`
+> here, because their compose files are not in this tree.
 >
-> `stats` monitors Plex, Jellyfin and Emby
-> (https://github.com/connorgallopo/tracearr). It runs the `supervised` image,
-> which bundles the app, TimescaleDB and Redis in one container, because Tracearr
-> requires TimescaleDB and the shared `postgres` does not provide it. Consequences:
-> **3GB RAM minimum**, PostgreSQL 15 rather than 18, and no `.env` secrets since it
-> self-generates. Its database is not in `db-backup`. See `stacks/stats/README.md`.
+> `stats` runs Tracearr (https://github.com/connorgallopo/tracearr) for Plex,
+> Jellyfin and Emby monitoring. It uses the `supervised` image, which bundles the
+> app, TimescaleDB and Redis in one container, because Tracearr requires
+> TimescaleDB and neither Postgres here provides it. Consequences: **3GB RAM
+> minimum**, PostgreSQL 15 rather than 18, and no `.env` secrets since it
+> self-generates. Its database is not in `db-backup`. See `stacks/stats/` in the
+> personal repo.
 >
 > The route sets `flush_interval -1` because Tracearr pushes live sessions over
 > SSE and Socket.IO; Caddy's default response buffering would delay events.
