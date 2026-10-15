@@ -66,16 +66,15 @@ media repo — so the Caddy snippet is the only artifact tracked here.
 > targets. The stacks themselves are not validated by `scripts/validate-compose.sh`
 > here, because their compose files are not in this tree.
 >
-> `stats` runs Tracearr (https://github.com/connorgallopo/tracearr) for Plex,
-> Jellyfin and Emby monitoring. It uses the `supervised` image, which bundles the
-> app, TimescaleDB and Redis in one container, because Tracearr requires
-> TimescaleDB and neither Postgres here provides it. Consequences: **3GB RAM
-> minimum**, PostgreSQL 15 rather than 18, and no `.env` secrets since it
-> self-generates. Its database is not in `db-backup`. See `stacks/stats/` in the
+> `stats` runs [JellyGlance](https://jellyglance.com/), a self-hosted admin
+> dashboard for Jellyfin or Emby: live sessions, libraries, users, requests,
+> download queues, transcodes, invites, server jobs, health checks, backups and
+> webhooks. It needs only plain PostgreSQL, which it takes from the personal
+> repo's own database, so it has no extra containers. See `stacks/stats/` in the
 > personal repo.
 >
-> The route sets `flush_interval -1` because Tracearr pushes live sessions over
-> SSE and Socket.IO; Caddy's default response buffering would delay events.
+> The route sets `flush_interval -1` because JellyGlance uses WebSockets for live
+> session updates; Caddy's default response buffering would delay them.
 
 ## Monitoring stack
 
