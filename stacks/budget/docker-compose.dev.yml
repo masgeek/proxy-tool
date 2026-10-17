@@ -1,0 +1,31 @@
+include:
+  - docker-compose.yml
+
+services:
+  db:
+    image: postgres:18-alpine
+    container_name: budget-db
+    restart: unless-stopped
+    environment:
+      DB_CONNECTION: ${DB_CONNECTION:-pgsql}
+      POSTGRES_USER: ${DB_USERNAME:-firefly}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE:-firefly}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+    volumes:
+      - firefly_db_data:/var/lib/postgresql/data
+    networks:
+      - dokploy-network
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  budget:
+    environment:
+      APP_ENV: development
+      APP_DEBUG: "true"
+      DB_HOST: db
+    depends_on:
+      - db
