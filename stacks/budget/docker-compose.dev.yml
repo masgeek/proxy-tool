@@ -1,7 +1,15 @@
 include:
-  - docker-compose.yml
+  - services/firefly-iii.yml
+
+networks:
+  dokploy-network:
+    name: dokploy-network
+    external: true
 
 volumes:
+  firefly_upload:
+    driver: local
+    name: firefly-upload
   firefly_db_data:
     driver: local
     name: firefly-db-data
