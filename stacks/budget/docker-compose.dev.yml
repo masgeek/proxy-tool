@@ -1,18 +1,21 @@
 include:
   - docker-compose.yml
 
+volumes:
+  firefly_db_data:
+    driver: local
+    name: firefly-db-data
+
 services:
   db:
-    image: postgres:18-alpine
+    image: postgres:17-alpine
     container_name: budget-db
     restart: unless-stopped
     environment:
-      DB_CONNECTION: ${DB_CONNECTION:-pgsql}
+      PGDATA: /var/lib/postgresql/data/pgdata
       POSTGRES_USER: ${DB_USERNAME:-firefly}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_DATABASE:-firefly}
-      DB_HOST: ${DB_HOST:-postgres}
-      DB_PORT: ${DB_PORT:-5432}
     volumes:
       - firefly_db_data:/var/lib/postgresql/data
     networks:

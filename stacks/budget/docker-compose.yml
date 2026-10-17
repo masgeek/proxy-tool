@@ -1,5 +1,5 @@
 name: "budget"
-
+ 
 # Household budgeting stack — Firefly III.
 #
 #   budget.munywele.co.ke -> 127.0.0.1:9720
@@ -15,62 +15,23 @@ name: "budget"
 # Create the database before first start:
 #   docker exec postgres createdb --username "$POSTGRES_USER" \
 #     --owner "$POSTGRES_USER" firefly
-
+ 
 networks:
   dokploy-network:
     name: dokploy-network
     external: true
-
+ 
 volumes:
   firefly_upload:
     driver: local
     name: firefly-upload
-  firefly_db_data:
-    driver: local
-    name: firefly-db-data
-
+ 
+include:
+  - services/firefly-iii.yml
+ 
 services:
   budget:
-    container_name: budget
-    image: fireflyiii/core:${FIREFLY_TAG:-latest}
-    hostname: budget
-    restart: unless-stopped
     environment:
-      APP_URL: ${APP_URL:-https://budget.munywele.co.ke}
-      APP_ENV: ${APP_ENV:-production}
-      APP_DEBUG: ${APP_DEBUG:-false}
-      APP_KEY: ${APP_KEY}
-      TZ: ${TZ:-Africa/Nairobi}
-      DB_CONNECTION: ${DB_CONNECTION:-pgsql}
       DB_HOST: postgres
-      DB_PORT: ${DB_PORT:-5432}
-      DB_DATABASE: ${DB_DATABASE:-firefly}
-      DB_USERNAME: ${DB_USERNAME:-firefly}
-      DB_PASSWORD: ${DB_PASSWORD}
-      REDIS_HOST: ${REDIS_HOST:-redis-budget}
-      REDIS_PORT: ${REDIS_PORT:-6379}
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      REDIS_CACHE_DB: ${REDIS_CACHE_DB:-0}
-      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-**}
-      ALLOW_WEBHOOKS: ${ALLOW_WEBHOOKS:-true}
-      STACK_REVISION: ${STACK_REVISION}
-    ports:
-      - "127.0.0.1:9720:8080"
-    volumes:
-      - firefly_upload:/var/www/html/storage/upload
-    networks:
-      - dokploy-network
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-    deploy:
-      resources:
-        limits:
-          memory: 2g
-          cpus: "2.0"
-        reservations:
-          memory: 512m
-          cpus: "0.1"
+
 
