@@ -1,0 +1,37 @@
+services:
+  invoice:
+    image: ghcr.io/pigontech/inkvoice:${INKVOICE_TAG:-latest}
+    container_name: inkvoice
+    hostname: inkvoice
+    restart: unless-stopped
+    environment:
+      ADMIN_USER: ${ADMIN_USER:-admin}
+      ADMIN_PASS: ${ADMIN_PASSWORD:-}
+      JWT_SECRET: ${APP_KEY:-}
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      ENABLE_HSTS: ${ENABLE_HSTS:-false}
+      DATABASE_PATH: ${DATABASE_PATH:-/app/data/invoice.db}
+      TZ: ${TZ:-Africa/Nairobi}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
+    ports:
+      - "127.0.0.1:9705:3000"
+    volumes:
+      - inkvoice_data:/app/data
+    networks:
+      - dokploy-network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "1.0"

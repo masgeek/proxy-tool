@@ -2,6 +2,29 @@ name: "cache"
 
 # Deploy this stack AFTER the databases stack.
 # All services join the shared 'dokploy-network' so other stacks can reach them by hostname.
+#
+# Redis instances are grouped by role rather than one per application, so the
+# stack stays small while keeping the risky workloads isolated.
+#
+#   cache         shared application caches       REDIS_PASSWORD
+#   cache-dev     development                     REDIS_DEV_PASSWORD
+#   redis-invoice single-tenant app with data    REDIS_INVOICE_PASSWORD
+#   redis-budget  app mixing cache/session/queue REDIS_BUDGET_PASSWORD
+#   redis-jobs    queues and brokers             REDIS_JOBS_PASSWORD
+#
+# Why this grouping:
+#   - Anything holding a queue or broker gets redis-jobs, separate from every
+#     cache, so a cache flush can never drop a job. redis-jobs runs noeviction:
+#     evicting a queued job silently loses work.
+#   - Anything mixing cache, session and queue (Firefly III) gets its own
+#     instance, so its cache policy cannot evict its own session or job data.
+#   - Remaining applications share `cache` on separate logical databases with
+#     distinct key prefixes. They are pure caches and rate-limit stores, so the
+#     failure mode of a shared instance is a cold cache, not lost data.
+#
+# Hostnames are prefixed on purpose: all of these containers join the same
+# external network, so a generic name like `redis` would resolve to several of
+# them at once.
 
 networks:
   internal:
@@ -18,15 +41,31 @@ volumes:
   redis-dev-data:
     driver: local
     name: redis-dev-data
+  redis-invoice-data:
+    driver: local
+    name: redis-invoice-data
+  redis-budget-data:
+    driver: local
+    name: redis-budget-data
+  redis-jobs-data:
+    driver: local
+    name: redis-jobs-data
 
 services:
+  # Shared application caches and rate-limit stores.
+  # fees-prod db 0, shortener db 1, akilimo db 2.
   cache:
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     image: redis:8
     container_name: redis
     hostname: cache
     restart: unless-stopped
     command: >
-      sh -c "redis-server ${REDIS_PASSWORD:+--requirepass $REDIS_PASSWORD}"
+      sh -c "redis-server ${REDIS_PASSWORD:+--requirepass $REDIS_PASSWORD}
+      --maxmemory ${REDIS_MAXMEMORY:-512mb} --maxmemory-policy allkeys-lru
+      --appendonly yes"
     volumes:
       - redis-data:/data
     networks:
@@ -35,7 +74,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 2g
+          memory: 1g
           cpus: "2.0"
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ${REDIS_PASSWORD:+-a $REDIS_PASSWORD} ping | grep -q PONG"]
@@ -45,6 +84,9 @@ services:
       start_period: 10s
 
   cache-dev:
+    environment:
+      REDIS_PASSWORD: ${REDIS_DEV_PASSWORD:-}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     image: redis:8
     container_name: redis-dev
     hostname: cache-dev
@@ -65,6 +107,100 @@ services:
           cpus: "1.0"
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ${REDIS_DEV_PASSWORD:+-a $REDIS_DEV_PASSWORD} ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Invoice Ninja. Own instance because it holds live invoice state in cache and
+  # queue alongside the session.
+  redis-invoice:
+    environment:
+      REDIS_PASSWORD: ${REDIS_INVOICE_PASSWORD:-}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
+    image: redis:8
+    container_name: redis-invoice
+    hostname: redis-invoice
+    restart: unless-stopped
+    command: >
+      sh -c "redis-server ${REDIS_INVOICE_PASSWORD:+--requirepass $REDIS_INVOICE_PASSWORD}
+      --maxmemory ${REDIS_INVOICE_MAXMEMORY:-256mb} --maxmemory-policy allkeys-lru
+      --appendonly yes"
+    volumes:
+      - redis-invoice-data:/data
+    networks:
+      - dokploy-network
+      - internal
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "1.0"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ${REDIS_INVOICE_PASSWORD:+-a $REDIS_INVOICE_PASSWORD} ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Firefly III. Own instance because cache, session and queue share it: an
+  # eviction policy that suits the cache would otherwise discard session or job
+  # data.
+  redis-budget:
+    environment:
+      REDIS_PASSWORD: ${REDIS_BUDGET_PASSWORD:-}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
+    image: redis:8
+    container_name: redis-budget
+    hostname: redis-budget
+    restart: unless-stopped
+    command: >
+      sh -c "redis-server ${REDIS_BUDGET_PASSWORD:+--requirepass $REDIS_BUDGET_PASSWORD}
+      --maxmemory ${REDIS_BUDGET_MAXMEMORY:-512mb} --maxmemory-policy noeviction
+      --appendonly yes"
+    volumes:
+      - redis-budget-data:/data
+    networks:
+      - dokploy-network
+      - internal
+    deploy:
+      resources:
+        limits:
+          memory: 768m
+          cpus: "1.0"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ${REDIS_BUDGET_PASSWORD:+-a $REDIS_BUDGET_PASSWORD} ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Queues and brokers only, never a cache.
+  # activepieces db 0, kvuno Celery db 1, fuelrod db 2.
+  redis-jobs:
+    environment:
+      REDIS_PASSWORD: ${REDIS_JOBS_PASSWORD:-}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
+    image: redis:8
+    container_name: redis-jobs
+    hostname: redis-jobs
+    restart: unless-stopped
+    command: >
+      sh -c "redis-server ${REDIS_JOBS_PASSWORD:+--requirepass $REDIS_JOBS_PASSWORD}
+      --maxmemory ${REDIS_JOBS_MAXMEMORY:-512mb} --maxmemory-policy noeviction
+      --appendonly yes"
+    volumes:
+      - redis-jobs-data:/data
+    networks:
+      - dokploy-network
+      - internal
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: "1.0"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ${REDIS_JOBS_PASSWORD:+-a $REDIS_JOBS_PASSWORD} ping | grep -q PONG"]
       interval: 10s
       timeout: 5s
       retries: 5

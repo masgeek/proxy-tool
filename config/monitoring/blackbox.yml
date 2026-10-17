@@ -1,0 +1,9 @@
+modules:
+  http_accessible:
+    prober: http
+    timeout: 10s
+    http:
+      preferred_ip_protocol: ip4
+      valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+      follow_redirects: true
+      valid_status_codes: [200, 201, 202, 204, 301, 302, 303, 307, 308, 401, 403, 404, 405, 429]

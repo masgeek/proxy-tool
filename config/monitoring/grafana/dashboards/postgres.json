@@ -1,0 +1,17 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "graphTooltip": 1,
+  "panels": [
+    {"id": 1, "type": "stat", "title": "PostgreSQL Up", "gridPos": {"h": 5, "w": 6, "x": 0, "y": 0}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}, "options": {"reduceOptions": {"calcs": ["lastNotNull"]}}, "targets": [{"expr": "max(pg_up)", "legendFormat": "status", "refId": "A"}]},
+    {"id": 2, "type": "stat", "title": "Active Connections", "gridPos": {"h": 5, "w": 6, "x": 6, "y": 0}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}, "options": {"reduceOptions": {"calcs": ["lastNotNull"]}}, "targets": [{"expr": "sum(pg_stat_database_numbackends)", "legendFormat": "connections", "refId": "A"}]},
+    {"id": 3, "type": "timeseries", "title": "Transactions", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 5}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "fieldConfig": {"defaults": {"unit": "ops"}, "overrides": []}, "targets": [{"expr": "sum(rate(pg_stat_database_xact_commit[5m]))", "legendFormat": "commits", "refId": "A"}, {"expr": "sum(rate(pg_stat_database_xact_rollback[5m]))", "legendFormat": "rollbacks", "refId": "B"}]},
+    {"id": 4, "type": "timeseries", "title": "Database Size", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 5}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "fieldConfig": {"defaults": {"unit": "bytes"}, "overrides": []}, "targets": [{"expr": "sum(pg_database_size_bytes)", "legendFormat": "size", "refId": "A"}]}
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["postgres", "database"],
+  "time": {"from": "now-6h", "to": "now"},
+  "title": "PostgreSQL",
+  "uid": "postgresql"
+}

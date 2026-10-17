@@ -42,6 +42,7 @@ services:
       # Logging
       KC_LOG_LEVEL: ${KC_LOG_LEVEL:-INFO}
       KC_LOG_CONSOLE_FORMAT: "%d{HH:mm:ss,SSS} %-5p [%c] (%t) %s%n"
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     volumes:
       - keycloak-data:/opt/keycloak/data
     networks:

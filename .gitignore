@@ -34,3 +34,4 @@ autobackup.sh
 stacks/databases/.env
 
 *.log
+data/

@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="robots" content="noindex">
+	<title>503 — Service Unavailable</title>
+	<style>
+		:root {
+			color-scheme: light dark;
+			font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+			--accent: #b42318;
+			--accent-strong: #991b1b;
+			--accent-soft: #fef2f2;
+			--accent-border: #fca5a5;
+			--accent-hover: #fee2e2;
+		}
+		body {
+			min-height: 100vh; margin: 0; display: grid; place-items: center;
+			background:
+				radial-gradient(circle at 15% 20%, #fca5a5 0, transparent 40%),
+				radial-gradient(circle at 85% 15%, #fdba74 0, transparent 40%),
+				radial-gradient(circle at 50% 90%, #c4b5fd 0, transparent 45%),
+				#fef2f2;
+			color: #3f1d1a;
+		}
+		main {
+			width: min(36rem, calc(100% - 3rem)); padding: 3rem;
+			border: 1px solid rgb(255 255 255 / 60%); border-radius: 1.25rem;
+			background: rgb(255 255 255 / 45%);
+			backdrop-filter: blur(20px) saturate(180%);
+			-webkit-backdrop-filter: blur(20px) saturate(180%);
+			box-shadow: 0 1.5rem 3rem rgb(127 29 29 / 12%), inset 0 1px 0 rgb(255 255 255 / 60%);
+			text-align: center; animation: rise .6s ease-out both;
+		}
+		.illustration { display: block; width: 13rem; height: 13rem; margin: 0 auto 1rem; animation: float 4s ease-in-out infinite; filter: drop-shadow(0 .75rem 1.25rem rgb(127 29 29 / 30%)); }
+		.status {
+			margin: 0; color: var(--accent); font-size: 4rem; font-weight: 800;
+			letter-spacing: -.05em; animation: pulse 2.5s ease-in-out infinite;
+		}
+		h1 { margin: .5rem 0; font-size: 1.5rem; }
+		p { margin: 0; color: #9a6b66; line-height: 1.6; }
+		.actions { margin-top: 1.5rem; display: flex; justify-content: center; gap: .75rem; flex-wrap: wrap; }
+		.retry, .home {
+			appearance: none; border: 1px solid var(--accent-border); border-radius: .5rem;
+			background: var(--accent-soft); color: var(--accent-strong);
+			font: inherit; font-weight: 600; font-size: .875rem; padding: .5rem 1rem;
+			cursor: pointer; text-decoration: none; display: inline-block;
+			transition: background-color .15s ease;
+		}
+		.retry:hover, .retry:focus-visible, .home:hover, .home:focus-visible { background: var(--accent-hover); }
+		.retry:focus-visible, .home:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 2px; }
+		small { display: block; margin-top: 1.5rem; color: #9a6b66; line-height: 1.6; }
+		@keyframes float { 0%, 100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-.6rem) rotate(1deg); } }
+		@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .72; } }
+		@keyframes rise { from { opacity: 0; transform: translateY(1rem); } to { opacity: 1; transform: translateY(0); } }
+		@media (prefers-color-scheme: dark) {
+			:root { --accent: #f87171; --accent-strong: #fca5a5; --accent-soft: #2b1210; --accent-border: #7f1d1d; --accent-hover: #3d1a17; }
+			body { background: radial-gradient(circle at 15% 20%, #7f1d1d 0, transparent 45%), radial-gradient(circle at 85% 15%, #9a3412 0, transparent 45%), radial-gradient(circle at 50% 90%, #4c1d95 0, transparent 50%), #170c0b; color: #fee2e2; }
+			main { border-color: rgb(255 255 255 / 12%); background: rgb(43 18 16 / 45%); box-shadow: 0 1.5rem 3rem rgb(0 0 0 / 35%), inset 0 1px 0 rgb(255 255 255 / 8%); }
+			p, small { color: #e0a8a3; }
+		}
+		@media (prefers-reduced-motion: reduce) {
+			*, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+		}
+	</style>
+</head>
+<body>
+	<main>
+		<svg class="illustration" viewBox="0 0 200 200" role="img" aria-label="A cloud napping on a striped beach cushion beside a small hourglass, under a hanging closed sign">
+			<defs>
+				<linearGradient id="bg503" x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%" stop-color="#fff1f2"/>
+					<stop offset="100%" stop-color="#ffe4e6"/>
+				</linearGradient>
+				<linearGradient id="cloud503" x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%" stop-color="#ffffff"/>
+					<stop offset="100%" stop-color="#e2e8f0"/>
+				</linearGradient>
+				<linearGradient id="sand503" x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%" stop-color="#fde68a"/>
+					<stop offset="100%" stop-color="#f59e0b"/>
+				</linearGradient>
+			</defs>
+
+			<rect x="4" y="4" width="192" height="192" rx="28" fill="url(#bg503)"/>
+
+			<!-- hanging closed sign -->
+			<g stroke="#9a3412" stroke-width="3" stroke-linecap="round">
+				<path d="M62 18v22"/>
+			</g>
+			<g transform="translate(62 62)">
+				<rect x="-22" y="-20" width="44" height="26" rx="5" fill="#ef4444" stroke="#991b1b" stroke-width="2.5"/>
+				<g stroke="#fee2e2" stroke-width="3" stroke-linecap="round">
+					<path d="M-11 -7h22"/>
+					<path d="M-11 1h14"/>
+				</g>
+			</g>
+
+			<!-- ground -->
+			<path d="M4 158h192v38H4z" fill="url(#sand503)" opacity=".55"/>
+			<path d="M4 158c30-10 60 8 96 2s60-14 96-6v40H4z" fill="url(#sand503)"/>
+
+			<!-- striped cushion -->
+			<g transform="translate(100 156)">
+				<rect x="-44" y="-10" width="88" height="18" rx="9" fill="#fff" stroke="#cbd5e1" stroke-width="2"/>
+				<g fill="#ef4444" opacity=".85">
+					<rect x="-34" y="-9" width="9" height="16" rx="4"/>
+					<rect x="-6" y="-9" width="9" height="16" rx="4"/>
+					<rect x="22" y="-9" width="9" height="16" rx="4"/>
+				</g>
+			</g>
+
+			<!-- sleeping cloud -->
+			<g transform="translate(100 116)">
+				<path fill="url(#cloud503)" stroke="#cbd5e1" stroke-width="2.5"
+					d="M-40 22a18 18 0 0 1 3-35 26 26 0 0 1 49-9 21 21 0 0 1 30 20 16 16 0 0 1-2 24z"/>
+				<path fill="none" stroke="#64748b" stroke-width="2.5" stroke-linecap="round" d="M-22 8q6 5 11 0M6 8q6 5 11 0"/>
+				<ellipse cx="-18" cy="20" rx="6" ry="4" fill="#fda4af" opacity=".55"/>
+				<ellipse cx="14" cy="21" rx="5" ry="3.5" fill="#fda4af" opacity=".45"/>
+			</g>
+
+			<!-- zzz -->
+			<g fill="#9a3412" opacity=".6" font-family="system-ui, sans-serif" font-weight="700">
+				<text x="150" y="70" font-size="16">z</text>
+				<text x="162" y="56" font-size="12">z</text>
+			</g>
+
+			<!-- hourglass on the sand -->
+			<g transform="translate(150 140)">
+				<rect x="-9" y="-12" width="18" height="24" rx="3" fill="#fff" stroke="#9a3412" stroke-width="2.5"/>
+				<path d="M-6-8h12L0-1z" fill="#f59e0b"/>
+				<path d="M-6 8h12L0 1z" fill="#fbbf24" opacity=".7"/>
+			</g>
+
+			<rect x="4" y="4" width="192" height="192" rx="28" fill="none" stroke="#b42318" stroke-width="2" opacity=".35"/>
+		</svg>
+		<p class="status" role="status" aria-live="polite">503</p>
+		<h1>Service Unavailable</h1>
+		<p>The service is temporarily down for maintenance or overloaded. It is resting &mdash; it will be back shortly.</p>
+		<div class="actions">
+			<button type="button" class="retry" id="retry">Retry now</button>
+			<a class="home" href="/">Go to homepage</a>
+		</div>
+		<small>Wait about two minutes before retrying &mdash; the page tells the browser when to come back. If the outage runs longer, check our status updates or contact support.</small>
+	</main>
+	<script>
+		document.getElementById('retry').addEventListener('click', function () {
+			location.reload();
+		});
+	</script>
+</body>
+</html>
