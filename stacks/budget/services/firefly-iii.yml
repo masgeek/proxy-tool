@@ -31,7 +31,6 @@ services:
       - firefly_upload:/var/www/html/storage/upload
     networks:
       - dokploy-network
-      - internal
     logging:
       driver: json-file
       options:
