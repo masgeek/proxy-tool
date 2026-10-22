@@ -61,7 +61,7 @@ dashboard.agwise.org {
 }
 
 # KVUNO service.
-kvuno.agwise.org {
+kvuno.agwise.org, kvuno.akilimo.org {
 	tls agwise@akilimo.org
 	encode gzip zstd
 	import ../disallowed-basic.caddy
