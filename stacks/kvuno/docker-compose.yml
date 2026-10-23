@@ -82,7 +82,7 @@ services:
       - "127.0.0.1:9801:80"
     depends_on:
       kvuno:
-        condition: service_healthy
+        condition: service_started
     networks:
       - dokploy-network
       - internal

@@ -29,10 +29,10 @@ kvuno.agwise.org, kvuno.akilimo.org {
 }
 
 # -----------------------------------------------------------------------------
-# kvuno Web — ui.kvuno.agwise.org, ui.kvuno.akilimo.org
+# kvuno Web — ui-kvuno.agwise.org, ui-kvuno.akilimo.org
 # HTTP reverse proxy to the kvuno-web container on 127.0.0.1:9801
 # -----------------------------------------------------------------------------
-ui.kvuno.agwise.org, ui.kvuno.akilimo.org {
+ui-kvuno.agwise.org, ui-kvuno.akilimo.org {
         tls dev@munywele.co.ke
 
         encode zstd gzip
