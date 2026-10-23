@@ -30,6 +30,8 @@ services:
       FLASK_DEBUG: ${FLASK_DEBUG:-false}
       DEBUG_DB: ${DEBUG_DB:-false}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # JSON log lines for aggregation (structlog; development = console output).
+      ENVIRONMENT: ${ENVIRONMENT:-production}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
       DB_DRIVER: postgresql
       DB_HOST: ${DB_HOST:-postgres}
@@ -51,7 +53,7 @@ services:
       ADMIN_EMAILS: ${ADMIN_EMAILS:?ADMIN_EMAILS must be set (comma-separated administrator emails)}
       # Activation / rejection / new-registration emails. Optional: with
       # SMTP_HOST or MAIL_FROM unset nothing is sent and the API log shows
-      # "would send …" instead.
+      # "email not sent: SMTP_HOST/MAIL_FROM unset" (logged with user ids, never addresses).
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USERNAME: ${SMTP_USERNAME:-}
@@ -123,6 +125,8 @@ services:
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
       DEBUG_DB: ${DEBUG_DB:-false}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # JSON log lines for aggregation (structlog; development = console output).
+      ENVIRONMENT: ${ENVIRONMENT:-production}
       DB_DRIVER: postgresql
       DB_HOST: ${DB_HOST:-postgres}
       DB_PORT: ${DB_PORT:-5432}
