@@ -43,10 +43,22 @@ services:
       # only for other sites calling the API. `*` with credentials let any
       # origin make credentialed requests.
       CORS_ORIGINS: ${CORS_ORIGINS:-https://kvuno-ui.akilimo.org,https://kvuno-ui.agwise.org}
-      # Email domains allowed to self-register (comma-separated, exact match,
-      # no subdomains). Newer API images close registration when this is
-      # empty. Existing accounts can always sign in.
-      REGISTRATION_ALLOWED_DOMAINS: ${REGISTRATION_ALLOWED_DOMAINS:-cgiar.org}
+      # Account approval: anyone may register, but new accounts are pending
+      # until an administrator approves them in the web app (Accounts).
+      # ADMIN_EMAILS are the "owners" — always administrators, approved at
+      # sign-up; they can make other approved accounts admins. Unset = nobody
+      # can approve new accounts.
+      ADMIN_EMAILS: ${ADMIN_EMAILS:?ADMIN_EMAILS must be set (comma-separated administrator emails)}
+      # Activation / rejection / new-registration emails. Optional: with
+      # SMTP_HOST or MAIL_FROM unset nothing is sent and the API log shows
+      # "would send …" instead.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_SECURITY: ${SMTP_SECURITY:-starttls}
+      MAIL_FROM: ${MAIL_FROM:-}
+      MAIL_APP_NAME: ${MAIL_APP_NAME:-KVuno}
       RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
       HOUSEKEEPING_MAX_WORKERS: ${HOUSEKEEPING_MAX_WORKERS:-1}
       CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis-jobs:6379/1}
