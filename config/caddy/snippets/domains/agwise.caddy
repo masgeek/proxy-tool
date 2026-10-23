@@ -71,3 +71,15 @@ kvuno.agwise.org, kvuno.akilimo.org {
 		import ../headers/proxy-headers.caddy
 	}
 }
+
+# KVUNO UI.
+kvuno-ui.agwise.org, kvuno-ui.akilimo.org {
+	tls agwise@akilimo.org
+	encode gzip zstd
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+	reverse_proxy 127.0.0.1:9801 {
+		import ../headers/proxy-headers.caddy
+	}
+}
