@@ -4,10 +4,10 @@
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# kvuno API — kvuno.agwise.org
+# kvuno API — api.kvuno.agwise.org
 # HTTP reverse proxy to the kvuno container on 127.0.0.1:9800
 # -----------------------------------------------------------------------------
-kvuno.agwise.org {
+api.kvuno.agwise.org {
         tls dev@munywele.co.ke
  
  
@@ -30,10 +30,10 @@ kvuno.agwise.org {
 }
 
 # -----------------------------------------------------------------------------
-# kvuno Web — web.kvuno.agwise.org
+# kvuno Web — kvuno.agwise.org
 # HTTP reverse proxy to the kvuno-web container on 127.0.0.1:9801
 # -----------------------------------------------------------------------------
-web.kvuno.agwise.org {
+kvuno.agwise.org {
         tls dev@munywele.co.ke
 
         encode zstd gzip
