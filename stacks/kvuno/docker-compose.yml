@@ -43,9 +43,10 @@ services:
       # only for other sites calling the API. `*` with credentials let any
       # origin make credentialed requests.
       CORS_ORIGINS: ${CORS_ORIGINS:-https://kvuno-ui.akilimo.org,https://kvuno-ui.agwise.org}
-      # Newer API images close registration unless this lists email domains
-      # (comma-separated, e.g. cgiar.org); empty = nobody can sign up.
-      REGISTRATION_ALLOWED_DOMAINS: ${REGISTRATION_ALLOWED_DOMAINS:-}
+      # Email domains allowed to self-register (comma-separated, exact match,
+      # no subdomains). Newer API images close registration when this is
+      # empty. Existing accounts can always sign in.
+      REGISTRATION_ALLOWED_DOMAINS: ${REGISTRATION_ALLOWED_DOMAINS:-cgiar.org}
       RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
       HOUSEKEEPING_MAX_WORKERS: ${HOUSEKEEPING_MAX_WORKERS:-1}
       CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis-jobs:6379/1}
