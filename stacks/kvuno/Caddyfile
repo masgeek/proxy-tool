@@ -5,15 +5,15 @@
 
 # -----------------------------------------------------------------------------
 # kvuno — kvuno.agwise.org
-# API on root, Web on /web
+# API on root, Web on /ui
 # -----------------------------------------------------------------------------
 kvuno.agwise.org {
         tls dev@munywele.co.ke
  
         encode zstd gzip
  
-        # Web app on /web
-        handle_path /web* {
+        # Web app on /ui
+        handle_path /ui* {
                 reverse_proxy 127.0.0.1:9801 {
                         import proxy_headers_port
                 }
