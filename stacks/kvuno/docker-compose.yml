@@ -50,6 +50,7 @@ services:
       SERVER_URL_PROD: ${SERVER_URL_PROD:-}
       REMOTE_RDS_URLS: ${REMOTE_RDS_URLS:-}
       STACK_REVISION: ${STACK_REVISION:-1790584804}
+      SPA_ROOT_URL: ${SPA_ROOT_URL:-https://kvuno-ui.akilimo.org}
 
     volumes:
       - kvuno-data:/app/static/data
@@ -112,7 +113,6 @@ services:
       HOUSEKEEPING_CHECKPOINT_INTERVAL: ${HOUSEKEEPING_CHECKPOINT_INTERVAL:-50}
       HOUSEKEEPING_MAX_WORKERS: ${HOUSEKEEPING_MAX_WORKERS:-1}
       REMOTE_RDS_URLS: ${REMOTE_RDS_URLS:-}
-      SPA_ROOT_URL: ${SPA_ROOT_URL:-https://kvuno-ui.akilimo.org}
 
       RDS_COLUMN_MAP: ${RDS_COLUMN_MAP:-}
       STACK_REVISION: ${STACK_REVISION:-1790584804}
