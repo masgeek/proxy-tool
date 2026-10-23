@@ -39,7 +39,13 @@ services:
       DB_NAME: ${DB_SCHEMA:?DB_SCHEMA must be set}
       SORT_JSON: ${SORT_JSON:-0}
       HOUSEKEEPING_ENABLED: ${HOUSEKEEPING_ENABLED:-true}
-      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      # The UI is served same-origin through kvuno-web's proxy, so CORS is
+      # only for other sites calling the API. `*` with credentials let any
+      # origin make credentialed requests.
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://kvuno-ui.akilimo.org,https://kvuno-ui.agwise.org}
+      # Newer API images close registration unless this lists email domains
+      # (comma-separated, e.g. cgiar.org); empty = nobody can sign up.
+      REGISTRATION_ALLOWED_DOMAINS: ${REGISTRATION_ALLOWED_DOMAINS:-}
       RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
       HOUSEKEEPING_MAX_WORKERS: ${HOUSEKEEPING_MAX_WORKERS:-1}
       CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis-jobs:6379/1}
@@ -79,6 +85,13 @@ services:
     hostname: kvuno-web
     image: ghcr.io/cgiar-agwise/kvuno-web:${KVUNO_TAG:-develop}
     restart: unless-stopped
+    pull_policy: always
+    environment:
+      # Where the web container's nginx proxies /api, /ui, /api-docs and
+      # /health: the `kvuno` API service above, over the shared network.
+      # Older web images hardcoded `api:80`; on dokploy-network that name
+      # belongs to another project, so kvuno-ui reached the wrong API.
+      API_UPSTREAM: ${KVUNO_API_UPSTREAM:-http://kvuno:80}
     ports:
       - "127.0.0.1:9801:80"
     depends_on:
