@@ -4,10 +4,10 @@
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# kvuno — kvuno.agwise.org
+# kvuno — kvuno.agwise.org, kvuno.akilimo.org
 # API on root, Web on /ui
 # -----------------------------------------------------------------------------
-kvuno.agwise.org {
+kvuno.agwise.org, kvuno.akilimo.org {
         tls dev@munywele.co.ke
  
         encode zstd gzip
