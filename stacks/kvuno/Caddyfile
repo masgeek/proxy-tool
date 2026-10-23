@@ -9,17 +9,37 @@
 # -----------------------------------------------------------------------------
 kvuno.agwise.org {
         tls dev@munywele.co.ke
-
-
+ 
+ 
         encode zstd gzip
-
+ 
         reverse_proxy 127.0.0.1:9800 {
                 import proxy_headers_port
-
+ 
                 transport http {
                         dial_timeout            1800s
                         response_header_timeout 1800s
                 }
+        }
+ 
+        @disallowed {
+                path /.git/*
+                path *.sql
+        }
+        respond @disallowed "Access Denied" 403
+}
+
+# -----------------------------------------------------------------------------
+# kvuno Web — web.kvuno.agwise.org
+# HTTP reverse proxy to the kvuno-web container on 127.0.0.1:9801
+# -----------------------------------------------------------------------------
+web.kvuno.agwise.org {
+        tls dev@munywele.co.ke
+
+        encode zstd gzip
+
+        reverse_proxy 127.0.0.1:9801 {
+                import proxy_headers_port
         }
 
         @disallowed {
@@ -28,3 +48,4 @@ kvuno.agwise.org {
         }
         respond @disallowed "Access Denied" 403
 }
+

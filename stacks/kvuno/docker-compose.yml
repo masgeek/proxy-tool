@@ -73,6 +73,19 @@ services:
           memory: 256m
           cpus: "0.25"
 
+  web:
+    container_name: kvuno-web
+    hostname: kvuno-web
+    image: ghcr.io/cgiar-agwise/kvuno-web:${KVUNO_TAG:-develop}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9801:80"
+    depends_on:
+      kvuno:
+        condition: service_healthy
+    networks:
+      - dokploy-network
+      - internal
   worker:
     container_name: kvuno-worker
     hostname: kvuno-worker
