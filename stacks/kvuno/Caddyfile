@@ -4,33 +4,43 @@
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# kvuno — kvuno.agwise.org, kvuno.akilimo.org
-# API on root, Web on /ui
+# kvuno API — kvuno.agwise.org, kvuno.akilimo.org
+# HTTP reverse proxy to the kvuno container on 127.0.0.1:9800
 # -----------------------------------------------------------------------------
 kvuno.agwise.org, kvuno.akilimo.org {
         tls dev@munywele.co.ke
  
         encode zstd gzip
  
-        # Web app on /ui
-        handle_path /ui* {
-                reverse_proxy 127.0.0.1:9801 {
-                        import proxy_headers_port
+        reverse_proxy 127.0.0.1:9800 {
+                import proxy_headers_port
+ 
+                transport http {
+                        dial_timeout            1800s
+                        response_header_timeout 1800s
                 }
+        }
+ 
+        @disallowed {
+                path /.git/*
+                path *.sql
+        }
+        respond @disallowed "Access Denied" 403
+}
+
+# -----------------------------------------------------------------------------
+# kvuno Web — ui.kvuno.agwise.org, ui.kvuno.akilimo.org
+# HTTP reverse proxy to the kvuno-web container on 127.0.0.1:9801
+# -----------------------------------------------------------------------------
+ui.kvuno.agwise.org, ui.kvuno.akilimo.org {
+        tls dev@munywele.co.ke
+
+        encode zstd gzip
+
+        reverse_proxy 127.0.0.1:9801 {
+                import proxy_headers_port
         }
 
-        # API on everything else
-        handle {
-                reverse_proxy 127.0.0.1:9800 {
-                        import proxy_headers_port
- 
-                        transport http {
-                                dial_timeout            1800s
-                                response_header_timeout 1800s
-                        }
-                }
-        }
- 
         @disallowed {
                 path /.git/*
                 path *.sql
