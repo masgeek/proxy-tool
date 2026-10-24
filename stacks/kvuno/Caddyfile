@@ -4,29 +4,41 @@
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# kvuno API — api.kvuno.example.com
+# kvuno API — kvuno.agwise.org, kvuno.akilimo.org
 # HTTP reverse proxy to the kvuno container on 127.0.0.1:9800
 # -----------------------------------------------------------------------------
-kvuno.example.com {
+kvuno.agwise.org, kvuno.akilimo.org {
         tls dev@munywele.co.ke
-
-        log {
-                output file /var/log/caddy/kvuno.log
-                format console
-                level debug
-        }
-
-        encode gzip
-
+ 
+        encode zstd gzip
+ 
         reverse_proxy 127.0.0.1:9800 {
-                header_up Host                {host}
-                header_up X-Real-IP           {remote_host}
-                header_up X-Forwarded-Port    {server_port}
-
+                import proxy_headers_port
+ 
                 transport http {
                         dial_timeout            1800s
                         response_header_timeout 1800s
                 }
+        }
+ 
+        @disallowed {
+                path /.git/*
+                path *.sql
+        }
+        respond @disallowed "Access Denied" 403
+}
+
+# -----------------------------------------------------------------------------
+# kvuno Web — kvuno-ui.agwise.org, kvuno-ui.akilimo.org
+# HTTP reverse proxy to the kvuno-web container on 127.0.0.1:9801
+# -----------------------------------------------------------------------------
+kvuno-ui.agwise.org, kvuno-ui.akilimo.org {
+        tls dev@munywele.co.ke
+
+        encode zstd gzip
+
+        reverse_proxy 127.0.0.1:9801 {
+                import proxy_headers_port
         }
 
         @disallowed {
@@ -35,3 +47,4 @@ kvuno.example.com {
         }
         respond @disallowed "Access Denied" 403
 }
+

@@ -26,6 +26,7 @@ services:
     environment:
       ADMINER_DEFAULT_SERVER: ${ADMINER_DEFAULT_SERVER:-postgres}
       ADMINER_DESIGN: ${ADMINER_DESIGN:-pepa-linha-dark}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     ports:
       - "127.0.0.1:8080:8080"
     deploy:
@@ -43,6 +44,7 @@ services:
     restart: unless-stopped
     environment:
       RI_ACCEPT_TERMS_AND_CONDITIONS: "yes"
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     volumes:
       - redis-insight:/data
     ports:

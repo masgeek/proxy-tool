@@ -1,0 +1,37 @@
+# The Caddyfile is an easy way to configure your Caddy web server.
+{
+	admin :2019 {
+		origins http://localhost:2019 localhost:2019 127.0.0.1:2019 http://172.17.0.1:2019 http://host.docker.internal:2019  http://:2019
+	}
+
+	# Default ACME contact for akilimo.org properties.
+	# Overridden per-site below where a different email is needed.
+	email akilimo@cgiar.org
+	order rate_limit before basicauth
+	order cache before reverse_proxy
+
+	# One access log for every site, rather than a file per domain. Domains that
+	# are added later are covered automatically, there is one rotation policy to
+	# reason about, and the file is collected into Loki by Alloy (see
+	# config/monitoring/agent/config.alloy), so Caddy requests are searchable in
+	# Grafana alongside every other service.
+	#
+	# roll_* makes Caddy rotate the file itself, so no logrotate configuration is
+	# needed: ten 100 MB files, kept for 30 days.
+	log {
+		output file /var/log/caddy/access.json {
+			roll_size     100mb
+			roll_keep     10
+			roll_keep_for 720h
+		}
+		format json
+		level  INFO
+	}
+}
+
+import snippets/domains/akilimo.caddy
+import snippets/domains/munywele.caddy
+import snippets/domains/tsobu.caddy
+import snippets/domains/personal.caddy
+import snippets/domains/agwise.caddy
+import snippets/domains/budget.caddy

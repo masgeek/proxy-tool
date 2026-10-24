@@ -30,6 +30,7 @@ services:
       DB_DATABASE: ${FARM_DB_DATABASE:-shirakalu}
       DEFAULT_PASSWORD: ${DEFAULT_PASSWORD:?DEFAULT_PASSWORD is required}
       DB_SCHEMA: ${FARM_DB_SCHEMA:-public}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     deploy:
       resources:
         limits:
@@ -71,6 +72,7 @@ services:
       AT_SENDER_ID: ${AT_SENDER_ID:-}
       SMS_HTTP_URL: ${SMS_HTTP_URL:-}
       SMS_HTTP_API_KEY: ${SMS_HTTP_API_KEY:-}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     volumes:
       - uploads:/repo/apps/api/uploads
     ports:
@@ -100,6 +102,7 @@ services:
     restart: unless-stopped
     environment:
       API_URL: ${API_URL:-}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     deploy:
       resources:
         limits:

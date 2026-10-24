@@ -1,0 +1,37 @@
+name: "budget"
+ 
+# Household budgeting stack — Firefly III.
+#
+#   budget.munywele.co.ke -> 127.0.0.1:9720
+#
+# The app was previously swappable between several bookkeeping applications via
+# a Compose `extends` indirection. Firefly III is settled on, so the service is
+# declared directly here and the indirection is gone.
+#
+# PostgreSQL comes from the shared `databases` stack (hostname `postgres`). Redis
+# is this stack's dedicated `redis-budget` instance from the `cache` stack, so
+# Firefly's cache, session and queue data never mix with another application's.
+#
+# Create the database before first start:
+#   docker exec postgres createdb --username "$POSTGRES_USER" \
+#     --owner "$POSTGRES_USER" firefly
+ 
+networks:
+  dokploy-network:
+    name: dokploy-network
+    external: true
+ 
+volumes:
+  firefly_upload:
+    driver: local
+    name: firefly-upload
+ 
+include:
+  - services/firefly-iii.yml
+ 
+services:
+  budget:
+    environment:
+      DB_HOST: postgres
+
+

@@ -1,0 +1,13 @@
+# -----------------------------------------------------------------------------
+# budget.munywele.co.ke — Firefly III
+# Host upstream: 127.0.0.1:9720 (stacks/budget)
+# -----------------------------------------------------------------------------
+budget.munywele.co.ke {
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+
+	reverse_proxy 127.0.0.1:9720 {
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+}

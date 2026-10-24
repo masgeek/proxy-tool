@@ -1,0 +1,5 @@
+@disallowed {
+	path /.git/*
+	path *.sql
+}
+respond @disallowed "Access Denied" 403
