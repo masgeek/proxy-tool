@@ -18,6 +18,25 @@ volumes:
     name: kvuno-data
 
 services:
+  # One-shot, as root, before kvuno and worker start: give the kvuno-data
+  # volume to the image's `app` user. Both containers run as that non-root
+  # user, but the volume was created owned by root, so uploads failed with
+  # "Permission denied: 'static/data/uploads'". Named, not numbered, so it
+  # matches whatever uid the pulled image uses. Only wrong-owner entries are
+  # touched; a failure is reported but never blocks the app.
+  kvuno-data-init:
+    container_name: kvuno-data-init
+    image: ghcr.io/cgiar-agwise/kvuno-api:${KVUNO_TAG:-develop}
+    pull_policy: always
+    user: "0:0"
+    entrypoint:
+      - sh
+      - -c
+      - "find /app/static/data \\( ! -user app -o ! -group app \\) -exec chown -h app:app {} + || echo 'kvuno-data-init: could not chown /app/static/data' >&2"
+    restart: "no"
+    volumes:
+      - kvuno-data:/app/static/data
+
   kvuno:
     container_name: kvuno
     image: ghcr.io/cgiar-agwise/kvuno-api:${KVUNO_TAG:-develop}
@@ -73,6 +92,9 @@ services:
       STACK_REVISION: ${STACK_REVISION:-1790584804}
       SPA_ROOT_URL: ${SPA_ROOT_URL:-https://kvuno-ui.akilimo.org}
 
+    depends_on:
+      kvuno-data-init:
+        condition: service_completed_successfully
     volumes:
       - kvuno-data:/app/static/data
     networks:
@@ -146,6 +168,9 @@ services:
 
       RDS_COLUMN_MAP: ${RDS_COLUMN_MAP:-}
       STACK_REVISION: ${STACK_REVISION:-1790584804}
+    depends_on:
+      kvuno-data-init:
+        condition: service_completed_successfully
     volumes:
       - kvuno-data:/app/static/data
     networks:
