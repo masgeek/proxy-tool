@@ -139,6 +139,10 @@ services:
       - internal
   worker:
     container_name: kvuno-worker
+    # Time to stop cleanly. On SIGTERM the running ingest finishes its
+    # current chunk, commits rows + offset and pauses; the restarted worker
+    # resumes it. Docker's default 10 s killed it mid-file instead.
+    stop_grace_period: 2m
     hostname: kvuno-worker
     image: ghcr.io/cgiar-agwise/kvuno-worker:${KVUNO_TAG:-develop}
     restart: unless-stopped
@@ -165,7 +169,7 @@ services:
       HOUSEKEEPING_CHECKPOINT_INTERVAL: ${HOUSEKEEPING_CHECKPOINT_INTERVAL:-50}
       HOUSEKEEPING_MAX_WORKERS: ${HOUSEKEEPING_MAX_WORKERS:-1}
       REMOTE_RDS_URLS: ${REMOTE_RDS_URLS:-}
-
+      HOUSEKEEPING_MODE: ${HOUSEKEEPING_MODE:-oneshot}
       RDS_COLUMN_MAP: ${RDS_COLUMN_MAP:-}
       STACK_REVISION: ${STACK_REVISION:-1790584804}
     depends_on:
