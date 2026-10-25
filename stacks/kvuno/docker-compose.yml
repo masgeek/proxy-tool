@@ -183,7 +183,15 @@ services:
       HOUSEKEEPING_CHECKPOINT_INTERVAL: ${HOUSEKEEPING_CHECKPOINT_INTERVAL:-50}
       HOUSEKEEPING_MAX_WORKERS: ${HOUSEKEEPING_MAX_WORKERS:-1}
       REMOTE_RDS_URLS: ${REMOTE_RDS_URLS:-}
-      HOUSEKEEPING_MODE: ${HOUSEKEEPING_MODE:-oneshot}
+      # Empty = run the Celery worker (the image's CMD), which does all the
+      # file work: reading uploads (RDS -> Parquet, preview), importing them,
+      # and the startup scan. It has 2 GB, is not recycled by web traffic and
+      # resumes interrupted jobs when it restarts. `oneshot` ran
+      # housekeeping.py once and exited, so nothing consumed the queue and the
+      # API imported uploads inside its gunicorn workers — which gunicorn
+      # recycles every MAX_REQUESTS, killing long imports (2M rows: 40+ h).
+      # oneshot | watch | dryrun still work for a one-off run.
+      HOUSEKEEPING_MODE: ${HOUSEKEEPING_MODE:-}
       RDS_COLUMN_MAP: ${RDS_COLUMN_MAP:-}
       # Same values as on kvuno (see there).
       INGEST_HOLD_UNMAPPED: ${INGEST_HOLD_UNMAPPED:-true}
