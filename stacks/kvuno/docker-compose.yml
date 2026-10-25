@@ -120,7 +120,12 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512m
+          # The API converts uploaded RDS files to Parquet (in a child
+          # process). pyreadr reads the whole file and needs ~150x its size
+          # (a 7.4 MB RDS peaks at ~1.1 GB), so 512m failed every RDS over
+          # ~3 MB with "needs more memory than the server allows". Idle the
+          # API stays ~160 MB; the reservation is unchanged.
+          memory: 2g
           cpus: "1.0"
         reservations:
           memory: 256m
