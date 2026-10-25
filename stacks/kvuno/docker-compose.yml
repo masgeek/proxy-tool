@@ -178,12 +178,11 @@ services:
       CELERY_TASK_DEFAULT_QUEUE: ${CELERY_TASK_DEFAULT_QUEUE:-kvuno}
       CELERY_TASK_MAX_RETRIES: ${CELERY_TASK_MAX_RETRIES:-10}
       CELERY_TASK_RETRY_DELAY: ${CELERY_TASK_RETRY_DELAY:-60}
-      # Two worker processes: an upload is read while another file imports.
-      # Reading an RDS needs ~150x its size in memory, so two large RDS files
-      # at once can exceed the 2g limit — the read then fails with "needs
-      # more memory" (only the conversion child is killed). Set 1 to rule
-      # that out, at the cost of uploads waiting behind imports.
-      CELERY_CONCURRENCY: ${CELERY_CONCURRENCY:-2}
+      # One worker process: each needs memory for one file (an import
+      # ~0.3 GB, an RDS read ~150x the file's size). With 2 in this 2g
+      # worker, processes were OOM-killed mid-import (WorkerLostError,
+      # signal 9). To run 2, raise the memory limit below to 4g as well.
+      CELERY_CONCURRENCY: ${CELERY_CONCURRENCY:-1}
       HOUSEKEEPING_BATCH_SIZE: ${HOUSEKEEPING_BATCH_SIZE:-2000}
       HOUSEKEEPING_CHUNK_SIZE: ${HOUSEKEEPING_CHUNK_SIZE:-5000}
       HOUSEKEEPING_CHECKPOINT_INTERVAL: ${HOUSEKEEPING_CHECKPOINT_INTERVAL:-50}
