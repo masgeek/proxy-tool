@@ -91,6 +91,15 @@ services:
       REMOTE_RDS_URLS: ${REMOTE_RDS_URLS:-}
       STACK_REVISION: ${STACK_REVISION:-1790584804}
       SPA_ROOT_URL: ${SPA_ROOT_URL:-https://kvuno-ui.akilimo.org}
+      # Ingest checks — keep these the same on kvuno and worker (uploads are
+      # imported by the API, data-folder scans by the worker).
+      # Hold data-folder files whose columns the default mapping cannot use
+      # (no lat/lon) as "Awaiting mapping" on the Upload page.
+      INGEST_HOLD_UNMAPPED: ${INGEST_HOLD_UNMAPPED:-true}
+      # Skip a file whose content (SHA-256) was already imported completely.
+      INGEST_DUPLICATE_CHECK: ${INGEST_DUPLICATE_CHECK:-true}
+      # Record each skipped duplicate row in import_conflicts (Quality page).
+      INGEST_CONFLICT_LOGGING: ${INGEST_CONFLICT_LOGGING:-true}
 
     depends_on:
       kvuno-data-init:
@@ -171,6 +180,10 @@ services:
       REMOTE_RDS_URLS: ${REMOTE_RDS_URLS:-}
       HOUSEKEEPING_MODE: ${HOUSEKEEPING_MODE:-oneshot}
       RDS_COLUMN_MAP: ${RDS_COLUMN_MAP:-}
+      # Same values as on kvuno (see there).
+      INGEST_HOLD_UNMAPPED: ${INGEST_HOLD_UNMAPPED:-true}
+      INGEST_DUPLICATE_CHECK: ${INGEST_DUPLICATE_CHECK:-true}
+      INGEST_CONFLICT_LOGGING: ${INGEST_CONFLICT_LOGGING:-true}
       STACK_REVISION: ${STACK_REVISION:-1790584804}
     depends_on:
       kvuno-data-init:
