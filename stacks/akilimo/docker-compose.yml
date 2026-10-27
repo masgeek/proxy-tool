@@ -116,10 +116,10 @@ services:
       DB_USERNAME: ${DB_USERNAME:?DB_USERNAME must be set}
       DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
       # Optional admin account ensured at start (needs the database)
-      ADMIN_EMAIL: ${AKILIMO_MCP_ADMIN_EMAIL:-}
-      ADMIN_PASSWORD: ${AKILIMO_MCP_ADMIN_PASSWORD:-}
+      ADMIN_EMAIL: ${AKILIMO_MCP_ADMIN_EMAIL:?AKILIMO_MCP_ADMIN_EMAIL must be set}
+      ADMIN_PASSWORD: ${AKILIMO_MCP_ADMIN_PASSWORD:?AKILIMO_MCP_ADMIN_PASSWORD must be set}
       ADMIN_NAME: ${AKILIMO_MCP_ADMIN_NAME:-Administrator}
-      ADMIN_USERNAME: ${AKILIMO_MCP_ADMIN_USERNAME:-}
+      ADMIN_USERNAME: ${AKILIMO_MCP_ADMIN_USERNAME:?AKILIMO_MCP_ADMIN_USERNAME must be set}
     volumes:
       # Shared MCP server registry of the gateway
       - akilimo-mcp-data:/app/data
