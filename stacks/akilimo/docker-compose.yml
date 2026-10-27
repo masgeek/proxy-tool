@@ -110,7 +110,7 @@ services:
       # Optional accounts database (PostgreSQL; migrations run at container start). Leave
       # AKILIMO_MCP_DB_HOST empty to run without accounts: MCP tools work, the gateway registry
       # is read-only.
-      DB_HOST: ${AKILIMO_MCP_DB_HOST:-}
+      DB_HOST: ${AKILIMO_MCP_DB_HOST:-postgres}
       DB_PORT: ${AKILIMO_MCP_DB_PORT:-5432}
       DB_DATABASE: ${AKILIMO_MCP_DB_DATABASE:-akilimo_mcp}
       DB_USERNAME: ${DB_USERNAME:?DB_USERNAME must be set}
