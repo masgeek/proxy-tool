@@ -86,7 +86,7 @@ stacks/
   ├── netdata/            ← Netdata host/container metrics
   ├── fuelrod/            ← Fuelrod service, SMS portal, SMS gateway
   ├── farm/               ← Farm Manager API, web, migrations
-  ├── akilimo/            ← Akilimo API (Laravel)
+  ├── akilimo/            ← Akilimo API (Laravel), Akilimo 1.0 MCP server
   ├── use-uptake/         ← Use-Uptake frontend
   ├── fees-prod/          ← Production Fee Syncer
   ├── fees-dev/           ← Development Fee Syncer
@@ -137,7 +137,7 @@ Stacks that share postgres credentials must use matching values — copy from `s
 | `stacks/netdata/.env` | Netdata image and resource settings |
 | `stacks/fuelrod/.env` | Fuelrod, SMS portal, SMS gateway |
 | `stacks/farm/.env` | Farm API, web, migrations (postgres creds must match databases) |
-| `stacks/akilimo/.env` | Akilimo API |
+| `stacks/akilimo/.env` | Akilimo API; MCP server (`AKILIMO_MCP_*`) |
 | `stacks/use-uptake/.env` | Use-Uptake frontend |
 | `stacks/fees-prod/.env` | Production Fee Syncer |
 | `stacks/fees-dev/.env` | Development Fee Syncer |
