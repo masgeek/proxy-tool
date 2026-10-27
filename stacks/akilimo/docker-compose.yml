@@ -113,8 +113,8 @@ services:
       DB_HOST: ${AKILIMO_MCP_DB_HOST:-}
       DB_PORT: ${AKILIMO_MCP_DB_PORT:-5432}
       DB_DATABASE: ${AKILIMO_MCP_DB_DATABASE:-akilimo_mcp}
-      DB_USERNAME: ${AKILIMO_MCP_DB_USERNAME:-}
-      DB_PASSWORD: ${AKILIMO_MCP_DB_PASSWORD:-}
+      DB_USERNAME: ${DB_USERNAME:?DB_USERNAME must be set}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
       # Optional admin account ensured at start (needs the database)
       ADMIN_EMAIL: ${AKILIMO_MCP_ADMIN_EMAIL:-}
       ADMIN_PASSWORD: ${AKILIMO_MCP_ADMIN_PASSWORD:-}
