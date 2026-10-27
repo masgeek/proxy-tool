@@ -88,3 +88,59 @@ services:
         limits:
           memory: 2g
           cpus: "2.0"
+
+  # Akilimo 1.0 MCP server (github.com/IITA-AKILIMO/akilimo-mcp-agent): exposes the Akilimo API
+  # as MCP tools for LLM clients. Public at akilimo-mcp.akilimo.org (mcp.akilimo.org is the
+  # Akilimo 2.0 MCP). Its env names are prefixed AKILIMO_MCP_ because DB_* above belong to the API.
+  mcp:
+    container_name: akilimo-mcp
+    image: ghcr.io/iita-akilimo/akilimo-mcp-agent:${AKILIMO_MCP_TAG:?AKILIMO_MCP_TAG must be set}
+    hostname: akilimo-mcp
+    restart: unless-stopped
+    pull_policy: always
+    ports:
+      - "127.0.0.1:9101:3000"
+    environment:
+      TRANSPORT: http
+      PORT: 3000
+      # The API container over the internal network (its routes live under /api)
+      AKILIMO_API_BASE_URL: ${AKILIMO_MCP_API_BASE_URL:-http://akilimo-api/api}
+      AKILIMO_API_KEY: ${AKILIMO_MCP_API_KEY:-}
+      ALLOWED_ORIGINS: ${AKILIMO_MCP_ALLOWED_ORIGINS:-https://akilimo-mcp.akilimo.org}
+      # Optional accounts database (PostgreSQL; migrations run at container start). Leave
+      # AKILIMO_MCP_DB_HOST empty to run without accounts: MCP tools work, the gateway registry
+      # is read-only.
+      DB_HOST: ${AKILIMO_MCP_DB_HOST:-}
+      DB_PORT: ${AKILIMO_MCP_DB_PORT:-5432}
+      DB_DATABASE: ${AKILIMO_MCP_DB_DATABASE:-akilimo_mcp}
+      DB_USERNAME: ${AKILIMO_MCP_DB_USERNAME:-}
+      DB_PASSWORD: ${AKILIMO_MCP_DB_PASSWORD:-}
+      # Optional admin account ensured at start (needs the database)
+      ADMIN_EMAIL: ${AKILIMO_MCP_ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${AKILIMO_MCP_ADMIN_PASSWORD:-}
+      ADMIN_NAME: ${AKILIMO_MCP_ADMIN_NAME:-Administrator}
+      ADMIN_USERNAME: ${AKILIMO_MCP_ADMIN_USERNAME:-}
+    volumes:
+      # Shared MCP server registry of the gateway
+      - akilimo-mcp-data:/app/data
+    depends_on:
+      api:
+        condition: service_started
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - dokploy-network
+      - internal
+    # The image's HEALTHCHECK probes GET /health
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "1.0"
+
+volumes:
+  akilimo-mcp-data:
+    name: akilimo-mcp-data
