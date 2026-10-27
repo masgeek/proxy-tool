@@ -186,3 +186,30 @@ api.akilimo.org {
         }
         respond @disallowed "Access Denied" 403
 }
+
+# -----------------------------------------------------------------------------
+# akilimo-mcp — akilimo-mcp.akilimo.org (mcp.akilimo.org is the Akilimo 2.0 MCP)
+# HTTP reverse proxy to the akilimo-mcp container on 127.0.0.1:9101. Only the MCP
+# endpoints are public: streamable HTTP /mcp, legacy SSE /sse with /messages,
+# and /health. No encode: compression would buffer the SSE streams.
+# -----------------------------------------------------------------------------
+akilimo-mcp.akilimo.org {
+        tls akilimo@cgiar.org
+
+
+        @mcp path /mcp /sse /messages /health
+        handle @mcp {
+                reverse_proxy 127.0.0.1:9101 {
+                        import proxy_headers
+
+                        flush_interval -1
+                        transport http {
+                                response_header_timeout 300s
+                        }
+                }
+        }
+
+        handle {
+                respond "Not found" 404
+        }
+}

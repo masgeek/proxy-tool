@@ -106,6 +106,36 @@ api.akilimo.org {
 }
 
 # -----------------------------------------------------------------------------
+# akilimo-mcp — akilimo-mcp.akilimo.org (mcp.akilimo.org is the Akilimo 2.0 MCP)
+# Reverse proxy to the akilimo-mcp container (Akilimo 1.0 MCP server) on 127.0.0.1:9101.
+# Only the MCP endpoints are public: streamable HTTP /mcp, legacy SSE /sse with
+# /messages, and /health. No encode: compression would buffer the SSE streams.
+# -----------------------------------------------------------------------------
+akilimo-mcp.akilimo.org {
+	tls akilimo@cgiar.org
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+
+	@mcp path /mcp /sse /messages /health
+	handle @mcp {
+		reverse_proxy 127.0.0.1:9101 {
+			import ../headers/proxy-headers.caddy
+
+			# Stream SSE events as they arrive; recommendation computes can take minutes
+			flush_interval -1
+			transport http {
+				response_header_timeout 300s
+			}
+		}
+	}
+
+	handle {
+		error 404
+	}
+}
+
+# -----------------------------------------------------------------------------
 # akilimo.org — Use-Uptake
 # -----------------------------------------------------------------------------
 uptake.akilimo.org {
