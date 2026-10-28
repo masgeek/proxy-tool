@@ -213,3 +213,30 @@ akilimo-mcp.akilimo.org {
                 respond "Not found" 404
         }
 }
+
+# -----------------------------------------------------------------------------
+# akilimo-agent — agent.akilimo.org
+# The web UI of the Akilimo 1.0 agent: reverse proxy to the akilimo-web container on
+# 127.0.0.1:9102. Its nginx forwards /gateway, /api and /chat to the MCP server over
+# the internal network, so this is the only block the UI needs. No encode: the chat
+# streams answers as they are produced and compression would buffer them.
+# -----------------------------------------------------------------------------
+agent.akilimo.org {
+        tls akilimo@cgiar.org
+
+
+        reverse_proxy 127.0.0.1:9102 {
+                import proxy_headers
+
+                flush_interval -1
+                transport http {
+                        response_header_timeout 300s
+                }
+        }
+
+        @disallowed {
+                path /.git/*
+                path *.sql
+        }
+        respond @disallowed "Access Denied" 403
+}

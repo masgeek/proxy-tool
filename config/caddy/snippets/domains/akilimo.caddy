@@ -136,6 +136,30 @@ akilimo-mcp.akilimo.org {
 }
 
 # -----------------------------------------------------------------------------
+# akilimo-agent — agent.akilimo.org
+# The web UI of the Akilimo 1.0 agent: reverse proxy to the akilimo-web container on 127.0.0.1:9102.
+# Its nginx forwards /gateway, /api and /chat to the MCP server over the internal network, so this is
+# the only block the UI needs. No encode: the chat streams answers as they are produced and
+# compression would buffer them.
+# -----------------------------------------------------------------------------
+agent.akilimo.org {
+	tls akilimo@cgiar.org
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+
+	reverse_proxy 127.0.0.1:9102 {
+		import ../headers/proxy-headers.caddy
+
+		# Stream the chat as it arrives; recommendation computes can take minutes
+		flush_interval -1
+		transport http {
+			response_header_timeout 300s
+		}
+	}
+}
+
+# -----------------------------------------------------------------------------
 # akilimo.org — Use-Uptake
 # -----------------------------------------------------------------------------
 uptake.akilimo.org {
