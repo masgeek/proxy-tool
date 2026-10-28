@@ -106,7 +106,10 @@ services:
       # The API container over the internal network (its routes live under /api)
       AKILIMO_API_BASE_URL: ${AKILIMO_MCP_API_BASE_URL:-http://akilimo-api/api}
       AKILIMO_API_KEY: ${AKILIMO_MCP_API_KEY:-}
-      ALLOWED_ORIGINS: ${AKILIMO_MCP_ALLOWED_ORIGINS:-https://akilimo-mcp.akilimo.org}
+      ALLOWED_ORIGINS: ${AKILIMO_MCP_ALLOWED_ORIGINS:-https://akilimo-mcp.akilimo.org,https://agent.akilimo.org}
+      # Master key for the secrets the web UI saves (AI provider keys, web search key); generate with
+      # `openssl rand -base64 32` and keep it stable. Without it only Ollama works in the chat.
+      SECRETS_KEY: ${AKILIMO_MCP_SECRETS_KEY:-}
       # Optional accounts database (PostgreSQL; migrations run at container start). Leave
       # AKILIMO_MCP_DB_HOST empty to run without accounts: MCP tools work, the gateway registry
       # is read-only.
@@ -140,6 +143,40 @@ services:
         limits:
           memory: 512m
           cpus: "1.0"
+
+  # Web UI of the Akilimo 1.0 agent (guided forms and AI chat), the static build served by nginx. Its nginx
+  # proxies /gateway, /api and /chat to the mcp service (hostname akilimo-mcp, port 3000) over the internal
+  # network, so only this one port is public: agent.akilimo.org -> 127.0.0.1:9102 (see Caddyfile).
+  web:
+    container_name: akilimo-web
+    image: ghcr.io/iita-akilimo/akilimo-mcp-agent-web:${AKILIMO_WEB_TAG:-${AKILIMO_MCP_TAG}}
+    hostname: akilimo-web
+    restart: unless-stopped
+    pull_policy: always
+    ports:
+      - "127.0.0.1:9102:8080"
+    environment:
+      # Where the chat's Ollama mode reaches an Ollama server; nginx needs a value to start, and the
+      # default only matters if the host runs Ollama
+      OLLAMA_UPSTREAM: ${AKILIMO_WEB_OLLAMA_UPSTREAM:-http://host.docker.internal:11434}
+    depends_on:
+      mcp:
+        condition: service_started
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - internal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # The image's HEALTHCHECK probes the nginx port
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+          cpus: "0.5"
 
 volumes:
   akilimo-mcp-data:
