@@ -1,0 +1,17 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "graphTooltip": 1,
+  "panels": [
+    {"id": 1, "type": "stat", "title": "Redis Up", "gridPos": {"h": 5, "w": 6, "x": 0, "y": 0}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}, "options": {"reduceOptions": {"calcs": ["lastNotNull"]}}, "targets": [{"expr": "redis_up", "legendFormat": "status", "refId": "A"}]},
+    {"id": 2, "type": "stat", "title": "Used Memory", "gridPos": {"h": 5, "w": 6, "x": 6, "y": 0}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "fieldConfig": {"defaults": {"unit": "bytes"}, "overrides": []}, "options": {"reduceOptions": {"calcs": ["lastNotNull"]}}, "targets": [{"expr": "redis_memory_used_bytes", "legendFormat": "used", "refId": "A"}]},
+    {"id": 3, "type": "timeseries", "title": "Cache Hit Ratio", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 5}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "fieldConfig": {"defaults": {"unit": "percentunit"}, "overrides": []}, "targets": [{"expr": "sum(rate(redis_keyspace_hits_total[5m])) / clamp_min(sum(rate(redis_keyspace_hits_total[5m])) + sum(rate(redis_keyspace_misses_total[5m])), 0.000001)", "legendFormat": "hit ratio", "refId": "A"}]},
+    {"id": 4, "type": "timeseries", "title": "Clients and Evictions", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 5}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}, "targets": [{"expr": "redis_connected_clients", "legendFormat": "clients", "refId": "A"}, {"expr": "rate(redis_evicted_keys_total[5m])", "legendFormat": "evictions/s", "refId": "B"}]}
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["redis", "cache"],
+  "time": {"from": "now-6h", "to": "now"},
+  "title": "Redis Cache",
+  "uid": "redis-cache"
+}

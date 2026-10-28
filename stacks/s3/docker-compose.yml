@@ -44,6 +44,8 @@ volumes:
 
 services:
   s3-init:
+    environment:
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     container_name: s3-init
     image: ghcr.io/achtungsoftware/alarik:${S3_TAG:-1.0.0-beta-13}
     restart: "no"
@@ -52,6 +54,7 @@ services:
     command: ["chown -R alarik:alarik /app/Storage"]
     volumes:
       - s3-data:/app/Storage
+    mem_limit: 256m
     networks:
       - internal
 
@@ -75,6 +78,7 @@ services:
       DEFAULT_BUCKETS: ${DEFAULT_BUCKETS:-}
       ALLOW_ACCOUNT_CREATION: ${ALLOW_ACCOUNT_CREATION:-false}
       ALARIK_FSYNC: ${S3_FSYNC:-true}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     ports:
       - "127.0.0.1:9612:8080"
     volumes:
@@ -84,12 +88,19 @@ services:
       - internal
     deploy:
       resources:
+        # Sized for range reads. A single-threaded client pulling a 1.3 GB CSV
+        # measured ~2.9 MB/s at the old 0.5 CPU cap, which made a full scan take
+        # over eight minutes and left each import chunk uncomfortably close to a
+        # 60s queue timeout. Range GET throughput here is CPU bound — SigV4
+        # signing and streaming are done inline per request — so CPU is what
+        # moves the needle. Memory is not the constraint: Alarik streams object
+        # bodies to disk with bounded memory, so body size does not drive it.
         limits:
+          memory: 2g
+          cpus: "2.0"
+        reservations:
           memory: 512m
           cpus: "0.5"
-        reservations:
-          memory: 128m
-          cpus: "0.1"
 
   console:
     container_name: s3-console
@@ -100,6 +111,7 @@ services:
       NUXT_PUBLIC_API_BASE_URL: ${NUXT_PUBLIC_API_BASE_URL:-https://s3.munywele.co.ke}
       NUXT_PUBLIC_CONSOLE_BASE_URL: ${NUXT_PUBLIC_CONSOLE_BASE_URL:-https://s3-console.munywele.co.ke}
       NUXT_PUBLIC_ALLOW_ACCOUNT_CREATION: ${NUXT_PUBLIC_ALLOW_ACCOUNT_CREATION:-false}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     depends_on:
       - s3
     ports:

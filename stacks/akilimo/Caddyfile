@@ -5,19 +5,14 @@
 
 # -----------------------------------------------------------------------------
 # akilimo-site — akilimo.org
-# PHP-FPM: akilimo-site container on 127.0.0.1:9000
+# PHP-FPM: akilimo-site container via unix socket
 # -----------------------------------------------------------------------------
 akilimo.org {
         tls akilimo@cgiar.org
 
-        log {
-                output file /var/log/caddy/akilimo.log
-                format console
-                level debug
-        }
 
-        root * /mnt/data/extra_storage/services/akilimo
-        encode gzip
+        root * /data/extra_storage/services/akilimo
+        encode zstd gzip
 
         @disallowed {
                 path /xmlrpc.php
@@ -33,14 +28,18 @@ akilimo.org {
                 path *.css *.js *.ico *.gif *.jpg *.jpeg *.png *.svg *.webp *.woff *.woff2 *.ttf *.eot *.otf *.mp4 *.webm *.pdf *.txt *.xml
         }
         handle @static {
-                header Cache-Control "public, max-age=31536000, immutable"
+                header Cache-Control "public, max-age=7200"
+                cache {
+                        allowed_http_verbs GET HEAD
+                        default_cache_control "public, max-age=7200"
+                        ttl 2h
+                        stale 0s
+                }
                 file_server
         }
 
         # PHP requests
-        php_fastcgi 127.0.0.1:9000 {
-                root /var/www/html
-        }
+        php_fastcgi unix//run/php/php8.4-fpm.sock
 
         # WordPress permalink fallback — passes original query string through
         try_files {path} {path}/ /index.php?{query}
@@ -50,19 +49,14 @@ akilimo.org {
 
 # -----------------------------------------------------------------------------
 # akilimo-portal — portal.akilimo.org
-# PHP-FPM: akilimo-portal container on 127.0.0.1:9001
+# PHP-FPM: akilimo-portal container via unix socket
 # -----------------------------------------------------------------------------
 portal.akilimo.org {
         tls akilimo@cgiar.org
 
-        log {
-                output file /var/log/caddy/akilimo-portal.log
-                format console
-                level debug
-        }
 
-        root * /mnt/data/extra_storage/services/portal
-        encode gzip
+        root * /data/extra_storage/services/portal
+        encode zstd gzip
 
         @disallowed {
                 path /xmlrpc.php
@@ -77,13 +71,17 @@ portal.akilimo.org {
                 path *.css *.js *.ico *.gif *.jpg *.jpeg *.png *.svg *.webp *.woff *.woff2 *.ttf *.eot *.otf *.mp4 *.webm *.pdf *.txt *.xml
         }
         handle @static {
-                header Cache-Control "public, max-age=31536000, immutable"
+                header Cache-Control "public, max-age=7200"
+                cache {
+                        allowed_http_verbs GET HEAD
+                        default_cache_control "public, max-age=7200"
+                        ttl 2h
+                        stale 0s
+                }
                 file_server
         }
 
-        php_fastcgi 127.0.0.1:9001 {
-                root /var/www/html
-        }
+        php_fastcgi unix//run/php/php8.4-fpm.sock
 
         try_files {path} {path}/ /index.php?{query}
 
@@ -92,19 +90,14 @@ portal.akilimo.org {
 
 # -----------------------------------------------------------------------------
 # new-akilimo — new.akilimo.org
-# PHP-FPM: new-akilimo container on 127.0.0.1:9002
+# PHP-FPM: new-akilimo container via unix socket
 # -----------------------------------------------------------------------------
 new.akilimo.org {
         tls akilimo@cgiar.org
 
-        log {
-                output file /var/log/caddy/new-akilimo.log
-                format console
-                level debug
-        }
 
-        root * /mnt/data/extra_storage/services/new_akilimo
-        encode gzip
+        root * /data/extra_storage/services/new_akilimo
+        encode zstd gzip
 
         @disallowed {
                 path /xmlrpc.php
@@ -119,13 +112,17 @@ new.akilimo.org {
                 path *.css *.js *.ico *.gif *.jpg *.jpeg *.png *.svg *.webp *.woff *.woff2 *.ttf *.eot *.otf *.mp4 *.webm *.pdf *.txt *.xml
         }
         handle @static {
-                header Cache-Control "public, max-age=31536000, immutable"
+                header Cache-Control "public, max-age=7200"
+                cache {
+                        allowed_http_verbs GET HEAD
+                        default_cache_control "public, max-age=7200"
+                        ttl 2h
+                        stale 0s
+                }
                 file_server
         }
 
-        php_fastcgi 127.0.0.1:9002 {
-                root /var/www/html
-        }
+        php_fastcgi unix//run/php/php8.4-fpm.sock
 
         try_files {path} {path}/ /index.php?{query}
 
@@ -139,18 +136,11 @@ new.akilimo.org {
 dev.akilimo.org {
         tls akilimo@cgiar.org
 
-        log {
-                output file /var/log/caddy/akilimo-dev.log
-                format console
-                level debug
-        }
 
-        encode gzip
+        encode zstd gzip
 
         reverse_proxy 127.0.0.1:9100 {
-                header_up Host                {host}
-                header_up X-Real-IP           {remote_host}
-                header_up X-Forwarded-Port    {server_port}
+                import proxy_headers_port
 
                 transport http {
                         dial_timeout            1800s
@@ -174,20 +164,13 @@ dev.akilimo.org {
 api.akilimo.org {
         tls akilimo@cgiar.org
 
-        log {
-                output file /var/log/caddy/akilimo-api.log
-                format console
-                level debug
-        }
 
-        encode gzip
+        encode zstd gzip
 
         rewrite * /api{uri}
 
         reverse_proxy 127.0.0.1:9100 {
-                header_up Host                {host}
-                header_up X-Real-IP           {remote_host}
-                header_up X-Forwarded-Port    {server_port}
+                import proxy_headers_port
 
                 transport http {
                         dial_timeout            1800s
@@ -200,6 +183,60 @@ api.akilimo.org {
                 path *.sql
                 path /xmlrpc.php
                 path_regexp user_ini \.user\.ini
+        }
+        respond @disallowed "Access Denied" 403
+}
+
+# -----------------------------------------------------------------------------
+# akilimo-mcp — akilimo-mcp.akilimo.org (mcp.akilimo.org is the Akilimo 2.0 MCP)
+# HTTP reverse proxy to the akilimo-mcp container on 127.0.0.1:9101. Only the MCP
+# endpoints are public: streamable HTTP /mcp, legacy SSE /sse with /messages,
+# and /health. No encode: compression would buffer the SSE streams.
+# -----------------------------------------------------------------------------
+akilimo-mcp.akilimo.org {
+        tls akilimo@cgiar.org
+
+
+        @mcp path /mcp /sse /messages /health
+        handle @mcp {
+                reverse_proxy 127.0.0.1:9101 {
+                        import proxy_headers
+
+                        flush_interval -1
+                        transport http {
+                                response_header_timeout 300s
+                        }
+                }
+        }
+
+        handle {
+                respond "Not found" 404
+        }
+}
+
+# -----------------------------------------------------------------------------
+# akilimo-agent — agent.akilimo.org
+# The web UI of the Akilimo 1.0 agent: reverse proxy to the akilimo-web container on
+# 127.0.0.1:9102. Its nginx forwards /gateway, /api and /chat to the MCP server over
+# the internal network, so this is the only block the UI needs. No encode: the chat
+# streams answers as they are produced and compression would buffer them.
+# -----------------------------------------------------------------------------
+agent.akilimo.org {
+        tls akilimo@cgiar.org
+
+
+        reverse_proxy 127.0.0.1:9102 {
+                import proxy_headers
+
+                flush_interval -1
+                transport http {
+                        response_header_timeout 300s
+                }
+        }
+
+        @disallowed {
+                path /.git/*
+                path *.sql
         }
         respond @disallowed "Access Denied" 403
 }

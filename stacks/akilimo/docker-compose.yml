@@ -1,10 +1,5 @@
 name: "akilimo"
 
-volumes:
-  akilimo-logs:
-    name: akilimo-logs
-    driver: local
-
 networks:
   internal:
     name: internal
@@ -16,7 +11,7 @@ networks:
 services:
   api:
     container_name: akilimo-api
-    image: iita/akilimo-api:${AKILIMO_TAG:?AKILIMO_TAG must be set}
+    image: ghcr.io/iita-akilimo/akilimo-api:${AKILIMO_TAG:?AKILIMO_TAG must be set}
     hostname: akilimo-api
     restart: unless-stopped
     pull_policy: always
@@ -45,7 +40,7 @@ services:
       SESSION_DRIVER: ${SESSION_DRIVER:-redis}
       SESSION_LIFETIME: ${SESSION_LIFETIME:-120}
       # Redis
-      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_HOST: ${REDIS_HOST:-cache}
       REDIS_PORT: ${REDIS_PORT:-6379}
       # Queue
       QUEUE_CONNECTION: ${QUEUE_CONNECTION:-redis}
@@ -57,8 +52,9 @@ services:
       AUTO_RECOVER_FAILED_MIGRATIONS: ${AUTO_RECOVER_FAILED_MIGRATIONS:-false}
       # Logging
       LOG_CHANNEL: ${LOG_CHANNEL:-stack}
+      LOG_STACK: ${LOG_STACK:-stderr}
       LOG_DEPRECATIONS_CHANNEL: ${LOG_DEPRECATIONS_CHANNEL:-null}
-      LOG_LEVEL: ${LOG_LEVEL:-debug}
+      LOG_LEVEL: ${LOG_LEVEL:-warning}
       # Filesystem
       FILESYSTEM_DISK: ${FILESYSTEM_DISK:-local}
       # Mail
@@ -70,14 +66,12 @@ services:
       MAIL_ENCRYPTION: ${MAIL_ENCRYPTION:-null}
       MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-noreply@akilimo.org}
       MAIL_FROM_NAME: ${MAIL_FROM_NAME:-Akilimo}
-      # PHP-FPM
-      PHP_FPM_PM_MAX_CHILDREN: ${PHP_FPM_PM_MAX_CHILDREN:-50}
-      PHP_FPM_PM_START_SERVERS: ${PHP_FPM_PM_START_SERVERS:-5}
-      PHP_FPM_PM_MIN_SPARE_SERVERS: ${PHP_FPM_PM_MIN_SPARE_SERVERS:-5}
-      PHP_FPM_PM_MAX_SPARE_SERVERS: ${PHP_FPM_PM_MAX_SPARE_SERVERS:-10}
-    volumes:
-      - akilimo-logs:/var/log/supervisor
-      - ../../config/supervisor/common:/etc/supervisor/conf.d
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - dokploy-network
       - internal
@@ -94,3 +88,96 @@ services:
         limits:
           memory: 2g
           cpus: "2.0"
+
+  # Akilimo 1.0 MCP server (github.com/IITA-AKILIMO/akilimo-mcp-agent): exposes the Akilimo API
+  # as MCP tools for LLM clients. Public at akilimo-mcp.akilimo.org (mcp.akilimo.org is the
+  # Akilimo 2.0 MCP). Its env names are prefixed AKILIMO_MCP_ because DB_* above belong to the API.
+  mcp:
+    container_name: akilimo-mcp
+    image: ghcr.io/iita-akilimo/akilimo-mcp-agent:${AKILIMO_MCP_TAG:?AKILIMO_MCP_TAG must be set}
+    hostname: akilimo-mcp
+    restart: unless-stopped
+    pull_policy: always
+    ports:
+      - "127.0.0.1:9101:3000"
+    environment:
+      TRANSPORT: http
+      PORT: 3000
+      # The API container over the internal network (its routes live under /api)
+      AKILIMO_API_BASE_URL: ${AKILIMO_MCP_API_BASE_URL:-http://akilimo-api/api}
+      AKILIMO_API_KEY: ${AKILIMO_MCP_API_KEY:-}
+      ALLOWED_ORIGINS: ${AKILIMO_MCP_ALLOWED_ORIGINS:-https://akilimo-mcp.akilimo.org,https://agent.akilimo.org}
+      # Master key for the secrets the web UI saves (AI provider keys, web search key); generate with
+      # `openssl rand -base64 32` and keep it stable. Without it only Ollama works in the chat.
+      SECRETS_KEY: ${AKILIMO_MCP_SECRETS_KEY:-}
+      # Optional accounts database (PostgreSQL; migrations run at container start). Leave
+      # AKILIMO_MCP_DB_HOST empty to run without accounts: MCP tools work, the gateway registry
+      # is read-only.
+      DB_HOST: ${AKILIMO_MCP_DB_HOST:-postgres}
+      DB_PORT: ${AKILIMO_MCP_DB_PORT:-5432}
+      DB_DATABASE: ${AKILIMO_MCP_DB_DATABASE:-akilimo_mcp}
+      DB_USERNAME: ${DB_USERNAME:?DB_USERNAME must be set}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
+      # Optional admin account ensured at start (needs the database)
+      ADMIN_EMAIL: ${AKILIMO_MCP_ADMIN_EMAIL:?AKILIMO_MCP_ADMIN_EMAIL must be set}
+      ADMIN_PASSWORD: ${AKILIMO_MCP_ADMIN_PASSWORD:?AKILIMO_MCP_ADMIN_PASSWORD must be set}
+      ADMIN_NAME: ${AKILIMO_MCP_ADMIN_NAME:-Administrator}
+      ADMIN_USERNAME: ${AKILIMO_MCP_ADMIN_USERNAME:?AKILIMO_MCP_ADMIN_USERNAME must be set}
+    volumes:
+      # Shared MCP server registry of the gateway
+      - akilimo-mcp-data:/app/data
+    depends_on:
+      api:
+        condition: service_started
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - dokploy-network
+      - internal
+    # The image's HEALTHCHECK probes GET /health
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "1.0"
+
+  # Web UI of the Akilimo 1.0 agent (guided forms and AI chat), the static build served by nginx. Its nginx
+  # proxies /gateway, /api and /chat to the mcp service (hostname akilimo-mcp, port 3000) over the internal
+  # network, so only this one port is public: agent.akilimo.org -> 127.0.0.1:9102 (see Caddyfile).
+  web:
+    container_name: akilimo-web
+    image: ghcr.io/iita-akilimo/akilimo-mcp-agent-web:${AKILIMO_WEB_TAG:-${AKILIMO_MCP_TAG}}
+    hostname: akilimo-web
+    restart: unless-stopped
+    pull_policy: always
+    ports:
+      - "127.0.0.1:9102:8080"
+    environment:
+      # Where the chat's Ollama mode reaches an Ollama server; nginx needs a value to start, and the
+      # default only matters if the host runs Ollama
+      OLLAMA_UPSTREAM: ${AKILIMO_WEB_OLLAMA_UPSTREAM:-http://host.docker.internal:11434}
+    depends_on:
+      mcp:
+        condition: service_started
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - internal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # The image's HEALTHCHECK probes the nginx port
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+          cpus: "0.5"
+
+volumes:
+  akilimo-mcp-data:
+    name: akilimo-mcp-data

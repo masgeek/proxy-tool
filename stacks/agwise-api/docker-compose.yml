@@ -55,6 +55,7 @@ services:
       DATA_ARCHIVE_CACHE_DIR: ${DATA_ARCHIVE_CACHE_DIR:-/app/data/.archive-cache}
       USE_VALVE: ${USE_VALVE:-true}
       TOKEN_EXPIRY_HOURS: ${TOKEN_EXPIRY_HOURS:-24}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     ports:
       - "127.0.0.1:8000:8000"
     volumes:
@@ -78,6 +79,8 @@ services:
           cpus: "0.1"
 
   dashboard:
+    environment:
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     container_name: agwise-dashboard
     hostname: agwise-dashboard
     image: iita/agwise-dashboard:${DASHBOARD_TAG:-latest}

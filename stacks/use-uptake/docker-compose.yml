@@ -14,6 +14,7 @@ services:
     stop_grace_period: 30s
     environment:
       API_URL: ${API_URL:?API_URL must be set}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
     ports:
       - "127.0.0.1:9500:4242"
     healthcheck:

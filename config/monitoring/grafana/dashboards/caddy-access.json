@@ -1,0 +1,611 @@
+{
+ "annotations": {
+  "list": []
+ },
+ "editable": true,
+ "fiscalYearStartMonth": 0,
+ "graphTooltip": 1,
+ "id": null,
+ "links": [],
+ "panels": [
+  {
+   "id": 1,
+   "type": "timeseries",
+   "title": "Request Rate by Host",
+   "description": "All requests Caddy served, split by the host requested. Health checks are dropped at ingestion.",
+   "datasource": {
+    "type": "loki",
+    "uid": "loki"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 0
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "custom": {
+      "axisBorderShow": false,
+      "axisCenteredZero": false,
+      "axisColorMode": "text",
+      "axisLabel": "",
+      "axisPlacement": "auto",
+      "barAlignment": 0,
+      "drawStyle": "bars",
+      "fillOpacity": 45,
+      "gradientMode": "opacity",
+      "hideFrom": {
+       "legend": false,
+       "tooltip": false,
+       "viz": false
+      },
+      "insertNulls": false,
+      "lineInterpolation": "linear",
+      "lineWidth": 1,
+      "pointSize": 5,
+      "scaleDistribution": {
+       "type": "linear"
+      },
+      "showPoints": "never",
+      "spanNulls": false,
+      "stacking": {
+       "group": "A",
+       "mode": "none"
+      },
+      "thresholdsStyle": {
+       "mode": "off"
+      }
+     },
+     "mappings": [],
+     "unit": "reqps",
+     "min": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "calcs": [
+      "sum"
+     ],
+     "displayMode": "table",
+     "placement": "right",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum(rate({service_name=\"caddy\", log_type=\"access\"}[5m])) by (host)",
+     "legendFormat": "{{host}}",
+     "datasource": {
+      "type": "loki",
+      "uid": "loki"
+     }
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "type": "timeseries",
+   "title": "Server Error Rate (5xx) by Host",
+   "description": "Upstreams failing. Anything above zero here is a container that is down or crashing.",
+   "datasource": {
+    "type": "loki",
+    "uid": "loki"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 0
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "custom": {
+      "axisBorderShow": false,
+      "axisCenteredZero": false,
+      "axisColorMode": "text",
+      "axisLabel": "",
+      "axisPlacement": "auto",
+      "barAlignment": 0,
+      "drawStyle": "bars",
+      "fillOpacity": 45,
+      "gradientMode": "opacity",
+      "hideFrom": {
+       "legend": false,
+       "tooltip": false,
+       "viz": false
+      },
+      "insertNulls": false,
+      "lineInterpolation": "linear",
+      "lineWidth": 1,
+      "pointSize": 5,
+      "scaleDistribution": {
+       "type": "linear"
+      },
+      "showPoints": "never",
+      "spanNulls": false,
+      "stacking": {
+       "group": "A",
+       "mode": "none"
+      },
+      "thresholdsStyle": {
+       "mode": "off"
+      }
+     },
+     "mappings": [],
+     "unit": "reqps",
+     "min": 0
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byRegexp",
+       "options": ".*5.*"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "red"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "legend": {
+     "calcs": [
+      "sum"
+     ],
+     "displayMode": "table",
+     "placement": "right",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum(rate({service_name=\"caddy\", log_type=\"access\"} | status=~\"5..\" [5m])) by (host)",
+     "legendFormat": "{{host}}",
+     "datasource": {
+      "type": "loki",
+      "uid": "loki"
+     }
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "type": "timeseries",
+   "title": "Response Status Mix",
+   "description": "Status classes in one view: a rising 4xx is often a bad link or auth problem, not an outage.",
+   "datasource": {
+    "type": "loki",
+    "uid": "loki"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "custom": {
+      "axisBorderShow": false,
+      "axisCenteredZero": false,
+      "axisColorMode": "text",
+      "axisLabel": "",
+      "axisPlacement": "auto",
+      "barAlignment": 0,
+      "drawStyle": "line",
+      "fillOpacity": 45,
+      "gradientMode": "opacity",
+      "hideFrom": {
+       "legend": false,
+       "tooltip": false,
+       "viz": false
+      },
+      "insertNulls": false,
+      "lineInterpolation": "linear",
+      "lineWidth": 1,
+      "pointSize": 5,
+      "scaleDistribution": {
+       "type": "linear"
+      },
+      "showPoints": "never",
+      "spanNulls": false,
+      "stacking": {
+       "group": "A",
+       "mode": "normal"
+      },
+      "thresholdsStyle": {
+       "mode": "off"
+      }
+     },
+     "mappings": [],
+     "unit": "reqps",
+     "min": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "calcs": [
+      "sum"
+     ],
+     "displayMode": "table",
+     "placement": "right",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum(rate({service_name=\"caddy\", log_type=\"access\"}[5m])) by (status)",
+     "legendFormat": "HTTP {{status}}",
+     "datasource": {
+      "type": "loki",
+      "uid": "loki"
+     }
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "type": "timeseries",
+   "title": "Non-2xx Share of Requests",
+   "description": "Fraction of requests answered with 4xx or 5xx.",
+   "datasource": {
+    "type": "loki",
+    "uid": "loki"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "custom": {
+      "axisBorderShow": false,
+      "axisCenteredZero": false,
+      "axisColorMode": "text",
+      "axisLabel": "",
+      "axisPlacement": "auto",
+      "barAlignment": 0,
+      "drawStyle": "bars",
+      "fillOpacity": 45,
+      "gradientMode": "opacity",
+      "hideFrom": {
+       "legend": false,
+       "tooltip": false,
+       "viz": false
+      },
+      "insertNulls": false,
+      "lineInterpolation": "linear",
+      "lineWidth": 1,
+      "pointSize": 5,
+      "scaleDistribution": {
+       "type": "linear"
+      },
+      "showPoints": "never",
+      "spanNulls": false,
+      "stacking": {
+       "group": "A",
+       "mode": "none"
+      },
+      "thresholdsStyle": {
+       "mode": "off"
+      }
+     },
+     "mappings": [],
+     "unit": "percentunit",
+     "min": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "calcs": [
+      "sum"
+     ],
+     "displayMode": "table",
+     "placement": "right",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum(rate({service_name=\"caddy\", log_type=\"access\"} | status=~\"[45]..\" [5m])) / clamp_min(sum(rate({service_name=\"caddy\", log_type=\"access\"}[5m])), 0.001)",
+     "legendFormat": "non-2xx share",
+     "datasource": {
+      "type": "loki",
+      "uid": "loki"
+     }
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "type": "barchart",
+   "title": "Busiest Hosts",
+   "description": "Where the traffic actually is over the selected time range.",
+   "datasource": {
+    "type": "loki",
+    "uid": "loki"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 16
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "mappings": [],
+     "unit": "short",
+     "min": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "barRadius": 0,
+    "barWidth": 0.8,
+    "fullHighlight": false,
+    "groupWidth": 0.7,
+    "legend": {
+     "calcs": [],
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": false
+    },
+    "orientation": "horizontal",
+    "showValue": "always",
+    "stacking": "none",
+    "tooltip": {
+     "mode": "single",
+     "sort": "none"
+    },
+    "xTickLabelRotation": 0,
+    "xTickLabelSpacing": 0
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "topk(10, sum(count_over_time({service_name=\"caddy\", log_type=\"access\"}[$__range]))) by (host)",
+     "legendFormat": "{{host}}",
+     "datasource": {
+      "type": "loki",
+      "uid": "loki"
+     }
+    }
+   ]
+  },
+  {
+   "id": 6,
+   "type": "barchart",
+   "title": "Busiest Paths",
+   "description": "Most requested paths. Query strings are stripped so one page with varying parameters is not ten bars.",
+   "datasource": {
+    "type": "loki",
+    "uid": "loki"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 16
+   },
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "mappings": [],
+     "unit": "short",
+     "min": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "barRadius": 0,
+    "barWidth": 0.8,
+    "fullHighlight": false,
+    "groupWidth": 0.7,
+    "legend": {
+     "calcs": [],
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": false
+    },
+    "orientation": "horizontal",
+    "showValue": "always",
+    "stacking": "none",
+    "tooltip": {
+     "mode": "single",
+     "sort": "none"
+    },
+    "xTickLabelRotation": 0,
+    "xTickLabelSpacing": 0
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "topk(10, sum(count_over_time({service_name=\"caddy\", log_type=\"access\"} | json | uri=~\"[^?]*\" [$__range]))) by (uri)",
+     "legendFormat": "{{uri}}",
+     "datasource": {
+      "type": "loki",
+      "uid": "loki"
+     }
+    }
+   ]
+  },
+  {
+   "id": 7,
+   "type": "logs",
+   "title": "Recent 5xx Requests",
+   "description": "Every upstream failure with the request that caused it. Start here when a domain reports a 502.",
+   "datasource": {
+    "type": "loki",
+    "uid": "loki"
+   },
+   "gridPos": {
+    "h": 9,
+    "w": 24,
+    "x": 0,
+    "y": 24
+   },
+   "options": {
+    "dedupStrategy": "none",
+    "enableLogDetails": true,
+    "prettifyLogMessage": false,
+    "showCommonLabels": false,
+    "showLabels": false,
+    "showTime": true,
+    "sortOrder": "Descending",
+    "wrapLogMessage": true
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "{service_name=\"caddy\", log_type=\"access\"} | status=~\"5..\"",
+     "datasource": {
+      "type": "loki",
+      "uid": "loki"
+     }
+    }
+   ]
+  },
+  {
+   "id": 8,
+   "type": "logs",
+   "title": "Slow Requests (over 1s)",
+   "description": "Requests where Caddy measured more than one second. duration is the proxy's own timing, not total response time.",
+   "datasource": {
+    "type": "loki",
+    "uid": "loki"
+   },
+   "gridPos": {
+    "h": 9,
+    "w": 24,
+    "x": 0,
+    "y": 33
+   },
+   "options": {
+    "dedupStrategy": "none",
+    "enableLogDetails": true,
+    "prettifyLogMessage": false,
+    "showCommonLabels": false,
+    "showLabels": false,
+    "showTime": true,
+    "sortOrder": "Descending",
+    "wrapLogMessage": true
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "{service_name=\"caddy\", log_type=\"access\"} | json | duration > 1",
+     "datasource": {
+      "type": "loki",
+      "uid": "loki"
+     }
+    }
+   ]
+  }
+ ],
+ "refresh": "1m",
+ "schemaVersion": 39,
+ "tags": [
+  "caddy",
+  "loki",
+  "access",
+  "proxy"
+ ],
+ "templating": {
+  "list": [
+   {
+    "current": {},
+    "hide": 0,
+    "includeAll": false,
+    "label": "Host",
+    "multi": false,
+    "name": "host",
+    "options": [],
+    "query": {
+     "query": "label_values({service_name=\"caddy\", log_type=\"access\"}, host)",
+     "refId": "A"
+    },
+    "refresh": 2,
+    "regex": "",
+    "skipUrlSync": false,
+    "sort": 1,
+    "type": "query"
+   },
+   {
+    "current": {},
+    "hide": 0,
+    "includeAll": false,
+    "label": "Status",
+    "multi": false,
+    "name": "status",
+    "options": [],
+    "query": {
+     "query": "label_values({service_name=\"caddy\", log_type=\"access\"}, status)",
+     "refId": "B"
+    },
+    "refresh": 2,
+    "regex": "",
+    "skipUrlSync": false,
+    "sort": 1,
+    "type": "query"
+   }
+  ]
+ },
+ "time": {
+  "from": "now-1h",
+  "to": "now"
+ },
+ "timepicker": {},
+ "timezone": "",
+ "title": "Caddy Access",
+ "uid": "caddy-access",
+ "version": 1
+}
