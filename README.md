@@ -381,6 +381,7 @@ Each stack keeps its own Caddyfile. Copy the relevant blocks into the host's glo
 |---|---|---|---|
 | akilimo | API | `stacks/akilimo/Caddyfile` | `90xx` (PHP-FPM), `91xx` (API) |
 | akilimo | MCP server (`akilimo-mcp.akilimo.org`) | `stacks/akilimo/Caddyfile` | `9101` |
+| akilimo | Agent web UI (`agent.akilimo.org`) | `stacks/akilimo/Caddyfile` | `9102` |
 | fuelrod | API | `stacks/fuelrod/Caddyfile` | `92xx` |
 | farm | API | `stacks/farm/Caddyfile` | `93xx` |
 | fees-prod | Fee Syncer production | `stacks/fees-prod/Caddyfile` | `9400` |
