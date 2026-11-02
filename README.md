@@ -19,6 +19,7 @@ proxy-tool/
 │   ├── fuelrod/               ← Fuelrod service, SMS portal, SMS gateway
 │   ├── farm/                  ← Farm Manager API, web, migrations
 │   ├── akilimo/               ← Akilimo API, use-uptake
+│   ├── akilimo-mcp/           ← Akilimo 1.0 MCP server, agent web UI, weather MCP
 │   ├── fees-prod/             ← Production Fee Syncer
 │   ├── fees-dev/              ← Development Fee Syncer
 │   ├── sonar/                 ← SonarQube  [optional]
@@ -109,7 +110,7 @@ Application services write logs to Docker stdout. Alloy discovers the selected F
 curl -sSL https://get.dokploy.com | sh
 
 # 2. Copy and configure env files for each stack
-for stack in databases cache activepieces automation monitoring fuelrod farm akilimo fees sonar metabase mail mqtt; do
+for stack in databases cache activepieces automation monitoring fuelrod farm akilimo akilimo-mcp fees sonar metabase mail mqtt; do
   cp stacks/$stack/.env.example stacks/$stack/.env
 done
 # Edit each .env — replace all placeholder values and domains
@@ -142,6 +143,7 @@ docker compose -f stacks/netdata/docker-compose.yml up -d
 docker compose -f stacks/fuelrod/docker-compose.yml up -d
 docker compose -f stacks/farm/docker-compose.yml up -d
 docker compose -f stacks/akilimo/docker-compose.yml up -d
+docker compose -f stacks/akilimo-mcp/docker-compose.yml up -d   # MCP server, agent web UI, weather MCP (needs the akilimo API)
 docker compose -f stacks/fees-prod/docker-compose.yml up -d
 docker compose -f stacks/fees-dev/docker-compose.yml up -d
 ```
@@ -237,6 +239,7 @@ Each stack has its own `.env` (gitignored) sourced from `.env.example`. Stacks s
 | `fuelrod` | `FUELROD_TAG`, `FUELROD_DOMAIN`, `PORTAL_DOMAIN`, `GATEWAY_DOMAIN` |
 | `farm` | `FARM_TAG`, `POSTGRES_*`, `JWT_SECRET`, `DEFAULT_PASSWORD` |
 | `akilimo` | `AKILIMO_TAG`, `USE_UPTAKE_TAG`, `AKILIMO_DOMAIN`, `MARIADB_*` |
+| `akilimo-mcp` | `AKILIMO_MCP_TAG`, `AKILIMO_WEB_TAG`, `AKILIMO_WEATHER_TAG`, `AKILIMO_MCP_*` |
 | `sonar` | `SONAR_TAG`, `SONAR_DOMAIN`, `POSTGRES_*` |
 | `metabase` | `METABASE_DOMAIN`, `POSTGRES_*` |
 | `mail` | `MAILPIT_DOMAIN` |
@@ -380,8 +383,8 @@ Each stack keeps its own Caddyfile. Copy the relevant blocks into the host's glo
 | Stack | Service | Caddyfile | Port |
 |---|---|---|---|
 | akilimo | API | `stacks/akilimo/Caddyfile` | `90xx` (PHP-FPM), `91xx` (API) |
-| akilimo | MCP server (`akilimo-mcp.akilimo.org`) | `stacks/akilimo/Caddyfile` | `9101` |
-| akilimo | Agent web UI (`agent.akilimo.org`) | `stacks/akilimo/Caddyfile` | `9102` |
+| akilimo-mcp | MCP server (`akilimo-mcp.akilimo.org`) | `stacks/akilimo-mcp/Caddyfile` | `9101` |
+| akilimo-mcp | Agent web UI (`agent.akilimo.org`) | `stacks/akilimo-mcp/Caddyfile` | `9102` |
 | fuelrod | API | `stacks/fuelrod/Caddyfile` | `92xx` |
 | farm | API | `stacks/farm/Caddyfile` | `93xx` |
 | fees-prod | Fee Syncer production | `stacks/fees-prod/Caddyfile` | `9400` |

@@ -41,6 +41,9 @@ docker compose -f stacks/farm/docker-compose.yml up -d
 # 6. Akilimo — requires databases (MariaDB)
 docker compose -f stacks/akilimo/docker-compose.yml up -d
 
+# 6b. Akilimo MCP (MCP server, agent web UI, weather MCP) — requires the akilimo API on the shared internal network
+docker compose -f stacks/akilimo-mcp/docker-compose.yml up -d
+
 # 7. Use-Uptake — requires akilimo (connects to Akilimo API)
 docker compose -f stacks/use-uptake/docker-compose.yml up -d
 
@@ -86,7 +89,8 @@ stacks/
   ├── netdata/            ← Netdata host/container metrics
   ├── fuelrod/            ← Fuelrod service, SMS portal, SMS gateway
   ├── farm/               ← Farm Manager API, web, migrations
-  ├── akilimo/            ← Akilimo API (Laravel), Akilimo 1.0 MCP server
+  ├── akilimo/            ← Akilimo API (Laravel)
+  ├── akilimo-mcp/        ← Akilimo 1.0 MCP server, agent web UI, weather MCP
   ├── use-uptake/         ← Use-Uptake frontend
   ├── fees-prod/          ← Production Fee Syncer
   ├── fees-dev/           ← Development Fee Syncer
@@ -137,7 +141,8 @@ Stacks that share postgres credentials must use matching values — copy from `s
 | `stacks/netdata/.env` | Netdata image and resource settings |
 | `stacks/fuelrod/.env` | Fuelrod, SMS portal, SMS gateway |
 | `stacks/farm/.env` | Farm API, web, migrations (postgres creds must match databases) |
-| `stacks/akilimo/.env` | Akilimo API; MCP server (`AKILIMO_MCP_*`) |
+| `stacks/akilimo/.env` | Akilimo API |
+| `stacks/akilimo-mcp/.env` | MCP server (`AKILIMO_MCP_*`), web UI, weather MCP |
 | `stacks/use-uptake/.env` | Use-Uptake frontend |
 | `stacks/fees-prod/.env` | Production Fee Syncer |
 | `stacks/fees-dev/.env` | Development Fee Syncer |

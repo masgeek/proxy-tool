@@ -48,6 +48,7 @@ docker compose -f stacks/netdata/docker-compose.yml up -d
 docker compose -f stacks/fuelrod/docker-compose.yml up -d
 docker compose -f stacks/farm/docker-compose.yml up -d
 docker compose -f stacks/akilimo/docker-compose.yml up -d
+docker compose -f stacks/akilimo-mcp/docker-compose.yml up -d
 docker compose -f stacks/fees-prod/docker-compose.yml up -d
 docker compose -f stacks/fees-dev/docker-compose.yml up -d
 ```

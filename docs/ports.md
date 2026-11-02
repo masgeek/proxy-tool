@@ -10,8 +10,9 @@ standard ports for compatibility.
 | Stack | Service | Host port | Container port | Caddyfile |
 |-------|---------|-----------|----------------|-----------|
 | akilimo | api | 9100 | 80 | `stacks/akilimo/Caddyfile` |
-| akilimo | mcp | 9101 | 3000 | `stacks/akilimo/Caddyfile` |
-| akilimo | web | 9102 | 8080 | `stacks/akilimo/Caddyfile` |
+| akilimo-mcp | mcp | 9101 | 3000 | `stacks/akilimo-mcp/Caddyfile` |
+| akilimo-mcp | web | 9102 | 8080 | `stacks/akilimo-mcp/Caddyfile` |
+| akilimo-mcp | weather-mcp | none (internal) | 8080 | none |
 | fuelrod | api | 9200 | 80 | `stacks/fuelrod/Caddyfile` |
 | fuelrod | portal | 9201 | 80 | `stacks/fuelrod/Caddyfile` |
 | farm | api | 9300 | 3001 | — |
