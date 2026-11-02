@@ -143,7 +143,7 @@ docker compose -f stacks/netdata/docker-compose.yml up -d
 docker compose -f stacks/fuelrod/docker-compose.yml up -d
 docker compose -f stacks/farm/docker-compose.yml up -d
 docker compose -f stacks/akilimo/docker-compose.yml up -d
-docker compose -f stacks/akilimo-mcp/docker-compose.yml up -d   # MCP server, agent web UI, weather MCP (needs the akilimo API)
+docker compose -f stacks/akilimo-mcp/docker-compose.yml up -d   # MCP server, agent web UI, weather and agriculture MCPs (needs the akilimo API)
 docker compose -f stacks/fees-prod/docker-compose.yml up -d
 docker compose -f stacks/fees-dev/docker-compose.yml up -d
 ```
@@ -239,7 +239,7 @@ Each stack has its own `.env` (gitignored) sourced from `.env.example`. Stacks s
 | `fuelrod` | `FUELROD_TAG`, `FUELROD_DOMAIN`, `PORTAL_DOMAIN`, `GATEWAY_DOMAIN` |
 | `farm` | `FARM_TAG`, `POSTGRES_*`, `JWT_SECRET`, `DEFAULT_PASSWORD` |
 | `akilimo` | `AKILIMO_TAG`, `USE_UPTAKE_TAG`, `AKILIMO_DOMAIN`, `MARIADB_*` |
-| `akilimo-mcp` | `AKILIMO_MCP_TAG`, `AKILIMO_WEB_TAG`, `AKILIMO_WEATHER_TAG`, `AKILIMO_MCP_*` |
+| `akilimo-mcp` | `AKILIMO_MCP_TAG`, `AKILIMO_WEB_TAG`, `AKILIMO_WEATHER_TAG`, `AKILIMO_AGRICULTURE_TAG`, `AKILIMO_MCP_*` |
 | `sonar` | `SONAR_TAG`, `SONAR_DOMAIN`, `POSTGRES_*` |
 | `metabase` | `METABASE_DOMAIN`, `POSTGRES_*` |
 | `mail` | `MAILPIT_DOMAIN` |
