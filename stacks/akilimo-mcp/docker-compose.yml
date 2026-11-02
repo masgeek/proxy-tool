@@ -33,7 +33,7 @@ services:
       ALLOWED_ORIGINS: ${AKILIMO_MCP_ALLOWED_ORIGINS:-https://akilimo-mcp.akilimo.org,https://agent.akilimo.org}
       # Master key for the secrets the web UI saves (AI provider keys, web search key); generate with
       # `openssl rand -base64 32` and keep it stable. Without it only Ollama works in the chat.
-      SECRETS_KEY: ${AKILIMO_MCP_SECRETS_KEY:-}
+      SECRETS_KEY: ${AKILIMO_MCP_SECRETS_KEY:?AKILIMO_MCP_SECRETS_KEY must be set}
       # Optional accounts database (PostgreSQL; migrations run at container start). Leave
       # AKILIMO_MCP_DB_HOST empty to run without accounts: MCP tools work, the gateway registry
       # is read-only.
