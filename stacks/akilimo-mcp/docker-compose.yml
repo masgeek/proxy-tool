@@ -122,6 +122,38 @@ services:
           memory: 256m
           cpus: "0.5"
 
+  # Agriculture MCP server (IITA fork, github.com/IITA-AKILIMO/agriculture-mcp-server): soil conditions, crop
+  # weather, climate history and averages (Open-Meteo, NASA POWER) and national agriculture statistics
+  # (World Bank); no API key. It has no authentication, so it stays on the internal network with no published
+  # port: register it in the web UI (Manage) as id "agriculture", URL http://akilimo-agriculture-mcp:8080/mcp,
+  # no key.
+  agriculture-mcp:
+    container_name: akilimo-agriculture-mcp
+    image: ghcr.io/iita-akilimo/agriculture-mcp-server:${AKILIMO_AGRICULTURE_TAG:-latest}
+    hostname: akilimo-agriculture-mcp
+    restart: unless-stopped
+    pull_policy: always
+    environment:
+      LOG_LEVEL: ${AKILIMO_AGRICULTURE_LOG_LEVEL:-INFO}
+      STATELESS_HTTP: "true"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs: [/tmp]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - internal
+    # The image's HEALTHCHECK probes GET /health
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          cpus: "0.5"
+
 volumes:
   akilimo-mcp-data:
     name: akilimo-mcp-data
