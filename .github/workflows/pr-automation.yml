@@ -2,7 +2,7 @@ name: Auto Approve
 on: pull_request_target
 jobs:
   pr-auto-approve:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       pull-requests: write
     concurrency:
