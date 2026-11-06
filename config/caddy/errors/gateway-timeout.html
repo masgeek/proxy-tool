@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="robots" content="noindex">
+	<title>504 — Gateway Timeout</title>
+	<style>
+		:root {
+			color-scheme: light dark;
+			font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+			--accent: #6d28d9;
+			--accent-strong: #5b21b6;
+			--accent-soft: #f5f3ff;
+			--accent-border: #c4b5fd;
+			--accent-hover: #ede9fe;
+		}
+		body {
+			min-height: 100vh; margin: 0; display: grid; place-items: center;
+			background:
+				radial-gradient(circle at 15% 20%, #c4b5fd 0, transparent 40%),
+				radial-gradient(circle at 85% 15%, #a5b4fc 0, transparent 40%),
+				radial-gradient(circle at 50% 90%, #fbcfe8 0, transparent 45%),
+				#f5f3ff;
+			color: #2b1a4d;
+		}
+		main {
+			width: min(36rem, calc(100% - 3rem)); padding: 3rem;
+			border: 1px solid rgb(255 255 255 / 60%); border-radius: 1.25rem;
+			background: rgb(255 255 255 / 45%);
+			backdrop-filter: blur(20px) saturate(180%);
+			-webkit-backdrop-filter: blur(20px) saturate(180%);
+			box-shadow: 0 1.5rem 3rem rgb(76 29 149 / 12%), inset 0 1px 0 rgb(255 255 255 / 60%);
+			text-align: center; animation: rise .6s ease-out both;
+		}
+		.illustration { display: block; width: 13rem; height: 13rem; margin: 0 auto 1rem; animation: float 4s ease-in-out infinite; filter: drop-shadow(0 .75rem 1.25rem rgb(76 29 149 / 30%)); }
+		.status {
+			margin: 0; color: var(--accent); font-size: 4rem; font-weight: 800;
+			letter-spacing: -.05em; animation: pulse 2.5s ease-in-out infinite;
+		}
+		h1 { margin: .5rem 0; font-size: 1.5rem; }
+		p { margin: 0; color: #7161a1; line-height: 1.6; }
+		.actions { margin-top: 1.5rem; display: flex; justify-content: center; gap: .75rem; flex-wrap: wrap; }
+		.retry, .home {
+			appearance: none; border: 1px solid var(--accent-border); border-radius: .5rem;
+			background: var(--accent-soft); color: var(--accent-strong);
+			font: inherit; font-weight: 600; font-size: .875rem; padding: .5rem 1rem;
+			cursor: pointer; text-decoration: none; display: inline-block;
+			transition: background-color .15s ease;
+		}
+		.retry:hover, .retry:focus-visible, .home:hover, .home:focus-visible { background: var(--accent-hover); }
+		.retry:focus-visible, .home:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 2px; }
+		small { display: block; margin-top: 1.5rem; color: #7161a1; line-height: 1.6; }
+		@keyframes float { 0%, 100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-.6rem) rotate(1deg); } }
+		@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .72; } }
+		@keyframes rise { from { opacity: 0; transform: translateY(1rem); } to { opacity: 1; transform: translateY(0); } }
+		@media (prefers-reduced-motion: reduce) {
+			*, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+		}
+		@media (prefers-color-scheme: dark) {
+			:root { --accent: #a78bfa; --accent-strong: #c4b5fd; --accent-soft: #1e1533; --accent-border: #5b21b6; --accent-hover: #2b1f47; }
+			body { background: radial-gradient(circle at 15% 20%, #5b21b6 0, transparent 45%), radial-gradient(circle at 85% 15%, #3730a3 0, transparent 45%), radial-gradient(circle at 50% 90%, #831843 0, transparent 50%), #120d22; color: #ede9fe; }
+			main { border-color: rgb(255 255 255 / 12%); background: rgb(30 21 51 / 45%); box-shadow: 0 1.5rem 3rem rgb(0 0 0 / 35%), inset 0 1px 0 rgb(255 255 255 / 8%); }
+			p, small { color: #b3a6d6; }
+		}
+	</style>
+</head>
+<body>
+	<main>
+		<svg class="illustration" viewBox="0 0 200 200" role="img" aria-label="A cloud waiting patiently with an oversized hourglass beside it while a tiny snail carries a clock uphill">
+			<defs>
+				<linearGradient id="bg504" x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%" stop-color="#f5f3ff"/>
+					<stop offset="100%" stop-color="#ede9fe"/>
+				</linearGradient>
+				<linearGradient id="cloud504" x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%" stop-color="#ffffff"/>
+					<stop offset="100%" stop-color="#ddd6fe"/>
+				</linearGradient>
+				<linearGradient id="sand504" x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%" stop-color="#c4b5fd"/>
+					<stop offset="100%" stop-color="#7c3aed"/>
+				</linearGradient>
+			</defs>
+
+			<rect x="4" y="4" width="192" height="192" rx="28" fill="url(#bg504)"/>
+
+			<!-- moon, still counting the minutes -->
+			<circle cx="42" cy="42" r="16" fill="#a78bfa" opacity=".8"/>
+			<circle cx="36" cy="38" r="14" fill="url(#bg504)"/>
+
+			<!-- ground -->
+			<path d="M4 164c28-8 56 6 92 2s62-12 100-4v38H4z" fill="#ddd6fe"/>
+			<path d="M4 168c28-8 56 6 92 2s62-12 100-4" fill="none" stroke="#a78bfa" stroke-width="3" stroke-linecap="round" opacity=".6"/>
+
+			<!-- patient cloud, looking up at a clock -->
+			<g transform="translate(92 120)">
+				<path fill="url(#cloud504)" stroke="#c4b5fd" stroke-width="2.5"
+					d="M-40 22a18 18 0 0 1 3-35 26 26 0 0 1 49-9 21 21 0 0 1 30 20 16 16 0 0 1-2 24z"/>
+				<circle cx="-16" cy="6" r="3.4" fill="#4c1d95"/>
+				<circle cx="14" cy="6" r="3.4" fill="#4c1d95"/>
+				<path fill="none" stroke="#4c1d95" stroke-width="2.5" stroke-linecap="round" d="M-6 18q6 4 12 0"/>
+			</g>
+
+			<!-- big hourglass with falling sand -->
+			<g transform="translate(146 128)">
+				<path fill="#7c3aed" d="M-11-22h22v-6h-22zM-11 28h22v-6h-22z"/>
+				<path d="M-8-20h16L0-4z" fill="url(#sand504)"/>
+				<path d="M-8 20h16L0 4z" fill="url(#sand504)"/>
+				<path fill="#a78bfa" d="M-1.6-2h3.2v4h-3.2z" opacity=".8"/>
+				<path fill="none" stroke="#5b21b6" stroke-width="2.5" stroke-linejoin="round"
+					d="M-8-20h16L0-4 8 20H-8L0-4z"/>
+			</g>
+
+			<!-- snail clock, crawling uphill -->
+			<g transform="translate(46 150)">
+				<path fill="none" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" d="M-10 6q8-8 16 0"/>
+				<circle cx="4" cy="-6" r="11" fill="#ddd6fe" stroke="#7c3aed" stroke-width="2.5"/>
+				<path fill="none" stroke="#5b21b6" stroke-width="2" stroke-linecap="round" d="M4-11v5l4 3"/>
+				<path fill="none" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" d="M-4-4l-4-8"/>
+			</g>
+
+			<!-- falling sand grains -->
+			<g fill="#8b5cf6" opacity=".7">
+				<circle cx="150" cy="166" r="1.8"/>
+				<circle cx="144" cy="176" r="1.4"/>
+				<circle cx="155" cy="180" r="1.2"/>
+			</g>
+
+			<rect x="4" y="4" width="192" height="192" rx="28" fill="none" stroke="#6d28d9" stroke-width="2" opacity=".35"/>
+		</svg>
+		<p class="status" role="status" aria-live="polite">504</p>
+		<h1>Gateway Timeout</h1>
+		<p>The upstream service took too long to respond, so the request timed out before it could be completed.</p>
+		<div class="actions">
+			<button type="button" class="retry" id="retry">Retry now</button>
+			<a class="home" href="/">Go to homepage</a>
+		</div>
+		<small>The request never reached its destination, so nothing was charged or saved. Wait a moment and retry; if it keeps timing out, the upstream service is slow and our support team should look at it.</small>
+	</main>
+	<script>
+		document.getElementById('retry').addEventListener('click', function () {
+			location.reload();
+		});
+	</script>
+</body>
+</html>

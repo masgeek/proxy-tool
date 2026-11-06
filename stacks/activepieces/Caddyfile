@@ -1,0 +1,21 @@
+# =============================================================================
+# Caddy configuration for Activepieces stack
+# Copy the relevant block(s) into your host Caddyfile
+# =============================================================================
+
+flow.munywele.co.ke {
+        tls dev@munywele.co.ke
+
+
+        encode zstd gzip
+
+        reverse_proxy 127.0.0.1:9710 {
+                import proxy_headers_forwarded_host_proto
+        }
+
+        @disallowed {
+                path /.git/*
+                path *.sql
+        }
+        respond @disallowed "Access Denied" 403
+}

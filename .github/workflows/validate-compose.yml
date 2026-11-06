@@ -1,0 +1,62 @@
+name: Validate Compose
+
+# Renders every stack's Compose file so a broken interpolation, a bad YAML edit or
+# a missing required variable fails here instead of on a deploy.
+#
+# No Docker daemon is required: `docker compose config` only parses and
+# interpolates.
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-compose-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compose:
+    name: Compose files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show runner versions
+        run: |
+          docker --version
+          docker compose version
+
+      - name: Check the script parses
+        run: bash -n scripts/validate-compose.sh
+
+      # The file is committed with the executable bit set, but re-assert it here
+      # so a checkout that drops file modes, or a contributor committing from an
+      # environment that does not preserve them, still produces a runnable script.
+      - name: Ensure the script is executable
+        run: |
+          chmod +x scripts/validate-compose.sh
+          ls -l scripts/validate-compose.sh
+
+      # Invoked through bash explicitly so the job does not depend on the
+      # executable bit surviving a checkout on every platform.
+      #
+      # The script never reads real secrets: it uses a stack's .env when one is
+      # present locally and .env.example otherwise, and injects placeholders for
+      # required variables the renderer reports missing. CI has no .env files, so
+      # only examples are used here.
+      - name: Validate all stacks
+        run: bash scripts/validate-compose.sh
+
+      - name: Narrow it down
+        if: failure()
+        run: |
+          {
+            echo "Re-run one stack at a time to narrow it down:"
+            echo "  bash scripts/validate-compose.sh budget"
+            echo "  bash scripts/validate-compose.sh invoice budget cache"
+          } >> "$GITHUB_STEP_SUMMARY"

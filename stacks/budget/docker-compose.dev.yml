@@ -1,0 +1,42 @@
+include:
+  - services/firefly-iii.yml
+
+networks:
+  dokploy-network:
+    name: dokploy-network
+    external: true
+
+volumes:
+  firefly_upload:
+    driver: local
+    name: firefly-upload
+  firefly_db_data:
+    driver: local
+    name: firefly-db-data
+
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: budget-db
+    restart: unless-stopped
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_USER: ${DB_USERNAME:-firefly}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE:-firefly}
+    volumes:
+      - firefly_db_data:/var/lib/postgresql/data
+    networks:
+      - dokploy-network
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  budget:
+    environment:
+      APP_ENV: development
+      APP_DEBUG: "true"
+      DB_HOST: db
+    depends_on:
+      - db

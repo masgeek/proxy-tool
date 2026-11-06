@@ -1,0 +1,211 @@
+# -----------------------------------------------------------------------------
+# akilimo.org domain group
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# akilimo-hub — akilimo-hub.eastus.cloudapp.azure.com
+# -----------------------------------------------------------------------------
+akilimo-hub.eastus.cloudapp.azure.com, dokploy.munywele.co.ke, dokploy.akilimo.org {
+	encode gzip zstd
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+
+	handle /logs* {
+		reverse_proxy 127.0.0.1:9999 {
+		}
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:3000 {
+			import ../headers/proxy-headers.caddy
+		}
+	}
+}
+
+# -----------------------------------------------------------------------------
+# akilimo-site — akilimo.org
+# PHP-FPM: akilimo-site container via unix socket
+# -----------------------------------------------------------------------------
+akilimo.org {
+	root * /data/extra_storage/services/akilimo
+	php_fastcgi unix//run/php/php8.4-fpm.sock
+	import ../wp-common.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+}
+
+
+# -----------------------------------------------------------------------------
+# akilimo-portal — portal.akilimo.org
+# PHP-FPM: akilimo-portal container via unix socket
+# -----------------------------------------------------------------------------
+portal.akilimo.org {
+	root * /data/extra_storage/services/portal
+	php_fastcgi unix//run/php/php8.4-fpm.sock
+	import ../wp-common.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+}
+
+# -----------------------------------------------------------------------------
+# new-akilimo — new.akilimo.org
+# PHP-FPM: new-akilimo container via unix socket
+# -----------------------------------------------------------------------------
+new.akilimo.org {
+	tls akilimo@cgiar.org
+
+	root * /data/extra_storage/services/new_akilimo
+	php_fastcgi unix//run/php/php8.4-fpm.sock
+	import ../wp-common.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+}
+
+# -----------------------------------------------------------------------------
+# akilimo-dev — app.akilimo.org, dev.akilimo.org
+# Reverse proxy to akilimo-api container root on 127.0.0.1:9100
+# -----------------------------------------------------------------------------
+app.akilimo.org, dev.akilimo.org {
+	tls akilimo@cgiar.org
+	encode gzip zstd
+	import ../disallowed-full.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+
+	reverse_proxy 127.0.0.1:9100 {
+		import ../headers/proxy-headers.caddy
+
+		transport http {
+			dial_timeout 1800s
+			response_header_timeout 1800s
+		}
+	}
+}
+
+# -----------------------------------------------------------------------------
+# akilimo-api — api.akilimo.org
+# Reverse proxy to akilimo-api container on 127.0.0.1:9100/api
+# -----------------------------------------------------------------------------
+api.akilimo.org {
+	tls akilimo@cgiar.org
+	encode gzip
+	import ../disallowed-full.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+
+	rewrite * /api{uri}
+
+	reverse_proxy 127.0.0.1:9100 {
+		import ../headers/proxy-headers-port.caddy
+
+		transport http {
+			dial_timeout 1800s
+			response_header_timeout 1800s
+		}
+	}
+}
+
+# -----------------------------------------------------------------------------
+# akilimo-mcp — akilimo-mcp.akilimo.org (mcp.akilimo.org is the Akilimo 2.0 MCP)
+# Reverse proxy to the akilimo-mcp container (Akilimo 1.0 MCP server) on 127.0.0.1:9101.
+# Only the MCP endpoints are public: streamable HTTP /mcp, legacy SSE /sse with
+# /messages, and /health. No encode: compression would buffer the SSE streams.
+# -----------------------------------------------------------------------------
+akilimo-mcp.akilimo.org {
+	tls akilimo@cgiar.org
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+
+	@mcp path /mcp /sse /messages /health
+	handle @mcp {
+		reverse_proxy 127.0.0.1:9101 {
+			import ../headers/proxy-headers.caddy
+
+			# Stream SSE events as they arrive; recommendation computes can take minutes
+			flush_interval -1
+			transport http {
+				response_header_timeout 300s
+			}
+		}
+	}
+
+	handle {
+		error 404
+	}
+}
+
+# -----------------------------------------------------------------------------
+# akilimo-agent — agent.akilimo.org
+# The web UI of the Akilimo 1.0 agent: reverse proxy to the akilimo-web container on 127.0.0.1:9102.
+# Its nginx forwards /gateway, /api and /chat to the MCP server over the internal network, so this is
+# the only block the UI needs. No encode: the chat streams answers as they are produced and
+# compression would buffer them.
+# -----------------------------------------------------------------------------
+agent.akilimo.org {
+	tls akilimo@cgiar.org
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+
+	reverse_proxy 127.0.0.1:9102 {
+		import ../headers/proxy-headers.caddy
+
+		# Stream the chat as it arrives; recommendation computes can take minutes
+		flush_interval -1
+		transport http {
+			response_header_timeout 300s
+		}
+	}
+}
+
+# -----------------------------------------------------------------------------
+# akilimo.org — Use-Uptake
+# -----------------------------------------------------------------------------
+uptake.akilimo.org {
+	tls akilimo@cgiar.org
+	encode gzip zstd
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+	reverse_proxy 127.0.0.1:9500 {
+		import ../headers/proxy-headers.caddy
+	}
+}
+
+# -----------------------------------------------------------------------------
+# akilimo.org — GeoServer
+# -----------------------------------------------------------------------------
+geo.akilimo.org {
+	tls akilimo@cgiar.org
+	encode gzip zstd
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+	cache {
+		allowed_http_verbs GET HEAD
+		default_cache_control "public, max-age=7200"
+		ttl 2h
+		stale 0s
+	}
+	reverse_proxy 127.0.0.1:9510 {
+		import ../headers/proxy-headers.caddy
+	}
+}
+
+stats.akilimo.org {
+	tls akilimo@cgiar.org
+	encode gzip zstd
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+	cache {
+		allowed_http_verbs GET HEAD
+		default_cache_control "public, max-age=120"
+		ttl 2m
+		stale 0s
+	}
+	reverse_proxy 127.0.0.1:9511 {
+		import ../headers/proxy-headers.caddy
+	}
+}
