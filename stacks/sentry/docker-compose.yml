@@ -29,7 +29,7 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://${DB_USERNAME}:${DB_PASSWORD}@postgres:5432/${DB_DATABASE}
-      REDIS_URL: redis://redis:6379/0
+      REDIS_URL: redis://redis-sentry:6379/0
       SECRET_KEY: ${DJANGO_SECRET_KEY:?DJANGO_SECRET_KEY must be set}
       SERVER_ROLE: all_in_one
       GLITCHTIP_DOMAIN: ${SENTRY_URL:-https://sentry.munywele.co.ke}

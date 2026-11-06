@@ -50,6 +50,9 @@ volumes:
   redis-jobs-data:
     driver: local
     name: redis-jobs-data
+  redis-sentry-data:
+    driver: local
+    name: redis-sentry-data
 
 services:
   # Shared application caches and rate-limit stores.
@@ -170,6 +173,38 @@ services:
           cpus: "1.0"
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ${REDIS_BUDGET_PASSWORD:+-a $REDIS_BUDGET_PASSWORD} ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Sentry. Own instance because cache, session and queue share it: an
+  # eviction policy that suits the cache would otherwise discard session or job
+  # data.
+  redis-sentry:
+    environment:
+      REDIS_PASSWORD: ${REDIS_SENTRY_PASSWORD:-}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
+    image: redis:8
+    container_name: redis-sentry
+    hostname: redis-sentry
+    restart: unless-stopped
+    command: >
+      sh -c "redis-server ${REDIS_PASSWORD:+--requirepass $REDIS_PASSWORD}
+      --maxmemory ${REDIS_SENTRY_MAXMEMORY:-512mb} --maxmemory-policy noeviction
+      --appendonly yes"
+    volumes:
+      - redis-sentry-data:/data
+    networks:
+      - dokploy-network
+      - internal
+    deploy:
+      resources:
+        limits:
+          memory: 768m
+          cpus: "1.0"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ${REDIS_PASSWORD:+-a $REDIS_PASSWORD} ping | grep -q PONG"]
       interval: 10s
       timeout: 5s
       retries: 5
