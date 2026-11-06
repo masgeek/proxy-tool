@@ -26,6 +26,8 @@ proxy-tool/
 │   ├── metabase/              ← Metabase BI  [optional]
 │   ├── mail/                  ← Mailpit SMTP relay  [optional]
 │   ├── mqtt/                  ← EMQX MQTT broker  [optional]
+│   ├── kvuno/                 ← Kvuno API + web
+│   ├── sentry/                ← GlitchTip error tracking (Sentry-compatible)
 │   ├── db-tools/              ← Adminer + RedisInsight  [tunnel only]
 │   └── dozzle/                ← Docker log viewer  [tunnel only]
 ├── config/
@@ -110,7 +112,7 @@ Application services write logs to Docker stdout. Alloy discovers the selected F
 curl -sSL https://get.dokploy.com | sh
 
 # 2. Copy and configure env files for each stack
-for stack in databases cache activepieces automation monitoring fuelrod farm akilimo akilimo-mcp fees sonar metabase mail mqtt; do
+for stack in databases cache activepieces automation monitoring fuelrod farm akilimo akilimo-mcp fees sonar metabase mail mqtt kvuno sentry; do
   cp stacks/$stack/.env.example stacks/$stack/.env
 done
 # Edit each .env — replace all placeholder values and domains
@@ -146,6 +148,8 @@ docker compose -f stacks/akilimo/docker-compose.yml up -d
 docker compose -f stacks/akilimo-mcp/docker-compose.yml up -d   # MCP server, agent web UI, weather and agriculture MCPs (needs the akilimo API)
 docker compose -f stacks/fees-prod/docker-compose.yml up -d
 docker compose -f stacks/fees-dev/docker-compose.yml up -d
+docker compose -f stacks/kvuno/docker-compose.yml up -d
+docker compose -f stacks/sentry/docker-compose.yml up -d
 ```
 
 `activepieces` must exist in PostgreSQL before starting the Activepieces stack. Adding it to `ADDITIONAL_DBS` only creates it when `pgdata-main` is empty; on an existing database volume, create it explicitly with the shared PostgreSQL owner.
@@ -240,6 +244,9 @@ Each stack has its own `.env` (gitignored) sourced from `.env.example`. Stacks s
 | `farm` | `FARM_TAG`, `POSTGRES_*`, `JWT_SECRET`, `DEFAULT_PASSWORD` |
 | `akilimo` | `AKILIMO_TAG`, `USE_UPTAKE_TAG`, `AKILIMO_DOMAIN`, `MARIADB_*` |
 | `akilimo-mcp` | `AKILIMO_MCP_TAG`, `AKILIMO_WEB_TAG`, `AKILIMO_WEATHER_TAG`, `AKILIMO_AGRICULTURE_TAG`, `AKILIMO_MCP_*` |
+| `kvuno` | `KVUNO_API_KEY`, `KVUNO_DOMAIN`, `DB_*`, `REDIS_*` |
+| `kvuno-ui` | `KVUNO_WEB_*` |
+| `sentry` | `DB_*`, `REDIS_*`, `DJANGO_SECRET_KEY`, `SENTRY_URL`, `MAILGUN_*` |
 | `sonar` | `SONAR_TAG`, `SONAR_DOMAIN`, `POSTGRES_*` |
 | `metabase` | `METABASE_DOMAIN`, `POSTGRES_*` |
 | `mail` | `MAILPIT_DOMAIN` |
@@ -394,6 +401,9 @@ Each stack keeps its own Caddyfile. Copy the relevant blocks into the host's glo
 | netdata | Host metrics | `stacks/netdata/Caddyfile` | `19999` |
 | automation | n8n | `stacks/automation/Caddyfile` | `9700` |
 | activepieces | Activepieces app | `stacks/activepieces/Caddyfile` | `9710` |
+| kvuno | API | `stacks/kvuno/Caddyfile` | `9800` |
+| kvuno | Web | `stacks/kvuno/Caddyfile` | `9801` |
+| sentry | API | Snippet in `config/caddy/snippets/domains/sentry.caddy` | `9805` |
 
 ---
 

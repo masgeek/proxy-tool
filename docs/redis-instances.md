@@ -1,6 +1,6 @@
 # Redis Instances
 
-Every Redis in this environment lives in `stacks/cache`. There are five
+Every Redis in this environment lives in `stacks/cache`. There are six
 instances, grouped by role rather than one per application.
 
 ## Instances
@@ -11,6 +11,7 @@ instances, grouped by role rather than one per application.
 | `cache-dev` | development | `REDIS_DEV_PASSWORD` | default |
 | `redis-invoice` | Invoice Ninja only | `REDIS_INVOICE_PASSWORD` | `allkeys-lru` |
 | `redis-budget` | Firefly III only | `REDIS_BUDGET_PASSWORD` | `noeviction` |
+| `redis-sentry` | Sentry only | `REDIS_SENTRY_PASSWORD` | `noeviction` |
 | `redis-jobs` | queues and brokers only | `REDIS_JOBS_PASSWORD` | `noeviction` |
 
 ## Allocation
@@ -31,7 +32,7 @@ instances, grouped by role rather than one per application.
 | kvuno (Celery broker and result backend) | 1 |
 | fuelrod-api | 2 |
 
-`redis-invoice` and `redis-budget` have a single application each, so database 0
+`redis-sentry` has a single application each, so database 0
 is the only one in use.
 
 ## Why this grouping
@@ -42,7 +43,7 @@ is the only one in use.
   so exceeding memory must fail loudly instead.
 - **Anything mixing cache, session and queue gets its own instance.** Firefly III
   uses all three on one Redis, where an eviction policy tuned for the cache would
-  otherwise discard session or job data. Invoice Ninja is treated the same way.
+  otherwise discard session or job data. Invoice Ninja and Sentry are treated the same way.
 - **Everything else shares `cache` on separate databases with distinct key
   prefixes.** These are pure caches and rate-limit stores, so the failure mode of
   sharing is a cold cache, not lost data.
@@ -54,7 +55,7 @@ is the only one in use.
 
 - Add new workloads to `redis-jobs` if they hold a queue or broker, to `cache` if
   they only cache, and give an application its own instance when it mixes cache
-  with session or queue data.
+  with session or queue data (e.g. Firefly III, Invoice Ninja, Sentry).
 - Keep the container memory limit comfortably above `maxmemory` so Redis can free
   memory instead of being killed.
 - Passwords are per instance, not global, so a compromised application cannot

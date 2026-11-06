@@ -28,7 +28,9 @@ standard ports for compatibility.
 | agwise-api | dashboard | 8300 | 3000 | `stacks/agwise-api/Caddyfile` |
 | caddy-manager | api | 9620 | 3500 | — |
 | caddy-manager | web | 9621 | 80 | `stacks/caddy-manager/Caddyfile` |
-| kvuno | api | 9800 | 5000 | `stacks/kvuno/Caddyfile` |
+| kvuno | api | 9800 | 80 | `stacks/kvuno/Caddyfile` |
+| kvuno | web | 9801 | 80 | `stacks/kvuno/Caddyfile` |
+| sentry | api | 9805 | 8000 | `stacks/sentry/Caddyfile` (snippet in `config/caddy/snippets/domains/sentry.caddy`) |
 | keycloak | keycloak | 9850 | 8080 | `stacks/keycloak/Caddyfile` |
 | sonar | sonar | 9900 | 9000 | — |
 | dozzle | dozzle | 9999 | 8080 | — |

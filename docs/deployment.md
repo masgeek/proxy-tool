@@ -18,6 +18,8 @@ cp stacks/databases/.env.example stacks/databases/.env
 cp stacks/cache/.env.example stacks/cache/.env
 cp stacks/activepieces/.env.example stacks/activepieces/.env
 cp stacks/automation/.env.example stacks/automation/.env
+cp stacks/kvuno/.env.example stacks/kvuno/.env
+cp stacks/sentry/.env.example stacks/sentry/.env
 ```
 
 Keep real `.env` files, `.backup`, credentials, and database data out of Git. Several Compose variables use `${VAR:?message}`; an example file may omit or misname a required value, so validate with the real stack `.env` before deployment.
@@ -51,6 +53,8 @@ docker compose -f stacks/akilimo/docker-compose.yml up -d
 docker compose -f stacks/akilimo-mcp/docker-compose.yml up -d
 docker compose -f stacks/fees-prod/docker-compose.yml up -d
 docker compose -f stacks/fees-dev/docker-compose.yml up -d
+docker compose -f stacks/kvuno/docker-compose.yml up -d
+docker compose -f stacks/sentry/docker-compose.yml up -d
 ```
 
 Do not add `--project-directory .` to these commands. Relative bind mounts such as `../../config/...` and stack-local `.env` loading depend on the compose file's directory.
