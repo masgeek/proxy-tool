@@ -38,7 +38,7 @@ services:
       DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-noreply@mg.munywele.co.ke}
       # Mailgun SMTP (example: smtp://default:KEY@smtp.mailgun.org:587)
       MAILGUN_API_KEY: ${MAILGUN_API_KEY:-}
-      MAILGUN_SENDER_DOMAIN: ${MAILGUN_SENDER_DOMAIN:-}
+      # MAILGUN_SENDER_DOMAIN: ${MAILGUN_SENDER_DOMAIN:-}
       ENABLE_ADMIN: ${ENABLE_ADMIN:-False}
       ENABLE_OPENAPI: ${ENABLE_OPENAPI:-False}
       GLITCHTIP_ENABLE_MCP: ${GLITCHTIP_ENABLE_MCP:-False}
