@@ -17,9 +17,9 @@ networks:
     external: true
 
 volumes:
-  sentry-media:
+  sentry-uploads:
     driver: local
-    name: sentry-media
+    name: sentry-uploads
 
 services:
   sentry:
@@ -28,28 +28,25 @@ services:
     hostname: sentry
     restart: unless-stopped
     environment:
-      # Database (shared databases stack)
-      DB_HOST: ${DB_HOST:-postgres}
-      DB_PORT: ${DB_PORT:-5432}
-      DB_NAME: ${DB_DATABASE:-sentry}
-      DB_USER: ${DB_USERNAME:-sentry}
-      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
-      # Redis (shared cache stack)
-      REDIS_HOST: ${REDIS_HOST:-redis}
-      REDIS_PORT: ${REDIS_PORT:-6379}
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-      # App settings
-      SENTRY_URL: ${SENTRY_URL:-https://sentry.munywele.co.ke}
-      SENTRY_PORT: ${SENTRY_PORT:-443}
-      SENTRY_PROTOCOL: ${SENTRY_PROTOCOL:-https}
-      DJANGO_SETTINGS_MODULE: glitchtip.settings
-      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?DJANGO_SECRET_KEY must be set}
+      DATABASE_URL: postgres://${DB_USERNAME}:${DB_PASSWORD}@postgres:5432/${DB_DATABASE}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+      SECRET_KEY: ${DJANGO_SECRET_KEY:?DJANGO_SECRET_KEY must be set}
+      SERVER_ROLE: all_in_one
+      GLITCHTIP_DOMAIN: ${SENTRY_URL:-https://sentry.munywele.co.ke}
+      EMAIL_URL: ${EMAIL_URL:-consolemail://}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-noreply@example.com}
+      ENABLE_ADMIN: ${ENABLE_ADMIN:-False}
+      ENABLE_OPENAPI: ${ENABLE_OPENAPI:-False}
+      GLITCHTIP_ENABLE_MCP: ${GLITCHTIP_ENABLE_MCP:-False}
+      GLITCHTIP_ENABLE_DUCKDB: ${GLITCHTIP_ENABLE_DUCKDB:-False}
+      GLITCHTIP_ENABLE_LOGS: ${GLITCHTIP_ENABLE_LOGS:-False}
+      GLITCHTIP_ENABLE_UPTIME: ${GLITCHTIP_ENABLE_UPTIME:-False}
       TZ: ${TZ:-Africa/Nairobi}
       STACK_REVISION: ${STACK_REVISION:-1790584804}
     ports:
       - "127.0.0.1:9805:8000"
     volumes:
-      - sentry-media:/app/media
+      - sentry-uploads:/code/uploads
     networks:
       - dokploy-network
     logging:
