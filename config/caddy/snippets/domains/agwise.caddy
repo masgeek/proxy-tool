@@ -60,6 +60,18 @@ dashboard.agwise.org {
 	}
 }
 
+# Sentry service (GlitchTip).
+sentry.akilimo.org {
+	tls agwise@akilimo.org
+	encode gzip zstd
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+	reverse_proxy 127.0.0.1:9805 {
+		import ../headers/proxy-headers.caddy
+	}
+}
+
 # KVUNO service.
 kvuno.agwise.org, kvuno.akilimo.org {
 	tls agwise@akilimo.org

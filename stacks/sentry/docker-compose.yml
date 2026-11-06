@@ -1,0 +1,67 @@
+name: "sentry"
+
+# Sentry — self-hosted error tracking (GlitchTip).
+#
+#   sentry.akilimo.org -> 127.0.0.1:9805
+#
+# PostgreSQL comes from the shared `databases` stack (hostname `postgres`).
+# Redis comes from the shared `cache` stack (hostname `redis`).
+#
+# Create the database before first start:
+#   docker exec postgres createdb --username "$POSTGRES_USER" \
+#     --owner "$POSTGRES_USER" sentry
+
+networks:
+  dokploy-network:
+    name: dokploy-network
+    external: true
+
+volumes:
+  sentry-media:
+    driver: local
+    name: sentry-media
+
+services:
+  sentry:
+    image: glitchtip/glitchtip:latest
+    container_name: sentry
+    hostname: sentry
+    restart: unless-stopped
+    environment:
+      # Database (shared databases stack)
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_DATABASE:-sentry}
+      DB_USER: ${DB_USERNAME:-sentry}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
+      # Redis (shared cache stack)
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
+      # App settings
+      SENTRY_URL: ${SENTRY_URL:-https://sentry.akilimo.org}
+      SENTRY_PORT: ${SENTRY_PORT:-443}
+      SENTRY_PROTOCOL: ${SENTRY_PROTOCOL:-https}
+      DJANGO_SETTINGS_MODULE: glitchtip.settings
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?DJANGO_SECRET_KEY must be set}
+      TZ: ${TZ:-Africa/Nairobi}
+      STACK_REVISION: ${STACK_REVISION:-1790584804}
+    ports:
+      - "127.0.0.1:9805:8000"
+    volumes:
+      - sentry-media:/app/media
+    networks:
+      - dokploy-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: "1.0"
+        reservations:
+          memory: 256m
+          cpus: "0.25"
