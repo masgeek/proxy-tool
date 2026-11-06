@@ -34,10 +34,11 @@ services:
       SERVER_ROLE: all_in_one
       GLITCHTIP_DOMAIN: ${SENTRY_URL:-https://sentry.munywele.co.ke}
       # EMAIL_URL: ${EMAIL_URL:-consolemail:///}
-      EMAIL_BACKEND: "anymail.backends.mailgun.EmailBackend"
+      EMAIL_BACKEND: ${EMAIL_BACKEND:-}
       DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-noreply@mg.munywele.co.ke}
       # Mailgun SMTP (example: smtp://default:KEY@smtp.mailgun.org:587)
-      MAILGUN_API_KEY: ${MAILGUN_API_KEY:-}
+      # MAILGUN_API_KEY: ${MAILGUN_API_KEY:-}
+      MAILTRAP_API_TOKEN: ${MAILTRAP_API_TOKEN:-}
       # MAILGUN_SENDER_DOMAIN: ${MAILGUN_SENDER_DOMAIN:-}
       ENABLE_ADMIN: ${ENABLE_ADMIN:-False}
       ENABLE_OPENAPI: ${ENABLE_OPENAPI:-False}
