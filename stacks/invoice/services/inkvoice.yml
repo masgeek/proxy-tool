@@ -12,7 +12,6 @@ services:
       ENABLE_HSTS: ${ENABLE_HSTS:-false}
       DATABASE_PATH: ${DATABASE_PATH:-/app/data/invoice.db}
       TZ: ${TZ:-Africa/Nairobi}
-      STACK_REVISION: ${STACK_REVISION:-1790584804}
     ports:
       - "127.0.0.1:9705:3000"
     volumes:

@@ -89,7 +89,6 @@ services:
       CELERY_TASK_RETRY_DELAY: ${CELERY_TASK_RETRY_DELAY:-60}
       SERVER_URL_PROD: ${SERVER_URL_PROD:-}
       REMOTE_RDS_URLS: ${REMOTE_RDS_URLS:-}
-      STACK_REVISION: ${STACK_REVISION:-1790584804}
       SPA_ROOT_URL: ${SPA_ROOT_URL:-https://kvuno-ui.akilimo.org}
       # Ingest checks — keep these the same on kvuno and worker (uploads are
       # imported by the API, data-folder scans by the worker).
@@ -202,7 +201,6 @@ services:
       INGEST_HOLD_UNMAPPED: ${INGEST_HOLD_UNMAPPED:-true}
       INGEST_DUPLICATE_CHECK: ${INGEST_DUPLICATE_CHECK:-true}
       INGEST_CONFLICT_LOGGING: ${INGEST_CONFLICT_LOGGING:-true}
-      STACK_REVISION: ${STACK_REVISION:-1790584804}
     depends_on:
       kvuno-data-init:
         condition: service_completed_successfully

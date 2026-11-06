@@ -40,7 +40,6 @@ services:
       AP_REDIS_PASSWORD: ${REDIS_PASSWORD:-}
       AP_REDIS_DB: ${REDIS_DB:-0}
       AP_QUEUE_UI_ENABLED: "false"
-      STACK_REVISION: ${STACK_REVISION:-1790584804}
     ports:
       - "127.0.0.1:9710:80"
     volumes:
@@ -78,7 +77,6 @@ services:
       AP_WORKER_CONCURRENCY: 1
       AP_REUSE_SANDBOX: "true"
       AP_EXECUTION_MODE: SANDBOX_CODE_ONLY
-      STACK_REVISION: ${STACK_REVISION:-1790584804}
     volumes:
       - activepieces-cache:/usr/src/app/cache
     networks:

@@ -68,7 +68,6 @@ Every service file reads the same variable names, so switching applications only
 | `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | Database connection |
 | `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` | Redis connection (Invoice Ninja) |
 | `TZ` | Container timezone |
-| `STACK_REVISION` | Deployment revision marker |
 
 Dolibarr maps these onto its `DOLI_*` variables, InvoiceShelf uses them natively, and Inkvoice uses `APP_KEY` plus `ADMIN_*` with embedded SQLite. Only app-specific extras keep their own names, such as `WWW_USER_ID` for Dolibarr and `SESSION_*`, `SCHEDULER_ENABLED`, and `PHP_OPCACHE_ENABLE` for InvoiceShelf.
 

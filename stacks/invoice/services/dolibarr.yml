@@ -20,7 +20,6 @@ services:
       WWW_USER_ID: ${WWW_USER_ID:-33}
       WWW_GROUP_ID: ${WWW_GROUP_ID:-33}
       TZ: ${TZ:-Africa/Nairobi}
-      STACK_REVISION: ${STACK_REVISION:-1790584804}
     ports:
       - "127.0.0.1:9705:80"
     volumes:

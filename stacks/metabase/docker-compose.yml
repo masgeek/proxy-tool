@@ -29,7 +29,6 @@ services:
       MB_DB_USER: ${POSTGRES_USER:?}
       MB_DB_PASS: ${POSTGRES_PASSWORD:?}
       MB_DB_HOST: ${POSTGRES_HOST:-postgres}
-      STACK_REVISION: ${STACK_REVISION:-1790584804}
     volumes:
       - metabase-data:/metabase-data
     deploy:

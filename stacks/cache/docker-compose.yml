@@ -60,7 +60,6 @@ services:
   cache:
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-      STACK_REVISION: ${STACK_REVISION:-1790584804}
     image: redis:8
     container_name: redis
     hostname: cache
@@ -89,7 +88,6 @@ services:
   cache-dev:
     environment:
       REDIS_PASSWORD: ${REDIS_DEV_PASSWORD:-}
-      STACK_REVISION: ${STACK_REVISION:-1790584804}
     image: redis:8
     container_name: redis-dev
     hostname: cache-dev
@@ -120,7 +118,6 @@ services:
   redis-invoice:
     environment:
       REDIS_PASSWORD: ${REDIS_INVOICE_PASSWORD:-}
-      STACK_REVISION: ${STACK_REVISION:-1790584804}
     image: redis:8
     container_name: redis-invoice
     hostname: redis-invoice
@@ -152,7 +149,6 @@ services:
   redis-budget:
     environment:
       REDIS_PASSWORD: ${REDIS_BUDGET_PASSWORD:-}
-      STACK_REVISION: ${STACK_REVISION:-1790584804}
     image: redis:8
     container_name: redis-budget
     hostname: redis-budget
@@ -184,7 +180,6 @@ services:
   redis-sentry:
     environment:
       REDIS_PASSWORD: ${REDIS_SENTRY_PASSWORD:-}
-      STACK_REVISION: ${STACK_REVISION:-1790584804}
     image: redis:8
     container_name: redis-sentry
     hostname: redis-sentry
@@ -215,7 +210,6 @@ services:
   redis-jobs:
     environment:
       REDIS_PASSWORD: ${REDIS_JOBS_PASSWORD:-}
-      STACK_REVISION: ${STACK_REVISION:-1790584804}
     image: redis:8
     container_name: redis-jobs
     hostname: redis-jobs

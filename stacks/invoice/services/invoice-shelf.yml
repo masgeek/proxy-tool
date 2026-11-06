@@ -26,7 +26,6 @@ services:
       AUTORUN_LARAVEL_OPTIMIZE: ${AUTORUN_LARAVEL_OPTIMIZE:-false}
       PHP_OPCACHE_ENABLE: ${PHP_OPCACHE_ENABLE:-1}
       TZ: ${TZ:-Africa/Nairobi}
-      STACK_REVISION: ${STACK_REVISION:-1790584804}
     ports:
       - "127.0.0.1:9705:8080"
     volumes:
