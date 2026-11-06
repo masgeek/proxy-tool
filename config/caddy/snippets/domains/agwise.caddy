@@ -61,7 +61,7 @@ dashboard.agwise.org {
 }
 
 # Sentry service (GlitchTip).
-sentry.akilimo.org {
+sentry.akilimo.org, sentry.munywele.co.ke {
 	tls agwise@akilimo.org
 	encode gzip zstd
 	import ../disallowed-basic.caddy

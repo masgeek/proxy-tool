@@ -2,7 +2,7 @@ name: "sentry"
 
 # Sentry — self-hosted error tracking (GlitchTip).
 #
-#   sentry.akilimo.org -> 127.0.0.1:9805
+#   sentry.akilimo.org, sentry.munywele.co.ke -> 127.0.0.1:9805
 #
 # PostgreSQL comes from the shared `databases` stack (hostname `postgres`).
 # Redis comes from the shared `cache` stack (hostname `redis`).
@@ -39,7 +39,7 @@ services:
       REDIS_PORT: ${REDIS_PORT:-6379}
       REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
       # App settings
-      SENTRY_URL: ${SENTRY_URL:-https://sentry.akilimo.org}
+      SENTRY_URL: ${SENTRY_URL:-https://sentry.munywele.co.ke}
       SENTRY_PORT: ${SENTRY_PORT:-443}
       SENTRY_PROTOCOL: ${SENTRY_PROTOCOL:-https}
       DJANGO_SETTINGS_MODULE: glitchtip.settings
