@@ -47,6 +47,9 @@ services:
       TZ: ${TZ:-Africa/Nairobi}
       STACK_REVISION: ${STACK_REVISION:-1790584804}
       SERVER_EMAIL: ${SERVER_EMAIL:-}
+      # user registration settings
+      ENABLE_USER_REGISTRATION: ${ENABLE_USER_REGISTRATION:-False}
+      ENABLE_SOCIAL_APPS_USER_REGISTRATION: ${ENABLE_USER_REGISTRATION:-False}
     ports:
       - "127.0.0.1:9805:8000"
     volumes:
