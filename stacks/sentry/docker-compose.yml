@@ -37,7 +37,7 @@ services:
       # Redis (shared cache stack)
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
-      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
       # App settings
       SENTRY_URL: ${SENTRY_URL:-https://sentry.munywele.co.ke}
       SENTRY_PORT: ${SENTRY_PORT:-443}
