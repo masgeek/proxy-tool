@@ -6,7 +6,7 @@ Compose `extends` indirection. Firefly III is settled on, so the service is now
 declared directly in `docker-compose.yml` and the alternatives are gone.
 
 The stack runs its own self-contained PostgreSQL database (`db` service) and uses
-a shared Redis instance (`redis-budget`) from `stacks/cache`.
+the shared `cache` Redis instance (its own logical database) from `stacks/cache`.
 
 ## Setup
 
@@ -22,7 +22,7 @@ a shared Redis instance (`redis-budget`) from `stacks/cache`.
    head /dev/urandom | LC_ALL=C tr -dc 'A-Za-z0-9' | head -c 32 && echo
    ```
 
-3. Deploy the cache stack first (for `redis-budget`), then start:
+3. Deploy the cache stack first (for `cache`), then start:
 
    ```bash
    docker compose --env-file stacks/cache/.env -f stacks/cache/docker-compose.yml up -d
@@ -40,7 +40,7 @@ a shared Redis instance (`redis-budget`) from `stacks/cache`.
 | `APP_KEY` | Must be exactly 32 characters, and changing it after first run invalidates encrypted data |
 | `APP_URL` | Must match the public URL exactly, or generated links are wrong |
 | `TRUSTED_PROXIES=**` | Required behind Caddy, otherwise Firefly builds `http` links for password reset and OAuth |
-| `REDIS_HOST=redis-budget` | Dedicated instance from `stacks/cache`; Firefly mixes cache, session and queue, so it must not be shared (`docs/redis-instances.md`) |
+| `REDIS_HOST=cache` | Shared `cache` instance from `stacks/cache`, on its own logical database (`docs/redis-instances.md`) |
 | `DB_HOST=db` | Local `db` service in this stack; PostgreSQL data persists in `firefly_db_data` volume |
 | `ALLOW_WEBHOOKS` | Set to `false` to reject webhook creation entirely |
 

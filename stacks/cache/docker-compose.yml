@@ -6,21 +6,23 @@ name: "cache"
 # Redis instances are grouped by role rather than one per application, so the
 # stack stays small while keeping the risky workloads isolated.
 #
-#   cache         shared application caches       REDIS_PASSWORD
-#   cache-dev     development                     REDIS_DEV_PASSWORD
-#   redis-invoice single-tenant app with data    REDIS_INVOICE_PASSWORD
-#   redis-budget  app mixing cache/session/queue REDIS_BUDGET_PASSWORD
-#   redis-jobs    queues and brokers             REDIS_JOBS_PASSWORD
+#   cache      shared application caches REDIS_PASSWORD
+#   cache-dev  development               REDIS_DEV_PASSWORD
+#   redis-jobs queues and brokers        REDIS_JOBS_PASSWORD
+#   redis-sentry app mixing cache/session/queue REDIS_SENTRY_PASSWORD
 #
 # Why this grouping:
 #   - Anything holding a queue or broker gets redis-jobs, separate from every
 #     cache, so a cache flush can never drop a job. redis-jobs runs noeviction:
 #     evicting a queued job silently loses work.
-#   - Anything mixing cache, session and queue (Firefly III) gets its own
-#     instance, so its cache policy cannot evict its own session or job data.
+#   - Anything mixing cache, session and queue on one Redis URL (Sentry/GlitchTip,
+#     via its Celery broker) gets its own instance, so its cache policy cannot
+#     evict its own session or job data.
 #   - Remaining applications share `cache` on separate logical databases with
 #     distinct key prefixes. They are pure caches and rate-limit stores, so the
-#     failure mode of a shared instance is a cold cache, not lost data.
+#     failure mode of a shared instance is a cold cache, not lost data. Invoice
+#     Ninja and Firefly III only use Redis as a cache (no queue/session config),
+#     so they share `cache` too (db 3 and db 4).
 #
 # Hostnames are prefixed on purpose: all of these containers join the same
 # external network, so a generic name like `redis` would resolve to several of
@@ -41,12 +43,6 @@ volumes:
   redis-dev-data:
     driver: local
     name: redis-dev-data
-  redis-invoice-data:
-    driver: local
-    name: redis-invoice-data
-  redis-budget-data:
-    driver: local
-    name: redis-budget-data
   redis-jobs-data:
     driver: local
     name: redis-jobs-data
@@ -56,7 +52,7 @@ volumes:
 
 services:
   # Shared application caches and rate-limit stores.
-  # fees-prod db 0, shortener db 1, akilimo db 2.
+  # fees-prod db 0, shortener db 1, akilimo db 2, invoice db 3, budget db 4.
   cache:
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
@@ -108,67 +104,6 @@ services:
           cpus: "1.0"
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ${REDIS_DEV_PASSWORD:+-a $REDIS_DEV_PASSWORD} ping | grep -q PONG"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
-  # Invoice Ninja. Own instance because it holds live invoice state in cache and
-  # queue alongside the session.
-  redis-invoice:
-    environment:
-      REDIS_PASSWORD: ${REDIS_INVOICE_PASSWORD:-}
-    image: redis:8
-    container_name: redis-invoice
-    hostname: redis-invoice
-    restart: unless-stopped
-    command: >
-      sh -c "redis-server ${REDIS_INVOICE_PASSWORD:+--requirepass $REDIS_INVOICE_PASSWORD}
-      --maxmemory ${REDIS_INVOICE_MAXMEMORY:-256mb} --maxmemory-policy allkeys-lru
-      --appendonly yes"
-    volumes:
-      - redis-invoice-data:/data
-    networks:
-      - dokploy-network
-      - internal
-    deploy:
-      resources:
-        limits:
-          memory: 512m
-          cpus: "1.0"
-    healthcheck:
-      test: ["CMD-SHELL", "redis-cli ${REDIS_INVOICE_PASSWORD:+-a $REDIS_INVOICE_PASSWORD} ping | grep -q PONG"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
-  # Firefly III. Own instance because cache, session and queue share it: an
-  # eviction policy that suits the cache would otherwise discard session or job
-  # data.
-  redis-budget:
-    environment:
-      REDIS_PASSWORD: ${REDIS_BUDGET_PASSWORD:-}
-    image: redis:8
-    container_name: redis-budget
-    hostname: redis-budget
-    restart: unless-stopped
-    command: >
-      sh -c "redis-server ${REDIS_BUDGET_PASSWORD:+--requirepass $REDIS_BUDGET_PASSWORD}
-      --maxmemory ${REDIS_BUDGET_MAXMEMORY:-512mb} --maxmemory-policy noeviction
-      --appendonly yes"
-    volumes:
-      - redis-budget-data:/data
-    networks:
-      - dokploy-network
-      - internal
-    deploy:
-      resources:
-        limits:
-          memory: 768m
-          cpus: "1.0"
-    healthcheck:
-      test: ["CMD-SHELL", "redis-cli ${REDIS_BUDGET_PASSWORD:+-a $REDIS_BUDGET_PASSWORD} ping | grep -q PONG"]
       interval: 10s
       timeout: 5s
       retries: 5

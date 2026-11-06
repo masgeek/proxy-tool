@@ -9,8 +9,8 @@ name: "budget"
 # declared directly here and the indirection is gone.
 #
 # PostgreSQL comes from the shared `databases` stack (hostname `postgres`). Redis
-# is this stack's dedicated `redis-budget` instance from the `cache` stack, so
-# Firefly's cache, session and queue data never mix with another application's.
+# is the shared `cache` instance from the `cache` stack (its own logical
+# database) — Firefly only uses Redis as a cache here, not for session or queue.
 #
 # Create the database before first start:
 #   docker exec postgres createdb --username "$POSTGRES_USER" \

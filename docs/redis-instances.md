@@ -1,6 +1,6 @@
 # Redis Instances
 
-Every Redis in this environment lives in `stacks/cache`. There are six
+Every Redis in this environment lives in `stacks/cache`. There are four
 instances, grouped by role rather than one per application.
 
 ## Instances
@@ -9,20 +9,22 @@ instances, grouped by role rather than one per application.
 |----------|---------|-------------------|----------|
 | `cache` | shared application caches | `REDIS_PASSWORD` | `allkeys-lru` |
 | `cache-dev` | development | `REDIS_DEV_PASSWORD` | default |
-| `redis-invoice` | Invoice Ninja only | `REDIS_INVOICE_PASSWORD` | `allkeys-lru` |
-| `redis-budget` | Firefly III only | `REDIS_BUDGET_PASSWORD` | `noeviction` |
 | `redis-sentry` | Sentry only | `REDIS_SENTRY_PASSWORD` | `noeviction` |
 | `redis-jobs` | queues and brokers only | `REDIS_JOBS_PASSWORD` | `noeviction` |
 
 ## Allocation
 
-`cache` — shared caches and rate-limit stores, one logical database each:
+`cache` — shared caches and rate-limit stores, one logical database each.
+Invoice Ninja and Firefly III only use Redis as a cache (no queue or session
+config), so they share `cache` too instead of getting their own instance:
 
 | Stack | Database |
 |-------|----------|
 | fees-prod | 0 |
 | shortener | 1 |
 | akilimo | 2 |
+| invoice (Invoice Ninja) | 3 |
+| budget (Firefly III) | 4 |
 
 `redis-jobs` — queues and brokers, one logical database each.
 
@@ -41,9 +43,11 @@ is the only one in use.
   `redis-jobs`, separate from every cache, so flushing a cache can never drop a
   job. `redis-jobs` runs `noeviction`: evicting a queued job loses work silently,
   so exceeding memory must fail loudly instead.
-- **Anything mixing cache, session and queue gets its own instance.** Firefly III
-  uses all three on one Redis, where an eviction policy tuned for the cache would
-  otherwise discard session or job data. Invoice Ninja and Sentry are treated the same way.
+- **Anything mixing cache, session and queue on one Redis URL gets its own
+  instance.** Sentry (GlitchTip) uses all three on one Redis, including its
+  Celery broker, where an eviction policy tuned for the cache would otherwise
+  discard session or job data. Invoice Ninja and Firefly III only use Redis as
+  a cache, so they share `cache` on their own logical database instead.
 - **Everything else shares `cache` on separate databases with distinct key
   prefixes.** These are pure caches and rate-limit stores, so the failure mode of
   sharing is a cold cache, not lost data.
@@ -55,7 +59,7 @@ is the only one in use.
 
 - Add new workloads to `redis-jobs` if they hold a queue or broker, to `cache` if
   they only cache, and give an application its own instance when it mixes cache
-  with session or queue data (e.g. Firefly III, Invoice Ninja, Sentry).
+  with session or queue data on one Redis URL (e.g. Sentry).
 - Keep the container memory limit comfortably above `maxmemory` so Redis can free
   memory instead of being killed.
 - Passwords are per instance, not global, so a compromised application cannot

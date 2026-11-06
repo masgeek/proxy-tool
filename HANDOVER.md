@@ -5,7 +5,7 @@
 ### Self-contained database
 - Added `db` service (PostgreSQL `16-alpine`) to `docker-compose.yml` with `firefly_db_data` volume
 - Production stack now uses its own local DB (hostname `db`)
-- Redis remains shared from `stacks/cache` (hostname `redis-budget`)
+- Redis shares the `cache` instance from `stacks/cache` (db 4) — see "Redis consolidation" below
 - Volumes kept as-is (`firefly_upload`, `firefly_db_data`)
 - Removed `internal` network (only `dokploy-network` external used)
 
@@ -22,10 +22,10 @@
 
 ### Usage
 ```bash
-# Production (local budget db, shared redis-budget)
+# Production (local budget db, shared cache instance)
 docker compose up -d
 
-# Development (local postgres db, shared redis-budget)
+# Development (local postgres db, shared cache instance)
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 ```
 
@@ -101,7 +101,23 @@ Required via `:?` syntax — stack will fail to start if missing:
 - Volume: `redis-sentry-data`
 - Memory limit: 768m
 - Env vars in `stacks/cache/.env.example`: `REDIS_SENTRY_PASSWORD`, `REDIS_SENTRY_MAXMEMORY`
-- Follows same pattern as `redis-budget` — apps mixing cache/session/queue get their own instance
+- GlitchTip mixes cache/session/queue (Celery broker) on one Redis URL, so it keeps its own instance
+
+### Redis consolidation (6 → 4 instances)
+- `redis-invoice` and `redis-budget` removed, along with their volumes and
+  `REDIS_INVOICE_*`/`REDIS_BUDGET_*` env vars
+- Invoice Ninja and Firefly III (budget) were given their own Redis instances
+  under the "mixes cache/session/queue" rule, but neither actually configures
+  Redis for anything but caching (no `QUEUE_CONNECTION`/`SESSION_DRIVER=redis`)
+- Both now share the `cache` instance on their own logical database:
+  Invoice Ninja → db 3, Firefly III (budget) → db 4
+- Updated: `stacks/invoice/services/invoice-ninja.yml`, `stacks/invoice/.env.example`,
+  `stacks/invoice/README.md`, `stacks/budget/services/firefly-iii.yml`,
+  `stacks/budget/.env.example`, `stacks/budget/README.md`, `stacks/budget/docker-compose.yml`
+- `redis-sentry` and `redis-jobs` are unaffected; `cache-dev` intentionally left
+  standalone rather than merged, to keep dev data out of the production cache
+- `REDIS_PASSWORD` for Invoice Ninja and Firefly III must now match `cache`'s
+  `REDIS_PASSWORD` in `stacks/cache/.env`, not their old dedicated passwords
 
 ## Databases Stack (`stacks/databases/`) — Modified
 
@@ -110,7 +126,7 @@ Required via `:?` syntax — stack will fail to start if missing:
 ## Documentation updated
 - `README.md` — repository layout, deployment order, stack table, Caddy port table
 - `docs/ports.md` — added kvuno web (9801) and sentry (9805), fixed kvuno api container port (80 not 5000)
-- `docs/redis-instances.md` — added `redis-sentry` row, updated instance count to six
+- `docs/redis-instances.md` — added `redis-sentry` row, then removed `redis-invoice`/`redis-budget` rows and updated instance count to four
 
 ## All pending verifications
 - GlitchTip env var names need cross-check against `https://glitchtip.com/documentation/install#configuration`
