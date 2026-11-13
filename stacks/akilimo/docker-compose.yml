@@ -57,6 +57,8 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-warning}
       # Filesystem
       FILESYSTEM_DISK: ${FILESYSTEM_DISK:-local}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-null}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-null}
       # Mail
       MAIL_MAILER: ${MAIL_MAILER:-smtp}
       MAIL_HOST: ${MAIL_HOST:-mailpit}
@@ -70,6 +72,9 @@ services:
       HORIZON_ENABLED: "${HORIZON_ENABLED:-false}"
       SCHEDULER_ENABLED: "${SCHEDULER_ENABLED:-false}"
       LARAVEL_MIGRATE: "${LARAVEL_MIGRATE:-false}"
+      #Google auth
+      FARMER_SOCIAL_PROVIDERS: ${FARMER_SOCIAL_PROVIDERS:-null}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-null}
     logging:
       driver: json-file
       options:
