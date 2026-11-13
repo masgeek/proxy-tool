@@ -1,0 +1,18 @@
+# =============================================================================
+# Caddy configuration for production Fee Syncer
+# Copy the block into the host Caddyfile.
+# =============================================================================
+
+fees.munywele.co.ke {
+        tls dev@munywele.co.ke
+
+
+        encode zstd gzip
+        reverse_proxy 127.0.0.1:9400
+
+        @disallowed {
+                path /.git/*
+                path *.sql
+        }
+        respond @disallowed "Access Denied" 403
+}

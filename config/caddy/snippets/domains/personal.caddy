@@ -1,0 +1,63 @@
+# Personal repository services exposed through the host Caddy instance.
+
+track.munywele.co.ke {
+	tls dev@munywele.co.ke
+	encode gzip zstd
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+	reverse_proxy 127.0.0.1:8800 {
+		import ../headers/proxy-headers.caddy
+	}
+}
+
+scrob.munywele.co.ke {
+	tls dev@munywele.co.ke
+	encode gzip zstd
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+	reverse_proxy 127.0.0.1:8900 {
+		import ../headers/proxy-headers.caddy
+	}
+}
+
+mealie.munywele.co.ke {
+	tls dev@munywele.co.ke
+	encode gzip zstd
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+	reverse_proxy 127.0.0.1:8925 {
+		import ../headers/proxy-headers.caddy
+	}
+}
+
+
+
+paperless.munywele.co.ke {
+	tls dev@munywele.co.ke
+	encode gzip zstd
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+	request_body {
+		max_size 100MB
+	}
+	reverse_proxy 127.0.0.1:8890 {
+		import ../headers/proxy-headers.caddy
+	}
+}
+
+
+
+stat.munywele.co.ke {
+	tls dev@munywele.co.ke
+	encode gzip zstd
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+	reverse_proxy 127.0.0.1:8930 {
+		import ../headers/proxy-headers.caddy
+	}
+}

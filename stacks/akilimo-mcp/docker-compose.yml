@@ -1,0 +1,159 @@
+name: "akilimo-mcp"
+
+# Akilimo 1.0 agent: MCP server, web UI and the weather MCP. Split from the `akilimo` stack (the API) so
+# they are released on their own. The stacks share the `internal` network by name, so the MCP server
+# still reaches the API at http://akilimo-api/api; start the akilimo stack first.
+
+networks:
+  internal:
+    name: internal
+    external: false
+  dokploy-network:
+    name: dokploy-network
+    external: true
+
+services:
+  # Akilimo 1.0 MCP server (github.com/IITA-AKILIMO/akilimo-mcp-agent): exposes the Akilimo API
+  # as MCP tools for LLM clients. Public at akilimo-mcp.akilimo.org (mcp.akilimo.org is the
+  # Akilimo 2.0 MCP).
+  mcp:
+    container_name: akilimo-mcp
+    image: ghcr.io/iita-akilimo/akilimo-mcp-agent:${AKILIMO_MCP_TAG:?AKILIMO_MCP_TAG must be set}
+    hostname: akilimo-mcp
+    restart: unless-stopped
+    pull_policy: always
+    ports:
+      - "127.0.0.1:9101:3000"
+    environment:
+      TRANSPORT: http
+      PORT: 3000
+      # The API container over the internal network (its routes live under /api)
+      AKILIMO_API_BASE_URL: ${AKILIMO_MCP_API_BASE_URL:-http://akilimo-api/api}
+      AKILIMO_API_KEY: ${AKILIMO_MCP_API_KEY:-}
+      ALLOWED_ORIGINS: ${AKILIMO_MCP_ALLOWED_ORIGINS:-https://akilimo-mcp.akilimo.org,https://agent.akilimo.org}
+      # Master key for the secrets the web UI saves (AI provider keys, web search key); generate with
+      # `openssl rand -base64 32` and keep it stable. Without it only Ollama works in the chat.
+      SECRETS_KEY: ${AKILIMO_MCP_SECRETS_KEY:?AKILIMO_MCP_SECRETS_KEY must be set}
+      # Optional accounts database (PostgreSQL; migrations run at container start). Leave
+      # AKILIMO_MCP_DB_HOST empty to run without accounts: MCP tools work, the gateway registry
+      # is read-only.
+      DB_HOST: ${AKILIMO_MCP_DB_HOST:-postgres}
+      DB_PORT: ${AKILIMO_MCP_DB_PORT:-5432}
+      DB_DATABASE: ${AKILIMO_MCP_DB_DATABASE:-akilimo_mcp}
+      DB_USERNAME: ${AKILIMO_MCP_DB_USERNAME:?AKILIMO_MCP_DB_USERNAME must be set}
+      DB_PASSWORD: ${AKILIMO_MCP_DB_PASSWORD:?AKILIMO_MCP_DB_PASSWORD must be set}
+      # Optional admin account ensured at start (needs the database)
+      ADMIN_EMAIL: ${AKILIMO_MCP_ADMIN_EMAIL:?AKILIMO_MCP_ADMIN_EMAIL must be set}
+      ADMIN_PASSWORD: ${AKILIMO_MCP_ADMIN_PASSWORD:?AKILIMO_MCP_ADMIN_PASSWORD must be set}
+      ADMIN_NAME: ${AKILIMO_MCP_ADMIN_NAME:-Administrator}
+      ADMIN_USERNAME: ${AKILIMO_MCP_ADMIN_USERNAME:?AKILIMO_MCP_ADMIN_USERNAME must be set}
+    volumes:
+      # Shared MCP server registry of the gateway (same named volume as before the split)
+      - akilimo-mcp-data:/app/data
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - dokploy-network
+      - internal
+    # The image's HEALTHCHECK probes GET /health
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "1.0"
+
+  # Web UI of the Akilimo 1.0 agent (guided forms and AI chat), the static build served by nginx. Its nginx
+  # proxies /gateway, /api and /chat to the mcp service (hostname akilimo-mcp, port 3000) over the internal
+  # network, so only this one port is public: agent.akilimo.org -> 127.0.0.1:9102 (see Caddyfile).
+  web:
+    container_name: akilimo-web
+    image: ghcr.io/iita-akilimo/akilimo-mcp-agent-web:${AKILIMO_WEB_TAG:-${AKILIMO_MCP_TAG}}
+    hostname: akilimo-web
+    restart: unless-stopped
+    pull_policy: always
+    ports:
+      - "127.0.0.1:9102:8080"
+    environment:
+      # Where the chat's Ollama mode reaches an Ollama server; nginx needs a value to start, and the
+      # default only matters if the host runs Ollama
+      OLLAMA_UPSTREAM: ${AKILIMO_WEB_OLLAMA_UPSTREAM:-http://host.docker.internal:11434}
+    depends_on:
+      mcp:
+        condition: service_started
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - internal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # The image's HEALTHCHECK probes the nginx port
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+          cpus: "0.5"
+
+  # Weather MCP server (Open-Meteo, no API key; github.com/IITA-AKILIMO/akilimo-mcp-agent, docker/weather-mcp).
+  # Internal network only, no published port: register it in the web UI (Manage) as id "weather",
+  # URL http://akilimo-weather-mcp:8080/mcp, no key.
+  weather-mcp:
+    container_name: akilimo-weather-mcp
+    image: ghcr.io/iita-akilimo/akilimo-weather-mcp:${AKILIMO_WEATHER_TAG:-latest}
+    hostname: akilimo-weather-mcp
+    restart: unless-stopped
+    pull_policy: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - internal
+    # The image's HEALTHCHECK probes the MCP port
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          cpus: "0.5"
+
+  # Agriculture MCP server (IITA fork, github.com/IITA-AKILIMO/agriculture-mcp-server): soil conditions, crop
+  # weather, climate history and averages (Open-Meteo, NASA POWER) and national agriculture statistics
+  # (World Bank); no API key. It has no authentication, so it stays on the internal network with no published
+  # port: register it in the web UI (Manage) as id "agriculture", URL http://akilimo-agriculture-mcp:8080/mcp,
+  # no key.
+  agriculture-mcp:
+    container_name: akilimo-agriculture-mcp
+    image: ghcr.io/iita-akilimo/agriculture-mcp-server:${AKILIMO_AGRICULTURE_TAG:-latest}
+    hostname: akilimo-agriculture-mcp
+    restart: unless-stopped
+    pull_policy: always
+    environment:
+      LOG_LEVEL: ${AKILIMO_AGRICULTURE_LOG_LEVEL:-INFO}
+      STATELESS_HTTP: "true"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs: [/tmp]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - internal
+    # The image's HEALTHCHECK probes GET /health
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          cpus: "0.5"
+
+volumes:
+  akilimo-mcp-data:
+    name: akilimo-mcp-data

@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="robots" content="noindex">
+	<title>502 — Bad Gateway</title>
+	<style>
+		:root {
+			color-scheme: light dark;
+			font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+			--accent: #b45309;
+			--accent-strong: #92400e;
+			--accent-soft: #fffbeb;
+			--accent-border: #fcd34d;
+			--accent-hover: #fef3c7;
+		}
+		body {
+			min-height: 100vh; margin: 0; display: grid; place-items: center;
+			background:
+				radial-gradient(circle at 15% 20%, #fcd34d 0, transparent 40%),
+				radial-gradient(circle at 85% 15%, #fdba74 0, transparent 40%),
+				radial-gradient(circle at 50% 90%, #fecaca 0, transparent 45%),
+				#fffbeb;
+			color: #3b2a12;
+		}
+		main {
+			width: min(36rem, calc(100% - 3rem)); padding: 3rem;
+			border: 1px solid rgb(255 255 255 / 60%); border-radius: 1.25rem;
+			background: rgb(255 255 255 / 45%);
+			backdrop-filter: blur(20px) saturate(180%);
+			-webkit-backdrop-filter: blur(20px) saturate(180%);
+			box-shadow: 0 1.5rem 3rem rgb(120 53 15 / 12%), inset 0 1px 0 rgb(255 255 255 / 60%);
+			text-align: center; animation: rise .6s ease-out both;
+		}
+		.illustration { display: block; width: 13rem; height: 13rem; margin: 0 auto 1rem; animation: float 4s ease-in-out infinite; filter: drop-shadow(0 .75rem 1.25rem rgb(146 64 14 / 30%)); }
+		.status {
+			margin: 0; color: var(--accent); font-size: 4rem; font-weight: 800;
+			letter-spacing: -.05em; animation: pulse 2.5s ease-in-out infinite;
+		}
+		h1 { margin: .5rem 0; font-size: 1.5rem; }
+		p { margin: 0; color: #8a6b45; line-height: 1.6; }
+		.actions { margin-top: 1.5rem; display: flex; justify-content: center; gap: .75rem; flex-wrap: wrap; }
+		.retry, .home {
+			appearance: none; border: 1px solid var(--accent-border); border-radius: .5rem;
+			background: var(--accent-soft); color: var(--accent-strong);
+			font: inherit; font-weight: 600; font-size: .875rem; padding: .5rem 1rem;
+			cursor: pointer; text-decoration: none; display: inline-block;
+			transition: background-color .15s ease;
+		}
+		.retry:hover, .retry:focus-visible, .home:hover, .home:focus-visible { background: var(--accent-hover); }
+		.retry:focus-visible, .home:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 2px; }
+		small { display: block; margin-top: 1.5rem; color: #8a6b45; line-height: 1.6; }
+		@keyframes float { 0%, 100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-.6rem) rotate(1deg); } }
+		@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .72; } }
+		@keyframes rise { from { opacity: 0; transform: translateY(1rem); } to { opacity: 1; transform: translateY(0); } }
+		@media (prefers-color-scheme: dark) {
+			:root { --accent: #fbbf24; --accent-strong: #fcd34d; --accent-soft: #2a1e0a; --accent-border: #92400e; --accent-hover: #3a2a0d; }
+			body { background: radial-gradient(circle at 15% 20%, #92400e 0, transparent 45%), radial-gradient(circle at 85% 15%, #9a3412 0, transparent 45%), radial-gradient(circle at 50% 90%, #7f1d1d 0, transparent 50%), #1c1408; color: #fef3c7; }
+			main { border-color: rgb(255 255 255 / 12%); background: rgb(41 30 10 / 45%); box-shadow: 0 1.5rem 3rem rgb(0 0 0 / 35%), inset 0 1px 0 rgb(255 255 255 / 8%); }
+			p, small { color: #d6b483; }
+		}
+		@media (prefers-reduced-motion: reduce) {
+			*, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+		}
+	</style>
+</head>
+<body>
+	<main>
+		<svg class="illustration" viewBox="0 0 200 200" role="img" aria-label="A cheerful cloud sneezing sparks while a severed cable dangles from a nearby tower">
+			<defs>
+				<linearGradient id="bg502" x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%" stop-color="#fff7ed"/>
+					<stop offset="100%" stop-color="#fef3c7"/>
+				</linearGradient>
+				<linearGradient id="cloud502" x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%" stop-color="#ffffff"/>
+					<stop offset="100%" stop-color="#e2e8f0"/>
+				</linearGradient>
+				<linearGradient id="bolt502" x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%" stop-color="#fde68a"/>
+					<stop offset="100%" stop-color="#f59e0b"/>
+				</linearGradient>
+			</defs>
+
+			<rect x="4" y="4" width="192" height="192" rx="28" fill="url(#bg502)"/>
+
+			<!-- sun peeking out top right -->
+			<circle cx="156" cy="46" r="16" fill="#fcd34d" opacity=".85"/>
+
+			<!-- signal arcs from a small tower -->
+			<g stroke="#f59e0b" stroke-width="3" fill="none" stroke-linecap="round" opacity=".55">
+				<path d="M44 62a20 20 0 0 1 22 0"/>
+				<path d="M36 52a32 32 0 0 1 38 0"/>
+			</g>
+			<rect x="52" y="62" width="6" height="34" rx="2" fill="#b45309"/>
+			<rect x="42" y="96" width="26" height="6" rx="2" fill="#b45309"/>
+
+			<!-- severed cable with sparks -->
+			<g stroke="#92400e" stroke-width="3" stroke-linecap="round" fill="none">
+				<path d="M55 99c10 8 6 20-2 24"/>
+				<path d="M55 123c-4 6-2 12 2 15"/>
+			</g>
+			<g fill="#fb923c">
+				<path d="M58 108l2.6 5.4L66 116l-5.4 2.6L58 124l-2.6-5.4L50 116l5.4-2.6z"/>
+				<circle cx="50" cy="130" r="2.4"/>
+				<circle cx="64" cy="128" r="1.8"/>
+			</g>
+
+			<!-- cloud -->
+			<g transform="translate(96 118)">
+				<path fill="url(#cloud502)" stroke="#cbd5e1" stroke-width="2.5"
+					d="M-40 22a18 18 0 0 1 3-35 26 26 0 0 1 49-9 21 21 0 0 1 30 20 16 16 0 0 1-2 24z"/>
+				<path fill="#fda4af" d="M-16 -6c2.5 3 2.5 7 0 9"/>
+				<path fill="none" stroke="#64748b" stroke-width="2.5" stroke-linecap="round" d="M-24 6q5 5 10 0M4 6q5 5 10 0"/>
+				<path fill="#fbbf24" d="M-12 14q12 8 24 0" opacity=".7"/>
+			</g>
+
+			<!-- floating light bulbs, the wire is cut -->
+			<g opacity=".5" fill="#b45309">
+				<circle cx="152" cy="160" r="4"/>
+				<circle cx="164" cy="176" r="3"/>
+				<circle cx="140" cy="176" r="2.5"/>
+			</g>
+
+			<rect x="4" y="4" width="192" height="192" rx="28" fill="none" stroke="#b45309" stroke-width="2" opacity=".35"/>
+		</svg>
+		<p class="status" role="status" aria-live="polite">502</p>
+		<h1>Bad Gateway</h1>
+		<p>The server received an invalid response from the upstream service. The connection broke somewhere in the middle of the journey.</p>
+		<div class="actions">
+			<button type="button" class="retry" id="retry">Retry now</button>
+			<a class="home" href="/">Go to homepage</a>
+		</div>
+		<small>Retrying in a moment usually clears this. If it keeps happening, the upstream service needs attention from our support team.</small>
+	</main>
+	<script>
+		document.getElementById('retry').addEventListener('click', function () {
+			location.reload();
+		});
+	</script>
+</body>
+</html>
