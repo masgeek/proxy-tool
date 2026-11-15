@@ -1,0 +1,27 @@
+# Tsobu domain group.
+
+api.tsobu.co.ke {
+	tls dev@munywele.co.ke
+	encode gzip
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+
+	rewrite * /api{uri}
+
+	reverse_proxy 127.0.0.1:9200 {
+		import ../headers/proxy-headers.caddy
+	}
+}
+
+sms.tsobu.co.ke {
+	tls dev@munywele.co.ke
+	encode gzip
+	import ../disallowed-basic.caddy
+	import ../headers/security-headers.caddy
+	import ../errors.caddy
+
+	reverse_proxy 127.0.0.1:9201 {
+		import ../headers/proxy-headers.caddy
+	}
+}

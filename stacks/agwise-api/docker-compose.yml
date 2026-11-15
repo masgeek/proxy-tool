@@ -78,6 +78,7 @@ services:
           cpus: "0.1"
 
   dashboard:
+    environment:
     container_name: agwise-dashboard
     hostname: agwise-dashboard
     image: iita/agwise-dashboard:${DASHBOARD_TAG:-latest}

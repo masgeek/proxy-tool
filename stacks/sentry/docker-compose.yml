@@ -1,0 +1,75 @@
+name: "sentry"
+
+# Sentry — self-hosted error tracking (GlitchTip).
+#
+#   sentry.akilimo.org, sentry.munywele.co.ke -> 127.0.0.1:9805
+#
+# PostgreSQL comes from the shared `databases` stack (hostname `postgres`).
+# Redis comes from the shared `cache` stack (hostname `redis`).
+#
+# Create the database before first start:
+#   docker exec postgres createdb --username "$POSTGRES_USER" \
+#     --owner "$POSTGRES_USER" sentry
+
+networks:
+  dokploy-network:
+    name: dokploy-network
+    external: true
+
+volumes:
+  sentry-uploads:
+    driver: local
+    name: sentry-uploads
+
+services:
+  sentry:
+    image: glitchtip/glitchtip:latest
+    container_name: sentry
+    hostname: sentry
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://${DB_USERNAME}:${DB_PASSWORD}@postgres:5432/${DB_DATABASE}
+      REDIS_URL: redis://redis-sentry:6379/0
+      SECRET_KEY: ${DJANGO_SECRET_KEY:?DJANGO_SECRET_KEY must be set}
+      SERVER_ROLE: all_in_one
+      GLITCHTIP_DOMAIN: ${SENTRY_URL:-https://sentry.munywele.co.ke}
+      # EMAIL_URL is parsed by django-environ and overrides EMAIL_BACKEND if set —
+      # leave it unset when using the Mailgun API (anymail) backend below.
+      # EMAIL_URL: ${EMAIL_URL:-consolemail:///}
+      EMAIL_BACKEND: ${EMAIL_BACKEND:-anymail.backends.mailgun.EmailBackend}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-noreply@mg.munywele.co.ke}
+      # Mailgun API (anymail). Only read by GlitchTip when actually set.
+      MAILGUN_API_KEY: ${MAILGUN_API_KEY:?MAILGUN_API_KEY must be set when EMAIL_BACKEND is anymail.backends.mailgun.EmailBackend}
+      MAILGUN_SENDER_DOMAIN: ${MAILGUN_SENDER_DOMAIN:?MAILGUN_SENDER_DOMAIN must be set to your verified Mailgun sending domain}
+      # EU-region Mailgun domain — using the US endpoint returns 403 Forbidden.
+      MAILGUN_API_URL: ${MAILGUN_API_URL:-https://api.eu.mailgun.net/v3}
+      ENABLE_ADMIN: ${ENABLE_ADMIN:-False}
+      ENABLE_OPENAPI: ${ENABLE_OPENAPI:-False}
+      GLITCHTIP_ENABLE_MCP: ${GLITCHTIP_ENABLE_MCP:-False}
+      GLITCHTIP_ENABLE_DUCKDB: ${GLITCHTIP_ENABLE_DUCKDB:-False}
+      GLITCHTIP_ENABLE_LOGS: ${GLITCHTIP_ENABLE_LOGS:-False}
+      GLITCHTIP_ENABLE_UPTIME: ${GLITCHTIP_ENABLE_UPTIME:-False}
+      TZ: ${TZ:-Africa/Nairobi}
+      SERVER_EMAIL: ${SERVER_EMAIL:-}
+      # user registration settings
+      ENABLE_USER_REGISTRATION: ${ENABLE_USER_REGISTRATION:-False}
+      ENABLE_SOCIAL_APPS_USER_REGISTRATION: ${ENABLE_USER_REGISTRATION:-False}
+    ports:
+      - "127.0.0.1:9805:8000"
+    volumes:
+      - sentry-uploads:/code/uploads
+    networks:
+      - dokploy-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: "1.0"
+        reservations:
+          memory: 256m
+          cpus: "0.25"

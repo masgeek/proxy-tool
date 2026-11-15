@@ -1,0 +1,35 @@
+name: "invoice"
+
+networks:
+  internal:
+    name: internal
+    external: false
+  dokploy-network:
+    name: dokploy-network
+    external: true
+
+volumes:
+  invoice_storage:
+    driver: local
+    name: invoice-storage
+  dolibarr_documents:
+    driver: local
+    name: dolibarr-documents
+  dolibarr_custom:
+    driver: local
+    name: dolibarr-custom
+  inkvoice_data:
+    driver: local
+    name: inkvoice-data
+  invoiceshelf_storage:
+    driver: local
+    name: invoiceshelf-storage
+  invoiceshelf_modules:
+    driver: local
+    name: invoiceshelf-modules
+
+services:
+  invoice:
+    extends:
+      file: ./services/dolibarr.yml
+      service: invoice
