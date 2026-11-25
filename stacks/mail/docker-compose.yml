@@ -19,7 +19,7 @@ volumes:
 
 services:
   mailpit:
-    image: axllent/mailpit
+    image: axllent/mailpit:${TAG:-latest}
     container_name: mailpit
     hostname: mailpit
     restart: unless-stopped
