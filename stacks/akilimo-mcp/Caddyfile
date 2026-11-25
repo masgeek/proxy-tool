@@ -1,0 +1,85 @@
+# =============================================================================
+# Caddy configuration for Akilimo MCP stack (MCP server and agent web UI)
+# Copy the relevant block(s) into your host Caddyfile
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+api.akilimo.org {
+        tls akilimo@cgiar.org
+
+
+        encode zstd gzip
+
+        rewrite * /api{uri}
+
+        reverse_proxy 127.0.0.1:9100 {
+                import proxy_headers_port
+
+                transport http {
+                        dial_timeout            1800s
+                        response_header_timeout 1800s
+                }
+        }
+
+        @disallowed {
+                path /.git/*
+                path *.sql
+                path /xmlrpc.php
+                path_regexp user_ini \.user\.ini
+        }
+        respond @disallowed "Access Denied" 403
+}
+
+# -----------------------------------------------------------------------------
+# akilimo-mcp — akilimo-mcp.akilimo.org (mcp.akilimo.org is the Akilimo 2.0 MCP)
+# HTTP reverse proxy to the akilimo-mcp container on 127.0.0.1:9101. Only the MCP
+# endpoints are public: streamable HTTP /mcp, legacy SSE /sse with /messages,
+# and /health. No encode: compression would buffer the SSE streams.
+# -----------------------------------------------------------------------------
+akilimo-mcp.akilimo.org {
+        tls akilimo@cgiar.org
+
+
+        @mcp path /mcp /sse /messages /health
+        handle @mcp {
+                reverse_proxy 127.0.0.1:9101 {
+                        import proxy_headers
+
+                        flush_interval -1
+                        transport http {
+                                response_header_timeout 300s
+                        }
+                }
+        }
+
+        handle {
+                respond "Not found" 404
+        }
+}
+
+# -----------------------------------------------------------------------------
+# akilimo-agent — agent.akilimo.org
+# The web UI of the Akilimo 1.0 agent: reverse proxy to the akilimo-web container on
+# 127.0.0.1:9102. Its nginx forwards /gateway, /api and /chat to the MCP server over
+# the internal network, so this is the only block the UI needs. No encode: the chat
+# streams answers as they are produced and compression would buffer them.
+# -----------------------------------------------------------------------------
+agent.akilimo.org {
+        tls akilimo@cgiar.org
+
+
+        reverse_proxy 127.0.0.1:9102 {
+                import proxy_headers
+
+                flush_interval -1
+                transport http {
+                        response_header_timeout 300s
+                }
+        }
+
+        @disallowed {
+                path /.git/*
+                path *.sql
+        }
+        respond @disallowed "Access Denied" 403
+}

@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="robots" content="noindex">
+	<title>404 — Not Found</title>
+	<style>
+		:root {
+			color-scheme: light dark;
+			font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+			--accent: #0f766e;
+			--accent-strong: #115e59;
+			--accent-soft: #f0fdfa;
+			--accent-border: #5eead4;
+			--accent-hover: #ccfbf1;
+		}
+		body {
+			min-height: 100vh; margin: 0; display: grid; place-items: center;
+			background:
+				radial-gradient(circle at 15% 20%, #5eead4 0, transparent 40%),
+				radial-gradient(circle at 85% 15%, #7dd3fc 0, transparent 40%),
+				radial-gradient(circle at 50% 90%, #bbf7d0 0, transparent 45%),
+				#f0fdfa;
+			color: #10312e;
+		}
+		main {
+			width: min(36rem, calc(100% - 3rem)); padding: 3rem;
+			border: 1px solid rgb(255 255 255 / 60%); border-radius: 1.25rem;
+			background: rgb(255 255 255 / 45%);
+			backdrop-filter: blur(20px) saturate(180%);
+			-webkit-backdrop-filter: blur(20px) saturate(180%);
+			box-shadow: 0 1.5rem 3rem rgb(13 148 136 / 12%), inset 0 1px 0 rgb(255 255 255 / 60%);
+			text-align: center; animation: rise .6s ease-out both;
+		}
+		.illustration { display: block; width: 13rem; height: 13rem; margin: 0 auto 1rem; animation: float 4s ease-in-out infinite; filter: drop-shadow(0 .75rem 1.25rem rgb(13 148 136 / 30%)); }
+		.status {
+			margin: 0; color: var(--accent); font-size: 4rem; font-weight: 800;
+			letter-spacing: -.05em; animation: pulse 2.5s ease-in-out infinite;
+		}
+		h1 { margin: .5rem 0; font-size: 1.5rem; }
+		p { margin: 0; color: #4d7c78; line-height: 1.6; }
+		.actions { margin-top: 1.5rem; display: flex; justify-content: center; gap: .75rem; flex-wrap: wrap; }
+		.home {
+			appearance: none; border: 1px solid var(--accent-border); border-radius: .5rem;
+			background: var(--accent-soft); color: var(--accent-strong);
+			font: inherit; font-weight: 600; font-size: .875rem; padding: .5rem 1rem;
+			cursor: pointer; text-decoration: none; display: inline-block;
+			transition: background-color .15s ease;
+		}
+		.home:hover, .home:focus-visible { background: var(--accent-hover); }
+		.home:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 2px; }
+		small { display: block; margin-top: 1.5rem; color: #4d7c78; line-height: 1.6; }
+		@keyframes float { 0%, 100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-.6rem) rotate(1deg); } }
+		@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .72; } }
+		@keyframes rise { from { opacity: 0; transform: translateY(1rem); } to { opacity: 1; transform: translateY(0); } }
+		@media (prefers-reduced-motion: reduce) {
+			*, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+		}
+		@media (prefers-color-scheme: dark) {
+			:root { --accent: #2dd4bf; --accent-strong: #5eead4; --accent-soft: #0d2b28; --accent-border: #0f766e; --accent-hover: #12403b; }
+			body { background: radial-gradient(circle at 15% 20%, #0f766e 0, transparent 45%), radial-gradient(circle at 85% 15%, #075985 0, transparent 45%), radial-gradient(circle at 50% 90%, #14532d 0, transparent 50%), #081614; color: #ccfbf1; }
+			main { border-color: rgb(255 255 255 / 12%); background: rgb(13 43 40 / 45%); box-shadow: 0 1.5rem 3rem rgb(0 0 0 / 35%), inset 0 1px 0 rgb(255 255 255 / 8%); }
+			p, small { color: #8fbfb9; }
+		}
+	</style>
+</head>
+<body>
+	<main>
+		<svg class="illustration" viewBox="0 0 200 200" role="img" aria-label="A cloud drifting over an empty path holding a map with a big question mark in front of a search magnifier">
+			<defs>
+				<linearGradient id="bg404" x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%" stop-color="#ecfeff"/>
+					<stop offset="100%" stop-color="#ccfbf1"/>
+				</linearGradient>
+				<linearGradient id="cloud404" x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%" stop-color="#ffffff"/>
+					<stop offset="100%" stop-color="#ccfbf1"/>
+				</linearGradient>
+				<linearGradient id="hill404" x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%" stop-color="#5eead4"/>
+					<stop offset="100%" stop-color="#0d9488"/>
+				</linearGradient>
+			</defs>
+
+			<rect x="4" y="4" width="192" height="192" rx="28" fill="url(#bg404)"/>
+
+			<!-- sun -->
+			<circle cx="44" cy="42" r="14" fill="#fde68a" opacity=".9"/>
+
+			<!-- rolling hills -->
+			<path d="M4 168c26-22 52-22 78-6s52 10 78-8 36-8 36-8v46H4z" fill="url(#hill404)" opacity=".55"/>
+			<path d="M4 180c30-16 56 4 92-4s58-10 100 2v18H4z" fill="#0f766e" opacity=".35"/>
+
+			<!-- winding path that leads nowhere -->
+			<path d="M100 196c-6-18 14-26 6-38" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity=".7"/>
+
+			<!-- lonely cloud -->
+			<g transform="translate(94 96)">
+				<path fill="url(#cloud404)" stroke="#99f6e4" stroke-width="2.5"
+					d="M-36 20a16 16 0 0 1 3-31 23 23 0 0 1 44-8 19 19 0 0 1 27 18 14 14 0 0 1-2 21z"/>
+				<circle cx="-12" cy="4" r="3" fill="#0f766e"/>
+				<circle cx="10" cy="4" r="3" fill="#0f766e"/>
+				<path fill="none" stroke="#0f766e" stroke-width="2.5" stroke-linecap="round" d="M-6 16q6 3 11 -1"/>
+			</g>
+
+			<!-- magnifier hovering over the empty path -->
+			<g transform="translate(128 140) rotate(-12)">
+				<circle r="22" fill="#ffffff" fill-opacity=".55" stroke="#0f766e" stroke-width="4"/>
+				<circle r="22" fill="none" stroke="#ccfbf1" stroke-width="2" opacity=".8"/>
+				<g stroke="#134e4a" stroke-width="3" stroke-linecap="round">
+					<path d="M0-9v4"/>
+					<path d="M0 3v2"/>
+				</g>
+				<path d="M16 16l14 14" stroke="#0f766e" stroke-width="8" stroke-linecap="round"/>
+			</g>
+
+			<!-- small signpost -->
+			<g transform="translate(48 152)">
+				<path d="M0 20V-4" stroke="#0f766e" stroke-width="4" stroke-linecap="round"/>
+				<path d="M0-6h18l5 7-5 7H0z" fill="#5eead4" stroke="#0f766e" stroke-width="2.5" stroke-linejoin="round"/>
+			</g>
+
+			<rect x="4" y="4" width="192" height="192" rx="28" fill="none" stroke="#0f766e" stroke-width="2" opacity=".35"/>
+		</svg>
+		<p class="status" role="status" aria-live="polite">404</p>
+		<h1>Not Found</h1>
+		<p>This page does not exist. It may have been moved, renamed, or it never existed in the first place.</p>
+		<div class="actions">
+			<a class="home" href="/">Go to homepage</a>
+		</div>
+		<small>Check the address for typos, or use the homepage above to find what you were looking for. Retrying this same address will not help &mdash; the page is not here.</small>
+	</main>
+</body>
+</html>

@@ -1,0 +1,12 @@
+# =============================================================================
+# Caddy configuration for Beszel
+# Copy the block into the host Caddyfile.
+# =============================================================================
+
+beszel.munywele.co.ke {
+        tls dev@munywele.co.ke
+        encode zstd gzip
+
+
+        reverse_proxy 127.0.0.1:9625
+}

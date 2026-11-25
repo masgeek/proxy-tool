@@ -1,0 +1,12 @@
+# =============================================================================
+# Caddy configuration for Netdata
+# Copy the block into the host Caddyfile.
+# =============================================================================
+
+monitor.munywele.co.ke {
+        tls dev@munywele.co.ke
+        encode zstd gzip
+
+
+        reverse_proxy 127.0.0.1:19999
+}
